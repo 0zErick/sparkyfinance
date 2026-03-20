@@ -1,68 +1,14 @@
 import { useState } from "react";
-import { Search, FolderOpen, Plus, Upload, Check, X, MoreHorizontal } from "lucide-react";
+import { Search, FolderOpen, Plus, Upload, Check, X, ClipboardList, FileText, FileSignature, IdCard, BookOpen, Folder } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const ClipboardIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-    <rect x="5" y="4" width="14" height="17" rx="2" fill="white" fillOpacity="0.9"/>
-    <rect x="8" y="1" width="8" height="4" rx="1" fill="#9CA3AF"/>
-    <path d="M9 10h6M9 14h4" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round"/>
-  </svg>
-);
-
-const ContaIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-    <rect x="4" y="3" width="16" height="18" rx="2" fill="white" fillOpacity="0.9"/>
-    <path d="M8 8h8M8 12h6M8 16h4" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M16 14l-2 4h4l-2-4z" fill="#9CA3AF"/>
-  </svg>
-);
-
-const ContratoIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-    <rect x="4" y="2" width="16" height="20" rx="2" fill="white" fillOpacity="0.9"/>
-    <path d="M8 7h8M8 11h6" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M10 15l3 5 1-3" stroke="#B87333" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M14 15l3 5 1-3" stroke="#B87333" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const DocumentoIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-    <rect x="3" y="3" width="18" height="18" rx="3" fill="#93C5FD" fillOpacity="0.3"/>
-    <rect x="3" y="3" width="18" height="18" rx="3" stroke="#60A5FA" strokeWidth="1.2"/>
-    <circle cx="9" cy="10" r="3" fill="#1E3A5F"/>
-    <rect x="14" y="8" width="5" height="1.5" rx="0.5" fill="#1E3A5F"/>
-    <rect x="14" y="11" width="4" height="1.5" rx="0.5" fill="#1E3A5F"/>
-    <rect x="6" y="16" width="12" height="1.5" rx="0.5" fill="#1E3A5F"/>
-  </svg>
-);
-
-const ManualIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-    <path d="M4 4c0-1 1-2 2-2h5l1 1v18l-1 1H6c-1 0-2-1-2-2V4z" fill="#1E3A5F"/>
-    <path d="M12 3h6c1 0 2 1 2 2v16c0 1-1 2-2 2h-6V3z" fill="#1E40AF"/>
-    <rect x="5" y="6" width="6" height="1" rx="0.5" fill="white" fillOpacity="0.5"/>
-    <rect x="5" y="9" width="5" height="1" rx="0.5" fill="white" fillOpacity="0.3"/>
-    <rect x="13" y="6" width="6" height="1" rx="0.5" fill="white" fillOpacity="0.5"/>
-    <rect x="13" y="9" width="5" height="1" rx="0.5" fill="white" fillOpacity="0.3"/>
-  </svg>
-);
-
-const PastaIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-    <path d="M2 8c0-1 1-2 2-2h5l2 2h9c1 0 2 1 2 2v10c0 1-1 2-2 2H4c-1 0-2-1-2-2V8z" fill="#B8860B"/>
-    <path d="M2 6h7l2 2" stroke="#E8A317" strokeWidth="1.5" strokeLinecap="round"/>
-  </svg>
-);
-
 const filters = [
-  { label: "Todos", icon: ClipboardIcon },
-  { label: "Conta", icon: ContaIcon },
-  { label: "Contrato", icon: ContratoIcon },
-  { label: "Documento", icon: DocumentoIcon },
-  { label: "Manual", icon: ManualIcon },
-  { label: "Outros", icon: PastaIcon },
+  { label: "Todos", icon: ClipboardList, color: "text-warning" },
+  { label: "Conta", icon: FileText, color: "text-muted-foreground" },
+  { label: "Contrato", icon: FileSignature, color: "text-amber-600" },
+  { label: "Documento", icon: IdCard, color: "text-primary" },
+  { label: "Manual", icon: BookOpen, color: "text-primary" },
+  { label: "Outros", icon: Folder, color: "text-warning" },
 ];
 
 const categories = ["Conta", "Contrato", "Documento", "Manual", "Outros"];
@@ -108,7 +54,7 @@ const DocsView = () => {
                 )}
               >
                 <span className="flex items-center gap-1.5">
-                  <Icon />
+                  <Icon size={14} className={activeFilter === f.label ? "text-primary-foreground" : f.color} />
                   {f.label}
                 </span>
               </button>

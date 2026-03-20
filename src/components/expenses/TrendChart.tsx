@@ -8,6 +8,8 @@ interface TrendChartProps {
   legend?: string;
 }
 
+const fmt = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+
 const TrendChart = ({ title, data, color, gradientId, legend }: TrendChartProps) => {
   return (
     <div className="card-zelo fade-in-up">
@@ -37,7 +39,7 @@ const TrendChart = ({ title, data, color, gradientId, legend }: TrendChartProps)
                 fontSize: "12px",
                 color: "hsl(0 0% 95%)",
               }}
-              formatter={(v: number) => [`R$ ${v.toLocaleString("pt-BR")}`, ""]}
+              formatter={(v: number) => [`R$ ${fmt(v)}`, ""]}
             />
             <Area
               type="monotone"
