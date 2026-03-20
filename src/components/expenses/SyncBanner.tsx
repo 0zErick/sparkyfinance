@@ -40,9 +40,6 @@ const SyncBanner = () => {
     e.target.value = "";
   };
 
-  const handleMetas = () => {
-    alert("Funcionalidade de Metas em desenvolvimento.");
-  };
 
   const quickActions = [
     { label: "Despesa", icon: TrendingDown, bg: "bg-destructive/15", color: "text-destructive", onClick: handleDespesa },
