@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Wallet, TrendingDown, TrendingUp, ScanLine, Download, Target } from "lucide-react";
 import AddExpenseModal from "@/components/expenses/AddExpenseModal";
+import PluggyConnectModal from "./PluggyConnectModal";
 
 const SyncBanner = () => {
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
