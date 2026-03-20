@@ -41,7 +41,10 @@ const FinancialSettingsModal = ({ open, onClose }: FinancialSettingsModalProps) 
                 <p className="text-[10px] text-muted-foreground">Conecte suas contas bancárias</p>
               </div>
             </div>
-            <button className="w-full rounded-xl border border-border py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground active:scale-[0.98] transition-all">
+            <button
+              onClick={() => setPluggyOpen(true)}
+              className="w-full rounded-xl border border-border py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground active:scale-[0.98] transition-all"
+            >
               Gerenciar Conexões
             </button>
           </div>
