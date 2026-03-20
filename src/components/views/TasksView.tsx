@@ -1,50 +1,100 @@
-import { CheckCircle2, Circle } from "lucide-react";
-import { useState } from "react";
+import { Crown, TrendingUp, Star, Trophy, Flame, Target, ShieldCheck, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const initialTasks = [
-  { id: 1, text: "Pagar conta de luz", done: false, pts: 10 },
-  { id: 2, text: "Conferir extrato bancário", done: true, pts: 5 },
-  { id: 3, text: "Atualizar orçamento mensal", done: false, pts: 15 },
-  { id: 4, text: "Revisar assinaturas ativas", done: false, pts: 10 },
+const rankingData = [
+  { name: "erick", username: "eriq", points: 60, isLeader: true, avatar: "E", gradient: "from-primary/40 to-primary/10" },
+  { name: "ana", username: "aninha", points: 35, isLeader: false, avatar: "A", gradient: "from-success/40 to-success/10" },
+  { name: "casa", username: "compartilhado", points: 15, isLeader: false, avatar: "C", gradient: "from-destructive/40 to-destructive/10" },
+];
+
+const achievements = [
+  { icon: Flame, label: "Sequência de 7 dias", desc: "Registre gastos por 7 dias seguidos", pts: 20, color: "text-orange-400", bg: "bg-orange-400/15", progress: 5, total: 7 },
+  { icon: Target, label: "Meta do mês", desc: "Gaste menos que o orçamento mensal", pts: 50, color: "text-success", bg: "bg-success/15", progress: 65, total: 100 },
+  { icon: ShieldCheck, label: "Reserva intacta", desc: "Não toque na reserva de emergência", pts: 30, color: "text-primary", bg: "bg-primary/15", progress: 1, total: 1 },
+  { icon: Zap, label: "Economia rápida", desc: "Economize R$ 100,00 em uma semana", pts: 15, color: "text-warning", bg: "bg-warning/15", progress: 72, total: 100 },
 ];
 
 const TasksView = () => {
-  const [tasks, setTasks] = useState(initialTasks);
-
-  const toggle = (id: number) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
-    );
-  };
-
   return (
     <div className="px-4 pb-24 space-y-4">
       <div className="pt-3">
-        <h1 className="text-xl font-bold">Tarefas</h1>
-        <p className="text-xs text-muted-foreground mt-1">Complete tarefas e ganhe pontos</p>
+        <h1 className="text-xl font-bold">Ranking & Pontos</h1>
+        <p className="text-xs text-muted-foreground mt-1">Compita com sua família e ganhe pontos por bons hábitos financeiros</p>
       </div>
-      <div className="space-y-2">
-        {tasks.map((task, i) => (
-          <button
-            key={task.id}
-            onClick={() => toggle(task.id)}
-            className={cn(
-              "card-zelo w-full flex items-center gap-3 text-left transition-all active:scale-[0.98] fade-in-up",
-              `stagger-${i + 1}`
-            )}
-          >
-            {task.done ? (
-              <CheckCircle2 size={20} className="text-success flex-shrink-0" />
-            ) : (
-              <Circle size={20} className="text-muted-foreground flex-shrink-0" />
-            )}
-            <span className={cn("text-sm flex-1", task.done && "line-through text-muted-foreground")}>
-              {task.text}
-            </span>
-            <span className="text-[10px] font-semibold text-warning tabular-nums">+{task.pts} pts</span>
-          </button>
-        ))}
+
+      {/* Ranking */}
+      <div>
+        <p className="text-label mb-2 px-1">RANKING DO GRUPO</p>
+        <div className="space-y-2">
+          {rankingData.map((member, i) => (
+            <div
+              key={member.username}
+              className={cn(
+                "card-zelo flex items-center gap-3 fade-in-up",
+                `stagger-${i + 1}`,
+                i === 0 && "border-warning/30"
+              )}
+            >
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
+                {i + 1}º
+              </div>
+              <div className="relative">
+                <div className={cn("flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br text-sm font-bold", member.gradient)}>
+                  {member.avatar}
+                </div>
+                {member.isLeader && <Crown size={12} className="absolute -top-1 -right-1 text-warning" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">{member.name}</p>
+                <p className="text-[10px] text-muted-foreground">@{member.username}</p>
+              </div>
+              <div className="flex items-center gap-1.5 rounded-full bg-warning/15 px-2.5 py-1">
+                {i === 0 ? <Trophy size={12} className="text-warning" /> : <Star size={12} className="text-warning" />}
+                <span className="text-xs font-bold text-warning tabular-nums">{member.points} pts</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Conquistas / Incentivos */}
+      <div>
+        <p className="text-label mb-2 px-1">CONQUISTAS & INCENTIVOS</p>
+        <p className="text-[10px] text-muted-foreground mb-3 px-1">
+          Complete desafios financeiros para ganhar pontos e subir no ranking do grupo.
+        </p>
+        <div className="space-y-2">
+          {achievements.map((a, i) => {
+            const Icon = a.icon;
+            const pctDone = a.total <= 1 ? (a.progress >= a.total ? 100 : 0) : Math.round((a.progress / a.total) * 100);
+            const isDone = pctDone >= 100;
+            return (
+              <div key={a.label} className={cn("card-zelo fade-in-up", `stagger-${i + 1}`)}>
+                <div className="flex items-center gap-3">
+                  <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", a.bg)}>
+                    <Icon size={18} className={a.color} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold">{a.label}</p>
+                      <span className="text-[10px] font-bold text-warning">+{a.pts} pts</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{a.desc}</p>
+                    <div className="mt-2 h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={cn("h-full rounded-full transition-all", isDone ? "bg-success" : "bg-primary")}
+                        style={{ width: `${pctDone}%` }}
+                      />
+                    </div>
+                    <p className="text-[9px] text-muted-foreground mt-1 tabular-nums">
+                      {isDone ? "✅ Conquistado!" : `${pctDone}% concluído`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

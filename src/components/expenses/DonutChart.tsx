@@ -20,27 +20,28 @@ const DonutChart = () => {
         Total gasto: <span className="text-foreground font-medium">R$ {fmt(total)}</span> · Veja como seus gastos estão divididos por categoria.
       </p>
       <div className="flex items-center gap-4">
-        <div className="h-32 w-32 flex-shrink-0 relative">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data}
-                innerRadius={34}
-                outerRadius={56}
-                paddingAngle={3}
-                dataKey="value"
-                strokeWidth={0}
-              >
-                {data.map((entry) => (
-                  <Cell key={entry.name} fill={entry.color} />
-                ))}
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-[9px] text-muted-foreground">Total</span>
-            <span className="text-xs font-bold tabular-nums">R$ {fmt(total)}</span>
+        <div className="flex flex-col items-center flex-shrink-0">
+          <div className="h-32 w-32 relative">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={data}
+                  innerRadius={34}
+                  outerRadius={56}
+                  paddingAngle={3}
+                  dataKey="value"
+                  strokeWidth={0}
+                >
+                  {data.map((entry) => (
+                    <Cell key={entry.name} fill={entry.color} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
           </div>
+          <p className="text-center text-[10px] text-muted-foreground mt-1">
+            Total: <span className="text-foreground font-bold text-xs tabular-nums">R$ {fmt(total)}</span>
+          </p>
         </div>
         <div className="flex flex-col gap-2.5 flex-1">
           {data.map((entry) => (

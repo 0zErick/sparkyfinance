@@ -12,13 +12,13 @@ const StatusCards = () => {
       {statuses.map((s, i) => {
         const Icon = s.icon;
         return (
-          <div key={s.label} className={`card-zelo fade-in-up stagger-${i + 1} !py-2.5 !px-2`}>
-            <div className="flex items-center gap-1 mb-0.5">
-              <Icon size={12} className={s.iconColor} />
-              <p className="text-label">{s.label}</p>
+          <div key={s.label} className={`card-zelo fade-in-up stagger-${i + 1} !py-3 !px-2.5`}>
+            <div className="flex items-center gap-1.5 mb-1">
+              <Icon size={15} className={s.iconColor} />
+              <p className="text-[11px] font-medium text-muted-foreground">{s.label}</p>
             </div>
-            <p className={`text-xs font-bold tabular-nums ${s.color}`}>{s.value}</p>
-            <p className="text-[8px] text-muted-foreground mt-0.5 leading-tight">{s.sub}</p>
+            <p className={`text-sm font-bold tabular-nums ${s.color}`}>{s.value}</p>
+            <p className="text-[9px] text-muted-foreground mt-0.5 leading-tight">{s.sub}</p>
           </div>
         );
       })}
