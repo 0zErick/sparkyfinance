@@ -20,9 +20,9 @@ const BalanceCard = () => {
       </p>
       <div className="mt-2 space-y-1">
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-          <span>Receitas: <span className="text-success font-medium">R$ 6.500</span></span>
+          <span>Receitas: <span className="text-success font-medium">R$ 6.500,00</span></span>
           <span className="text-border">•</span>
-          <span>Despesas: <span className="text-destructive font-medium">R$ 3.252</span></span>
+          <span>Despesas: <span className="text-destructive font-medium">R$ 3.252,50</span></span>
         </div>
         <p className="text-[10px] text-muted-foreground">
           Livre após contas agendadas
