@@ -1,4 +1,5 @@
 import StatusCards from "@/components/expenses/StatusCards";
+import CreditCardCarousel from "@/components/expenses/CreditCardCarousel";
 import TrendChart from "@/components/expenses/TrendChart";
 import DonutChart from "@/components/expenses/DonutChart";
 import PaceBar from "@/components/expenses/PaceBar";
