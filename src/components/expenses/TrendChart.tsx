@@ -5,12 +5,14 @@ interface TrendChartProps {
   data: { name: string; value: number }[];
   color: string;
   gradientId: string;
+  legend?: string;
 }
 
-const TrendChart = ({ title, data, color, gradientId }: TrendChartProps) => {
+const TrendChart = ({ title, data, color, gradientId, legend }: TrendChartProps) => {
   return (
     <div className="card-zelo fade-in-up">
-      <p className="text-xs font-semibold text-muted-foreground mb-3">{title}</p>
+      <p className="text-xs font-semibold text-muted-foreground mb-1">{title}</p>
+      {legend && <p className="text-[10px] text-muted-foreground/70 mb-3">{legend}</p>}
       <div className="h-32">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
