@@ -31,11 +31,11 @@ const defaultProfiles: Profile[] = [
 ];
 
 const inspirationalQuotes = [
-  "💡 "Riqueza não é ter muito, é precisar de pouco."",
-  "🚀 "Pequenos hábitos financeiros geram grandes resultados."",
-  "🎯 "Quem controla o dinheiro, controla o futuro."",
-  "🌟 "Cada centavo economizado é um passo para a liberdade."",
-  "🔥 "Disciplina hoje, colheita amanhã."",
+  "💡 Riqueza não é ter muito, é precisar de pouco.",
+  "🚀 Pequenos hábitos financeiros geram grandes resultados.",
+  "🎯 Quem controla o dinheiro, controla o futuro.",
+  "🌟 Cada centavo economizado é um passo para a liberdade.",
+  "🔥 Disciplina hoje, colheita amanhã.",
 ];
 
 type SubView = null | "profile" | "prizes" | "members" | "ranking";
