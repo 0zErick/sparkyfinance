@@ -20,7 +20,8 @@ const DonutChart = () => {
         Total gasto: <span className="text-foreground font-medium">R$ {fmt(total)}</span> · Veja como seus gastos estão divididos por categoria.
       </p>
       <div className="flex items-center gap-4">
-        <div className="h-32 w-32 flex-shrink-0 relative">
+        <div className="flex flex-col items-center flex-shrink-0">
+          <div className="h-32 w-32 relative">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
