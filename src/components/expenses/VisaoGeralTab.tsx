@@ -1,4 +1,5 @@
 import StatusCards from "@/components/expenses/StatusCards";
+import CreditCardCarousel from "@/components/expenses/CreditCardCarousel";
 import TrendChart from "@/components/expenses/TrendChart";
 import DonutChart from "@/components/expenses/DonutChart";
 import PaceBar from "@/components/expenses/PaceBar";
@@ -28,6 +29,7 @@ const VisaoGeralTab = () => (
     <SyncBanner />
     <BudgetAlert />
     <StatusCards />
+    <CreditCardCarousel />
     <TrendChart title="Histórico de Saldo" data={balanceHistory} color="hsl(var(--primary))" gradientId="balGrad" />
     <TrendChart title="Projeção de Saldo" data={projectionData} color="hsl(var(--success))" gradientId="projGrad" legend="Estimativa do saldo nas próximas semanas com base nos seus gastos e receitas recorrentes." />
     <TrendChart title="Poder de Compra Diário" data={dailyPower} color="hsl(var(--warning))" gradientId="dailyGrad" legend="Quanto você pode gastar por dia sem comprometer o orçamento do mês." />
