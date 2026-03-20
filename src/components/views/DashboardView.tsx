@@ -1,5 +1,6 @@
 import Header from "@/components/layout/Header";
 import BalanceCard from "@/components/dashboard/BalanceCard";
+import SpendingOverview from "@/components/dashboard/SpendingOverview";
 import ShoppingCard from "@/components/dashboard/ShoppingCard";
 import RankingCard from "@/components/dashboard/RankingCard";
 import TasksCard from "@/components/dashboard/TasksCard";
@@ -9,6 +10,7 @@ const DashboardView = () => {
     <div className="space-y-3 px-4 pb-4">
       <Header />
       <BalanceCard />
+      <SpendingOverview />
       <ShoppingCard />
       <RankingCard />
       <div>
