@@ -1,10 +1,12 @@
 import { useState, useRef } from "react";
 import { Wallet, TrendingDown, TrendingUp, ScanLine, Download, Target } from "lucide-react";
 import AddExpenseModal from "@/components/expenses/AddExpenseModal";
+import PluggyConnectModal from "./PluggyConnectModal";
 
 const SyncBanner = () => {
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [expenseModalType, setExpenseModalType] = useState<"expense" | "income">("expense");
+  const [pluggyOpen, setPluggyOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDespesa = () => {
@@ -69,7 +71,10 @@ const SyncBanner = () => {
           <p className="text-sm font-semibold">Sincronize suas finanças</p>
           <p className="text-[11px] text-muted-foreground">Conecte seus bancos para importar transações.</p>
         </div>
-        <button className="shrink-0 rounded-full bg-primary px-3.5 py-1.5 text-[10px] font-bold text-primary-foreground active:scale-95 transition-transform whitespace-nowrap">
+        <button
+          onClick={() => setPluggyOpen(true)}
+          className="shrink-0 rounded-full bg-primary px-3.5 py-1.5 text-[10px] font-bold text-primary-foreground active:scale-95 transition-transform whitespace-nowrap"
+        >
           Conectar Bancos
         </button>
       </div>
@@ -94,6 +99,7 @@ const SyncBanner = () => {
       </div>
 
       <AddExpenseModal open={expenseModalOpen} onClose={() => setExpenseModalOpen(false)} type={expenseModalType} />
+      <PluggyConnectModal open={pluggyOpen} onClose={() => setPluggyOpen(false)} />
     </div>
   );
 };

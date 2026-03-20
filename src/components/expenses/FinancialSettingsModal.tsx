@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, Link2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import PluggyConnectModal from "./PluggyConnectModal";
 
 interface FinancialSettingsModalProps {
   open: boolean;
@@ -13,6 +14,7 @@ const FinancialSettingsModal = ({ open, onClose }: FinancialSettingsModalProps) 
   const [weekendWeight, setWeekendWeight] = useState(1.5);
   const [lowBalanceAlert, setLowBalanceAlert] = useState("500");
   const [alertsEnabled, setAlertsEnabled] = useState(true);
+  const [pluggyOpen, setPluggyOpen] = useState(false);
 
   if (!open) return null;
 
@@ -39,7 +41,10 @@ const FinancialSettingsModal = ({ open, onClose }: FinancialSettingsModalProps) 
                 <p className="text-[10px] text-muted-foreground">Conecte suas contas bancárias</p>
               </div>
             </div>
-            <button className="w-full rounded-xl border border-border py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground active:scale-[0.98] transition-all">
+            <button
+              onClick={() => setPluggyOpen(true)}
+              className="w-full rounded-xl border border-border py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground active:scale-[0.98] transition-all"
+            >
               Gerenciar Conexões
             </button>
           </div>
@@ -139,6 +144,8 @@ const FinancialSettingsModal = ({ open, onClose }: FinancialSettingsModalProps) 
         <button className="w-full mt-5 rounded-xl bg-primary py-3.5 text-sm font-bold text-primary-foreground transition-all active:scale-[0.98]">
           Salvar Configurações
         </button>
+
+        <PluggyConnectModal open={pluggyOpen} onClose={() => setPluggyOpen(false)} />
       </div>
     </div>
   );

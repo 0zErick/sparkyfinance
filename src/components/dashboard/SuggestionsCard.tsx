@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { Landmark, MessageCircle } from "lucide-react";
+import PluggyConnectModal from "@/components/expenses/PluggyConnectModal";
 
 const SuggestionsCard = () => {
+  const [pluggyOpen, setPluggyOpen] = useState(false);
+
   return (
     <div className="space-y-2">
       <p className="text-label px-1">SUGESTÕES PARA VOCÊ</p>
@@ -13,7 +17,10 @@ const SuggestionsCard = () => {
           <p className="text-sm font-semibold">Sincronize suas finanças</p>
           <p className="text-[11px] text-muted-foreground">Importe suas transações bancárias automaticamente.</p>
         </div>
-        <button className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-[10px] font-bold text-primary-foreground active:scale-95 transition-transform">
+        <button
+          onClick={() => setPluggyOpen(true)}
+          className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-[10px] font-bold text-primary-foreground active:scale-95 transition-transform"
+        >
           Conectar
         </button>
       </div>
@@ -30,6 +37,8 @@ const SuggestionsCard = () => {
           Ativar
         </button>
       </div>
+
+      <PluggyConnectModal open={pluggyOpen} onClose={() => setPluggyOpen(false)} />
     </div>
   );
 };
