@@ -1,4 +1,5 @@
 import { Sun, Ghost } from "lucide-react";
+import ProfileSwitcher from "@/components/layout/ProfileSwitcher";
 
 const Header = () => {
   return (
@@ -13,9 +14,7 @@ const Header = () => {
         <button className="rounded-full p-2 text-muted-foreground transition-colors hover:text-foreground active:scale-95">
           <Sun size={18} />
         </button>
-        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-xs font-bold text-primary-foreground">
-          E
-        </div>
+        <ProfileSwitcher />
       </div>
     </header>
   );
