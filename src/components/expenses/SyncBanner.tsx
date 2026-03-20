@@ -99,6 +99,7 @@ const SyncBanner = () => {
       </div>
 
       <AddExpenseModal open={expenseModalOpen} onClose={() => setExpenseModalOpen(false)} type={expenseModalType} />
+      <PluggyConnectModal open={pluggyOpen} onClose={() => setPluggyOpen(false)} />
     </div>
   );
 };
