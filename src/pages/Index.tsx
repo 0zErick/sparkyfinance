@@ -3,7 +3,6 @@ import TabBar from "@/components/layout/TabBar";
 import DashboardView from "@/components/views/DashboardView";
 import TasksView from "@/components/views/TasksView";
 import ExpensesView from "@/components/views/ExpensesView";
-import MarketView from "@/components/views/MarketView";
 import DocsView from "@/components/views/DocsView";
 import MembersView from "@/components/views/MembersView";
 
@@ -15,7 +14,6 @@ const Index = () => {
       case "home": return <DashboardView />;
       case "tasks": return <TasksView />;
       case "expenses": return <ExpensesView />;
-      case "market": return <MarketView />;
       case "docs": return <DocsView />;
       case "members": return <MembersView />;
       default: return <DashboardView />;
