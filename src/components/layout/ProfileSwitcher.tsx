@@ -303,6 +303,43 @@ const ProfileSwitcher = () => {
               Salvar Alterações
             </button>
           </div>
+
+          {/* Developer Signature */}
+          <div className="card-zelo space-y-3">
+            <div>
+              <h3 className="text-sm font-semibold">Sobre o Projeto</h3>
+              <p className="text-[10px] text-muted-foreground">Criado com 💙 para você</p>
+            </div>
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center">
+                  <span className="text-sm font-bold text-primary">ED</span>
+                </div>
+                <div>
+                  <p className="text-sm font-bold">Erick Milhomens</p>
+                  <p className="text-[10px] text-muted-foreground">Erick Developer</p>
+                </div>
+              </div>
+              <div className="h-px bg-border" />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Nome Real</p>
+                  <p className="text-xs font-medium">Erick Milhomens</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Developer</p>
+                  <p className="text-xs font-medium">Erick Developer</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground">Data de Criação</p>
+                <p className="text-xs font-medium">19/03/2026</p>
+              </div>
+              <p className="text-[10px] text-muted-foreground/70 italic text-center pt-1">
+                🐱 Sparky — inspirado no gatinho que dá nome ao projeto
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );

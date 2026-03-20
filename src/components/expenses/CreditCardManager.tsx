@@ -1,0 +1,514 @@
+import { useState } from "react";
+import { X, ArrowLeft, Plus, CreditCard, Eye, EyeOff, ChevronRight, Receipt, Calendar, DollarSign, Wallet, Building2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+// Bank icon mapping with colors
+const BANK_DATA: Record<string, { color: string; abbr: string }> = {
+  "nubank": { color: "bg-purple-600", abbr: "NU" },
+  "inter": { color: "bg-orange-500", abbr: "IN" },
+  "itaú": { color: "bg-orange-600", abbr: "IT" },
+  "itau": { color: "bg-orange-600", abbr: "IT" },
+  "bradesco": { color: "bg-red-600", abbr: "BR" },
+  "santander": { color: "bg-red-700", abbr: "SA" },
+  "banco do brasil": { color: "bg-yellow-500", abbr: "BB" },
+  "bb": { color: "bg-yellow-500", abbr: "BB" },
+  "caixa": { color: "bg-blue-600", abbr: "CX" },
+  "c6": { color: "bg-gray-900", abbr: "C6" },
+  "c6 bank": { color: "bg-gray-900", abbr: "C6" },
+  "pan": { color: "bg-blue-500", abbr: "PN" },
+  "original": { color: "bg-green-600", abbr: "OR" },
+  "neon": { color: "bg-cyan-500", abbr: "NE" },
+  "next": { color: "bg-green-500", abbr: "NX" },
+  "picpay": { color: "bg-green-400", abbr: "PP" },
+  "mercado pago": { color: "bg-blue-400", abbr: "MP" },
+  "will bank": { color: "bg-yellow-400", abbr: "WB" },
+  "digio": { color: "bg-blue-700", abbr: "DG" },
+  "sicoob": { color: "bg-green-700", abbr: "SC" },
+  "sicredi": { color: "bg-green-600", abbr: "SI" },
+  "btg": { color: "bg-blue-900", abbr: "BT" },
+  "xp": { color: "bg-gray-800", abbr: "XP" },
+  "safra": { color: "bg-blue-800", abbr: "SF" },
+  "american express": { color: "bg-blue-500", abbr: "AX" },
+  "amex": { color: "bg-blue-500", abbr: "AX" },
+  "visa": { color: "bg-blue-600", abbr: "VI" },
+  "mastercard": { color: "bg-red-500", abbr: "MC" },
+  "elo": { color: "bg-gray-700", abbr: "EL" },
+  "hipercard": { color: "bg-red-600", abbr: "HC" },
+  "credicard": { color: "bg-green-600", abbr: "CC" },
+  "porto seguro": { color: "bg-blue-700", abbr: "PS" },
+  "bmg": { color: "bg-orange-600", abbr: "BM" },
+  "stone": { color: "bg-green-500", abbr: "ST" },
+  "pagbank": { color: "bg-yellow-600", abbr: "PB" },
+  "pagseguro": { color: "bg-yellow-600", abbr: "PG" },
+  "chase": { color: "bg-blue-800", abbr: "CH" },
+  "citibank": { color: "bg-blue-600", abbr: "CT" },
+  "hsbc": { color: "bg-red-600", abbr: "HS" },
+  "goldman sachs": { color: "bg-blue-900", abbr: "GS" },
+  "barclays": { color: "bg-cyan-700", abbr: "BC" },
+  "revolut": { color: "bg-indigo-600", abbr: "RV" },
+  "wise": { color: "bg-green-500", abbr: "WS" },
+  "n26": { color: "bg-teal-600", abbr: "N2" },
+};
+
+const getBankInfo = (name: string) => {
+  const lower = name.toLowerCase();
+  for (const [key, val] of Object.entries(BANK_DATA)) {
+    if (lower.includes(key)) return val;
+  }
+  return { color: "bg-muted-foreground", abbr: name.slice(0, 2).toUpperCase() };
+};
+
+interface CardTransaction {
+  id: string;
+  desc: string;
+  value: number;
+  date: string;
+  category: string;
+}
+
+interface CreditCardData {
+  id: string;
+  bankName: string;
+  cardName: string;
+  limit: number;
+  usedAmount: number;
+  invoiceAmount: number;
+  dueDay: number;
+  closeDay: number;
+  transactions: CardTransaction[];
+  paidInvoices: { month: string; amount: number; paidAt: string }[];
+  futureInvoices: { month: string; amount: number }[];
+}
+
+const STORAGE_KEY = "sparky-credit-cards";
+
+const loadCards = (): CreditCardData[] => {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch { return []; }
+};
+const saveCards = (cards: CreditCardData[]) => localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
+
+const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+interface Props {
+  open: boolean;
+  onClose: () => void;
+}
+
+const CreditCardManager = ({ open, onClose }: Props) => {
+  const [cards, setCards] = useState<CreditCardData[]>(loadCards);
+  const [showAdd, setShowAdd] = useState(false);
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const [showPayment, setShowPayment] = useState(false);
+  const [payAmount, setPayAmount] = useState("");
+  const [payFull, setPayFull] = useState(true);
+
+  // New card form
+  const [newBank, setNewBank] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newLimit, setNewLimit] = useState("");
+  const [newDueDay, setNewDueDay] = useState("10");
+  const [newCloseDay, setNewCloseDay] = useState("3");
+
+  const update = (updated: CreditCardData[]) => { setCards(updated); saveCards(updated); };
+
+  const handleAddCard = () => {
+    if (!newBank.trim() || !newName.trim()) return;
+    const limit = parseFloat(newLimit.replace(/\D/g, "")) / 100 || 0;
+    const card: CreditCardData = {
+      id: crypto.randomUUID(),
+      bankName: newBank,
+      cardName: newName,
+      limit,
+      usedAmount: 0,
+      invoiceAmount: 0,
+      dueDay: parseInt(newDueDay) || 10,
+      closeDay: parseInt(newCloseDay) || 3,
+      transactions: [],
+      paidInvoices: [
+        { month: "Jan/2026", amount: 1250.00, paidAt: "10/01/2026" },
+        { month: "Fev/2026", amount: 980.50, paidAt: "10/02/2026" },
+      ],
+      futureInvoices: [
+        { month: "Abr/2026", amount: 320.00 },
+        { month: "Mai/2026", amount: 150.00 },
+      ],
+    };
+    update([...cards, card]);
+    setNewBank(""); setNewName(""); setNewLimit(""); setNewDueDay("10"); setNewCloseDay("3");
+    setShowAdd(false);
+  };
+
+  const handlePayInvoice = (cardId: string) => {
+    const amount = payFull
+      ? cards.find(c => c.id === cardId)?.invoiceAmount || 0
+      : parseFloat(payAmount.replace(/\D/g, "")) / 100;
+    update(cards.map(c => c.id === cardId ? {
+      ...c,
+      invoiceAmount: Math.max(0, c.invoiceAmount - amount),
+      usedAmount: Math.max(0, c.usedAmount - amount),
+      paidInvoices: [...c.paidInvoices, {
+        month: new Date().toLocaleDateString("pt-BR", { month: "short", year: "numeric" }),
+        amount,
+        paidAt: new Date().toLocaleDateString("pt-BR"),
+      }],
+    } : c));
+    setShowPayment(false);
+    setPayAmount("");
+  };
+
+  const handleDeleteCard = (id: string) => {
+    update(cards.filter(c => c.id !== id));
+    if (selectedCard === id) setSelectedCard(null);
+  };
+
+  if (!open) return null;
+
+  const activeCard = cards.find(c => c.id === selectedCard);
+
+  // Card detail view
+  if (activeCard) {
+    const available = activeCard.limit - activeCard.usedAmount;
+    const bankInfo = getBankInfo(activeCard.bankName);
+    const now = new Date();
+    const dueDate = new Date(now.getFullYear(), now.getMonth(), activeCard.dueDay);
+    if (dueDate < now) dueDate.setMonth(dueDate.getMonth() + 1);
+    const closeDate = new Date(now.getFullYear(), now.getMonth(), activeCard.closeDay);
+    if (closeDate < now) closeDate.setMonth(closeDate.getMonth() + 1);
+
+    return (
+      <div className="fixed inset-0 z-[60] flex items-end justify-center">
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedCard(null)} />
+        <div className="relative w-full max-w-lg animate-slide-up rounded-t-3xl bg-card border-t border-border p-5 pb-8 max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center gap-3 mb-4">
+            <button onClick={() => { setSelectedCard(null); setShowPayment(false); }} className="rounded-full p-1.5 text-muted-foreground hover:text-foreground active:scale-95">
+              <ArrowLeft size={20} />
+            </button>
+            <div className="flex items-center gap-2.5 flex-1">
+              <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center text-white text-xs font-bold", bankInfo.color)}>
+                {bankInfo.abbr}
+              </div>
+              <div>
+                <h2 className="text-base font-bold">{activeCard.cardName}</h2>
+                <p className="text-[10px] text-muted-foreground">{activeCard.bankName}</p>
+              </div>
+            </div>
+            <button onClick={() => handleDeleteCard(activeCard.id)} className="p-2 rounded-lg text-destructive hover:bg-destructive/10">
+              <X size={16} />
+            </button>
+          </div>
+
+          {/* Summary cards */}
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            <div className="card-zelo !py-3">
+              <p className="text-[10px] text-muted-foreground">Limite</p>
+              <p className="text-sm font-bold">{fmt(activeCard.limit)}</p>
+            </div>
+            <div className="card-zelo !py-3">
+              <p className="text-[10px] text-muted-foreground">Disponível</p>
+              <p className="text-sm font-bold text-success">{fmt(available)}</p>
+            </div>
+          </div>
+
+          {/* Dates */}
+          <div className="card-zelo mb-4 space-y-2">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Calendar size={14} className="text-warning" />
+                <span className="text-xs">Fechamento</span>
+              </div>
+              <span className="text-xs font-bold">Dia {activeCard.closeDay} — {closeDate.toLocaleDateString("pt-BR")}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Calendar size={14} className="text-destructive" />
+                <span className="text-xs">Vencimento</span>
+              </div>
+              <span className="text-xs font-bold">Dia {activeCard.dueDay} — {dueDate.toLocaleDateString("pt-BR")}</span>
+            </div>
+          </div>
+
+          {/* Current invoice */}
+          <div className="card-zelo mb-4">
+            <div className="flex justify-between items-center mb-3">
+              <div>
+                <p className="text-xs font-semibold">Fatura Atual</p>
+                <p className="text-[10px] text-muted-foreground">Venc. {dueDate.toLocaleDateString("pt-BR")}</p>
+              </div>
+              <p className="text-lg font-bold text-warning">{fmt(activeCard.invoiceAmount)}</p>
+            </div>
+
+            {!showPayment ? (
+              <button
+                onClick={() => setShowPayment(true)}
+                className="w-full rounded-xl bg-success/15 py-2.5 text-xs font-semibold text-success active:scale-[0.98] transition-all"
+              >
+                💳 Pagar Fatura
+              </button>
+            ) : (
+              <div className="space-y-3 border-t border-border pt-3">
+                <div className="flex gap-2">
+                  <button onClick={() => setPayFull(true)} className={cn("flex-1 rounded-lg py-2 text-xs font-medium transition-all", payFull ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>Total</button>
+                  <button onClick={() => setPayFull(false)} className={cn("flex-1 rounded-lg py-2 text-xs font-medium transition-all", !payFull ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>Parcial</button>
+                </div>
+                {!payFull && (
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="R$ 0,00"
+                    value={payAmount}
+                    onChange={(e) => {
+                      const nums = e.target.value.replace(/\D/g, "");
+                      const val = (parseInt(nums) || 0) / 100;
+                      setPayAmount(val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }));
+                    }}
+                    className="w-full rounded-xl border border-border bg-muted/30 px-3 py-2.5 text-sm outline-none focus:border-primary"
+                  />
+                )}
+                <div className="flex gap-2">
+                  <button onClick={() => setShowPayment(false)} className="flex-1 rounded-lg border border-border py-2 text-xs text-muted-foreground">Cancelar</button>
+                  <button onClick={() => handlePayInvoice(activeCard.id)} className="flex-1 rounded-lg bg-success py-2 text-xs font-semibold text-white">Confirmar</button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Gastos do mês */}
+          <div className="card-zelo mb-4">
+            <p className="text-xs font-semibold mb-2 flex items-center gap-1.5">
+              <Receipt size={13} className="text-primary" /> Gastos do Mês
+            </p>
+            <p className="text-lg font-bold text-foreground mb-3">{fmt(activeCard.usedAmount)}</p>
+            {activeCard.transactions.length === 0 ? (
+              <p className="text-[10px] text-muted-foreground text-center py-3">Nenhuma transação neste período</p>
+            ) : (
+              <div className="space-y-2">
+                {activeCard.transactions.map(t => (
+                  <div key={t.id} className="flex justify-between items-center py-1.5 border-b border-border/50 last:border-0">
+                    <div>
+                      <p className="text-xs font-medium">{t.desc}</p>
+                      <p className="text-[10px] text-muted-foreground">{t.date} • {t.category}</p>
+                    </div>
+                    <p className="text-xs font-bold text-destructive">-{fmt(t.value)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Future invoices */}
+          {activeCard.futureInvoices.length > 0 && (
+            <div className="card-zelo mb-4">
+              <p className="text-xs font-semibold mb-2 flex items-center gap-1.5">
+                <Calendar size={13} className="text-warning" /> Faturas Futuras
+              </p>
+              <div className="space-y-2">
+                {activeCard.futureInvoices.map((inv, i) => (
+                  <div key={i} className="flex justify-between items-center py-1.5 border-b border-border/50 last:border-0">
+                    <span className="text-xs text-muted-foreground">{inv.month}</span>
+                    <span className="text-xs font-bold">{fmt(inv.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Paid invoices */}
+          {activeCard.paidInvoices.length > 0 && (
+            <div className="card-zelo">
+              <p className="text-xs font-semibold mb-2 flex items-center gap-1.5">
+                <DollarSign size={13} className="text-success" /> Faturas Pagas
+              </p>
+              <div className="space-y-2">
+                {activeCard.paidInvoices.map((inv, i) => (
+                  <div key={i} className="flex justify-between items-center py-1.5 border-b border-border/50 last:border-0">
+                    <div>
+                      <span className="text-xs">{inv.month}</span>
+                      <p className="text-[10px] text-muted-foreground">Pago em {inv.paidAt}</p>
+                    </div>
+                    <span className="text-xs font-bold text-success">{fmt(inv.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Add card form
+  if (showAdd) {
+    const bankInfo = getBankInfo(newBank);
+    return (
+      <div className="fixed inset-0 z-[60] flex items-end justify-center">
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAdd(false)} />
+        <div className="relative w-full max-w-lg animate-slide-up rounded-t-3xl bg-card border-t border-border p-5 pb-8 max-h-[85vh] overflow-y-auto">
+          <div className="flex items-center gap-3 mb-5">
+            <button onClick={() => setShowAdd(false)} className="rounded-full p-1.5 text-muted-foreground hover:text-foreground active:scale-95">
+              <ArrowLeft size={20} />
+            </button>
+            <div>
+              <h2 className="text-lg font-bold">Novo Cartão</h2>
+              <p className="text-[10px] text-muted-foreground">Adicione um cartão de crédito</p>
+            </div>
+          </div>
+
+          {/* Bank preview */}
+          {newBank && (
+            <div className="flex items-center gap-3 mb-4 p-3 rounded-xl bg-muted/30 border border-border">
+              <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center text-white text-sm font-bold", bankInfo.color)}>
+                {bankInfo.abbr}
+              </div>
+              <div>
+                <p className="text-sm font-bold">{newBank || "Banco"}</p>
+                <p className="text-[10px] text-muted-foreground">{newName || "Nome do cartão"}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <div>
+              <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Banco / Instituição*</label>
+              <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/30 px-3 py-2.5">
+                <Building2 size={14} className="text-muted-foreground" />
+                <input value={newBank} onChange={(e) => setNewBank(e.target.value)} placeholder="Ex: Nubank, Itaú, Inter..." className="bg-transparent text-sm flex-1 outline-none" />
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Nome do Cartão*</label>
+              <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/30 px-3 py-2.5">
+                <CreditCard size={14} className="text-muted-foreground" />
+                <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Ex: Cartão Principal" className="bg-transparent text-sm flex-1 outline-none" />
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Limite do Cartão</label>
+              <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/30 px-3 py-2.5">
+                <Wallet size={14} className="text-muted-foreground" />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={newLimit}
+                  onChange={(e) => {
+                    const nums = e.target.value.replace(/\D/g, "");
+                    const val = (parseInt(nums) || 0) / 100;
+                    setNewLimit(val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }));
+                  }}
+                  placeholder="R$ 0,00"
+                  className="bg-transparent text-sm flex-1 outline-none"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Dia Fechamento</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={newCloseDay}
+                  onChange={(e) => setNewCloseDay(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                  className="w-full rounded-xl border border-border bg-muted/30 px-3 py-2.5 text-sm outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Dia Vencimento</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={newDueDay}
+                  onChange={(e) => setNewDueDay(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                  className="w-full rounded-xl border border-border bg-muted/30 px-3 py-2.5 text-sm outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3 mt-5">
+            <button onClick={() => setShowAdd(false)} className="flex-1 rounded-xl border border-border py-3 text-sm font-medium text-muted-foreground active:scale-[0.98]">Cancelar</button>
+            <button onClick={handleAddCard} className="flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground active:scale-[0.98]">Salvar Cartão</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Main list view
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end justify-center">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-lg animate-slide-up rounded-t-3xl bg-card border-t border-border p-5 pb-8 max-h-[85vh] overflow-y-auto">
+        <div className="flex items-center gap-3 mb-5">
+          <button onClick={onClose} className="rounded-full p-1.5 text-muted-foreground hover:text-foreground active:scale-95">
+            <ArrowLeft size={20} />
+          </button>
+          <div className="flex-1">
+            <h2 className="text-lg font-bold">Meus Cartões</h2>
+            <p className="text-[10px] text-muted-foreground">Gerencie seus cartões de crédito</p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setShowAdd(true)}
+          className="w-full rounded-xl bg-primary/10 border border-primary/20 py-3 text-sm font-semibold text-primary flex items-center justify-center gap-2 active:scale-[0.98] transition-all mb-4"
+        >
+          <Plus size={16} /> Adicionar Cartão
+        </button>
+
+        {cards.length === 0 ? (
+          <div className="flex flex-col items-center py-10 text-center">
+            <div className="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+              <CreditCard size={28} className="text-muted-foreground" />
+            </div>
+            <p className="text-sm font-medium text-muted-foreground">Nenhum cartão cadastrado</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Adicione seu primeiro cartão de crédito</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {cards.map(card => {
+              const bankInfo = getBankInfo(card.bankName);
+              const available = card.limit - card.usedAmount;
+              const now = new Date();
+              const dueDate = new Date(now.getFullYear(), now.getMonth(), card.dueDay);
+              if (dueDate < now) dueDate.setMonth(dueDate.getMonth() + 1);
+
+              return (
+                <button
+                  key={card.id}
+                  onClick={() => setSelectedCard(card.id)}
+                  className="w-full text-left card-zelo !p-3.5 active:scale-[0.98] transition-all"
+                >
+                  <div className="flex items-center gap-3 mb-2.5">
+                    <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0", bankInfo.color)}>
+                      {bankInfo.abbr}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold truncate">{card.cardName}</p>
+                      <p className="text-[10px] text-muted-foreground">{card.bankName}</p>
+                    </div>
+                    <ChevronRight size={16} className="text-muted-foreground shrink-0" />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <p className="text-[9px] text-muted-foreground">Disponível</p>
+                      <p className="text-xs font-bold text-success">{fmt(available)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] text-muted-foreground">Fatura</p>
+                      <p className="text-xs font-bold text-warning">{fmt(card.invoiceAmount)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] text-muted-foreground">Venc.</p>
+                      <p className="text-xs font-bold">{dueDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</p>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default CreditCardManager;
