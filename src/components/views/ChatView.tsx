@@ -32,12 +32,23 @@ const ChatView = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Generate a smart title from the first user message
+  const generateTitle = (msgs: Msg[]): string => {
+    const firstUser = msgs.find(m => m.role === "user");
+    if (!firstUser) return "Nova conversa";
+    const text = firstUser.content.trim();
+    // Truncate to first sentence or 50 chars
+    const sentence = text.split(/[.!?\n]/)[0].trim();
+    if (sentence.length <= 50) return sentence;
+    return sentence.slice(0, 47) + "...";
+  };
+
   // Save current conversation whenever messages change
   useEffect(() => {
     if (!activeId || messages.length === 0) return;
     setConversations(prev => {
       const updated = prev.map(c =>
-        c.id === activeId ? { ...c, messages, title: messages[0]?.content.slice(0, 40) || "Nova conversa" } : c
+        c.id === activeId ? { ...c, messages, title: generateTitle(messages) } : c
       );
       saveConversations(updated);
       return updated;
