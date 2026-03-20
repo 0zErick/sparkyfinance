@@ -20,6 +20,9 @@ entriesExitsData[19] = { day: 20, entradas: 800, saidas: 2400 };
 const SALDO = 3247.50;
 const DIAS_RESTANTES = 12;
 
+const fmt = (v: number) =>
+  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
+
 const SpendingOverview = () => {
   const [simOpen, setSimOpen] = useState(false);
   const [simValue, setSimValue] = useState(0);
@@ -27,9 +30,6 @@ const SpendingOverview = () => {
   const orcamentoDiarioAtual = SALDO / DIAS_RESTANTES;
   const orcamentoDiarioNovo = Math.max(0, (SALDO - simValue) / DIAS_RESTANTES);
   const reducao = orcamentoDiarioAtual - orcamentoDiarioNovo;
-
-  const formatCurrency = (v: number) =>
-    v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   return (
     <div className="space-y-3">
@@ -54,7 +54,7 @@ const SpendingOverview = () => {
             onClick={() => setSimOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-full bg-background border border-border px-3 py-1 text-[11px] font-semibold text-primary cursor-pointer active:scale-95 transition-transform"
           >
-            <Calculator size={12} />
+            <Calculator size={12} className="text-primary" />
             Simular
           </button>
         </div>
@@ -105,14 +105,14 @@ const SpendingOverview = () => {
               <div className="flex items-center justify-between rounded-xl bg-muted/50 border border-border px-4 py-3">
                 <div>
                   <p className="text-[10px] text-muted-foreground">Orçamento diário atual</p>
-                  <p className="text-sm font-bold tabular-nums text-success">{formatCurrency(orcamentoDiarioAtual)}</p>
+                  <p className="text-sm font-bold tabular-nums text-success">{fmt(orcamentoDiarioAtual)}</p>
                 </div>
                 <span className="text-[10px] text-muted-foreground">por dia</span>
               </div>
               <div className="flex items-center justify-between rounded-xl bg-muted/50 border border-border px-4 py-3">
                 <div>
                   <p className="text-[10px] text-muted-foreground">Novo orçamento diário</p>
-                  <p className={`text-sm font-bold tabular-nums ${simValue > 0 ? "text-warning" : "text-success"}`}>{formatCurrency(orcamentoDiarioNovo)}</p>
+                  <p className={`text-sm font-bold tabular-nums ${simValue > 0 ? "text-warning" : "text-success"}`}>{fmt(orcamentoDiarioNovo)}</p>
                 </div>
                 <span className="text-[10px] text-muted-foreground">por dia</span>
               </div>
@@ -120,7 +120,7 @@ const SpendingOverview = () => {
                 <div className="flex items-center justify-between rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3">
                   <div>
                     <p className="text-[10px] text-muted-foreground">Redução diária</p>
-                    <p className="text-sm font-bold tabular-nums text-destructive">- {formatCurrency(reducao)}</p>
+                    <p className="text-sm font-bold tabular-nums text-destructive">- {fmt(reducao)}</p>
                   </div>
                   <span className="text-[10px] text-destructive font-medium">por dia</span>
                 </div>
@@ -139,7 +139,7 @@ const SpendingOverview = () => {
             </div>
             <span className="text-[10px] text-muted-foreground font-medium">Receita Mensal</span>
           </div>
-          <p className="text-lg font-bold tabular-nums">R$ 6.500</p>
+          <p className="text-lg font-bold tabular-nums">R$ 6.500,00</p>
           <span className="text-[10px] text-success font-medium flex items-center gap-0.5">
             <ArrowUpRight size={10} /> +8% vs mês passado
           </span>
@@ -151,7 +151,7 @@ const SpendingOverview = () => {
             </div>
             <span className="text-[10px] text-muted-foreground font-medium">Gasto Mensal</span>
           </div>
-          <p className="text-lg font-bold tabular-nums">R$ 3.252</p>
+          <p className="text-lg font-bold tabular-nums">R$ 3.252,50</p>
           <span className="text-[10px] text-destructive font-medium flex items-center gap-0.5">
             <ArrowUpRight size={10} className="rotate-90" /> +12% vs mês passado
           </span>
@@ -217,7 +217,7 @@ const SpendingOverview = () => {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[11px] font-medium truncate">Personalizado</p>
-              <p className="text-sm font-bold tabular-nums">R$ 1.969</p>
+              <p className="text-sm font-bold tabular-nums">R$ 1.969,00</p>
             </div>
           </div>
           <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
@@ -260,7 +260,7 @@ const SpendingOverview = () => {
               <Tooltip
                 contentStyle={{ background: "hsl(0 0% 8.6%)", border: "1px solid hsl(0 0% 15%)", borderRadius: "12px", fontSize: "11px" }}
                 labelFormatter={(v) => `DIA ${v}`}
-                formatter={(value: number, name: string) => [`R$ ${value.toLocaleString("pt-BR")}`, name === "entradas" ? "Entradas" : "Saídas"]}
+                formatter={(value: number, name: string) => [fmt(value), name === "entradas" ? "Entradas" : "Saídas"]}
               />
               <Bar dataKey="entradas" fill="hsl(var(--success))" radius={[3, 3, 0, 0]} />
               <Bar dataKey="saidas" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />

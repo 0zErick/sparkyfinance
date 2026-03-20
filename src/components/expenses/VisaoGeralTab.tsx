@@ -6,21 +6,21 @@ import BudgetAlert from "@/components/expenses/BudgetAlert";
 import SyncBanner from "@/components/expenses/SyncBanner";
 
 const balanceHistory = [
-  { name: "Jan", value: 3200 }, { name: "Fev", value: 2800 },
-  { name: "Mar", value: 3500 }, { name: "Abr", value: 3100 },
-  { name: "Mai", value: 4200 }, { name: "Jun", value: 3800 },
+  { name: "Jan", value: 3200.00 }, { name: "Fev", value: 2800.00 },
+  { name: "Mar", value: 3500.00 }, { name: "Abr", value: 3100.00 },
+  { name: "Mai", value: 4200.00 }, { name: "Jun", value: 3800.00 },
 ];
 
 const projectionData = [
-  { name: "Sem 1", value: 4800 }, { name: "Sem 2", value: 4200 },
-  { name: "Sem 3", value: 3600 }, { name: "Sem 4", value: 3247 },
+  { name: "Sem 1", value: 4800.00 }, { name: "Sem 2", value: 4200.00 },
+  { name: "Sem 3", value: 3600.00 }, { name: "Sem 4", value: 3247.50 },
 ];
 
 const dailyPower = [
-  { name: "Seg", value: 150 }, { name: "Ter", value: 120 },
-  { name: "Qua", value: 95 }, { name: "Qui", value: 108 },
-  { name: "Sex", value: 130 }, { name: "Sáb", value: 85 },
-  { name: "Dom", value: 108 },
+  { name: "Seg", value: 150.00 }, { name: "Ter", value: 120.00 },
+  { name: "Qua", value: 95.00 }, { name: "Qui", value: 108.25 },
+  { name: "Sex", value: 130.00 }, { name: "Sáb", value: 85.00 },
+  { name: "Dom", value: 108.25 },
 ];
 
 const VisaoGeralTab = () => (
