@@ -72,7 +72,7 @@ const ExpensesView = () => {
         <Plus size={24} strokeWidth={2.5} />
       </button>
 
-      <AddExpenseModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      <AddExpenseModal open={modalOpen} onClose={() => setModalOpen(false)} type="expense" />
       <FinancialSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <DebtManagementModal open={debtOpen} onClose={() => setDebtOpen(false)} />
     </>
