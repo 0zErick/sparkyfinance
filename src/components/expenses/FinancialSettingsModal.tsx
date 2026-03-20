@@ -14,6 +14,7 @@ const FinancialSettingsModal = ({ open, onClose }: FinancialSettingsModalProps) 
   const [weekendWeight, setWeekendWeight] = useState(1.5);
   const [lowBalanceAlert, setLowBalanceAlert] = useState("500");
   const [alertsEnabled, setAlertsEnabled] = useState(true);
+  const [pluggyOpen, setPluggyOpen] = useState(false);
 
   if (!open) return null;
 
