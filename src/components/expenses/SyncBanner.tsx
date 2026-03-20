@@ -40,16 +40,13 @@ const SyncBanner = () => {
     e.target.value = "";
   };
 
-  const handleMetas = () => {
-    alert("Funcionalidade de Metas em desenvolvimento.");
-  };
 
   const quickActions = [
     { label: "Despesa", icon: TrendingDown, bg: "bg-destructive/15", color: "text-destructive", onClick: handleDespesa },
     { label: "Receita", icon: TrendingUp, bg: "bg-success/15", color: "text-success", onClick: handleReceita },
     { label: "Escanear", icon: ScanLine, bg: "bg-primary/15", color: "text-primary", onClick: handleScan },
     { label: "Importar", icon: Download, bg: "bg-[hsl(280_60%_35%)]/20", color: "text-[hsl(280_60%_65%)]", onClick: handleImport },
-    { label: "Metas", icon: Target, bg: "bg-warning/15", color: "text-warning", onClick: handleMetas },
+    { label: "Metas", icon: Target, bg: "bg-warning/15", color: "text-warning", onClick: () => {} },
   ];
 
   return (
