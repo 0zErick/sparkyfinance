@@ -202,7 +202,7 @@ const PlanejamentoTab = () => {
       </div>
 
       {/* Smart Tips */}
-      <div className="card-zelo fade-in-up stagger-1">
+      <div className="card-zelo fade-in-up stagger-1 border-l-warning">
         <div className="flex items-center gap-2 mb-3">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-warning/15">
             <Lightbulb size={14} className="text-warning" />
