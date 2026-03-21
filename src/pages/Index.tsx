@@ -74,7 +74,6 @@ const Index = () => {
       style={{
         height: '100dvh',
         paddingTop: 'env(safe-area-inset-top, 20px)',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         overscrollBehavior: 'none',
       }}
     >

@@ -86,6 +86,8 @@ const CreditCardManager = ({ open, onClose }: Props) => {
   const [payFull, setPayFull] = useState(true);
 
   const [newBank, setNewBank] = useState("");
+  const [customBankName, setCustomBankName] = useState("");
+  const [showCustomBank, setShowCustomBank] = useState(false);
   const [newName, setNewName] = useState("");
   const [newLimit, setNewLimit] = useState("");
   const [newDueDay, setNewDueDay] = useState("10");
@@ -96,10 +98,11 @@ const CreditCardManager = ({ open, onClose }: Props) => {
   const update = (updated: CreditCardData[]) => { setCards(updated); saveCards(updated); };
 
   const handleAddCard = () => {
-    if (!newBank.trim() || !newName.trim()) return;
+    const bankName = showCustomBank ? customBankName.trim() : newBank.trim();
+    if (!bankName || !newName.trim()) return;
     const limit = parseFloat(newLimit.replace(/\D/g, "")) / 100 || 0;
     const card: CreditCardData = {
-      id: crypto.randomUUID(), bankName: newBank, cardName: newName,
+      id: crypto.randomUUID(), bankName, cardName: newName,
       cardType: newType, cardFlag: newFlag,
       limit, usedAmount: 0, invoiceAmount: 0,
       dueDay: parseInt(newDueDay) || 10, closeDay: parseInt(newCloseDay) || 3,
@@ -107,7 +110,7 @@ const CreditCardManager = ({ open, onClose }: Props) => {
       paidInvoices: [], futureInvoices: [],
     };
     update([...cards, card]);
-    setNewBank(""); setNewName(""); setNewLimit(""); setNewDueDay("10"); setNewCloseDay("3"); setNewType("Crédito"); setNewFlag("");
+    setNewBank(""); setCustomBankName(""); setShowCustomBank(false); setNewName(""); setNewLimit(""); setNewDueDay("10"); setNewCloseDay("3"); setNewType("Crédito"); setNewFlag("");
     setShowAdd(false);
   };
 
@@ -274,11 +277,11 @@ const CreditCardManager = ({ open, onClose }: Props) => {
           </div>
 
           {/* Preview */}
-          {newBank && (
+          {(showCustomBank ? customBankName : newBank) && (
             <div className="flex items-center gap-3 mb-4 p-3 rounded-xl bg-muted/30 border border-border">
-              <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center text-white text-sm font-bold", bankInfo.color)}>{bankInfo.abbr}</div>
+              <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center text-white text-sm font-bold", getBankInfo(showCustomBank ? customBankName : newBank).color)}>{getBankInfo(showCustomBank ? customBankName : newBank).abbr}</div>
               <div>
-                <p className="text-sm font-bold">{newBank}</p>
+                <p className="text-sm font-bold">{showCustomBank ? customBankName : newBank}</p>
                 <p className="text-[10px] text-muted-foreground">{newName || "Nome do cartão"} {newFlag && `• ${newFlag}`}</p>
               </div>
             </div>
@@ -312,24 +315,30 @@ const CreditCardManager = ({ open, onClose }: Props) => {
               <label className="text-[10px] text-muted-foreground font-medium mb-2 block">Instituição Bancária*</label>
               <div className="grid grid-cols-4 gap-2">
                 {BANK_OPTIONS.map(bank => (
-                  <button key={bank.name} onClick={() => setNewBank(bank.name)}
+                  <button key={bank.name} onClick={() => { setNewBank(bank.name); setShowCustomBank(false); setCustomBankName(""); }}
                     className={cn("flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 text-[10px] font-medium transition-all border",
-                      newBank === bank.name ? "border-primary bg-primary/10" : "border-border bg-muted/20 hover:border-primary/40")}>
+                      newBank === bank.name && !showCustomBank ? "border-primary bg-primary/10" : "border-border bg-muted/20 hover:border-primary/40")}>
                     <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center text-white text-[9px] font-bold", bank.color)}>{bank.abbr}</div>
                     <span className="truncate w-full text-center">{bank.name}</span>
                   </button>
                 ))}
-                <button onClick={() => setNewBank("Outro")}
+                <button onClick={() => { setShowCustomBank(true); setNewBank(""); }}
                   className={cn("flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 text-[10px] font-medium transition-all border",
-                    !BANK_OPTIONS.find(b => b.name === newBank) && newBank ? "border-primary bg-primary/10" : "border-border bg-muted/20 hover:border-primary/40")}>
+                    showCustomBank ? "border-primary bg-primary/10" : "border-border bg-muted/20 hover:border-primary/40")}>
                   <div className="h-7 w-7 rounded-lg flex items-center justify-center bg-muted text-muted-foreground text-[9px] font-bold">+</div>
                   <span>Outro</span>
                 </button>
               </div>
-              {newBank === "Outro" && (
+              {showCustomBank && (
                 <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/30 px-3 py-2.5 mt-2">
                   <Building2 size={14} className="text-muted-foreground" />
-                  <input value={newBank === "Outro" ? "" : newBank} onChange={(e) => setNewBank(e.target.value)} placeholder="Nome do banco..." className="bg-transparent text-sm flex-1 outline-none" />
+                  <input
+                    value={customBankName}
+                    onChange={(e) => setCustomBankName(e.target.value)}
+                    placeholder="Nome do banco..."
+                    className="bg-transparent text-sm flex-1 outline-none"
+                    autoFocus
+                  />
                 </div>
               )}
             </div>
