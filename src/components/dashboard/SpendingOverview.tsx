@@ -51,6 +51,9 @@ const SpendingOverview = ({ hideValues = false }: SpendingOverviewProps) => {
   });
   const { data, available, daysLeft } = useFinancialData();
 
+  useDockVisibility(simOpen);
+  useDockVisibility(infoPopup !== null);
+
   useEffect(() => {
     localStorage.setItem("sparky-spend-percent", String(spendPercent));
   }, [spendPercent]);
@@ -83,64 +86,98 @@ const SpendingOverview = ({ hideValues = false }: SpendingOverviewProps) => {
     return points.length > 0 ? points : [{ d: today, v: data.balance }];
   };
 
-  const balanceHistory = buildBalanceHistory();
-  const entriesExitsData = Array.from({ length: 31 }, (_, i) => ({ day: i + 1, entradas: 0, saidas: 0 }));
-  if (hasData) {
-    const now = new Date();
-    data.transactions.forEach(t => {
-      const d = new Date(t.date);
-      if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
-        const day = d.getDate() - 1;
-        if (day >= 0 && day < 31) {
-          if (t.type === "income") entriesExitsData[day].entradas += t.amount;
-          else entriesExitsData[day].saidas += t.amount;
-        }
-      }
-    });
-  }
-
   const masked = "••••••";
 
-  return (
-    <div className="space-y-3">
-      {/* Pode gastar hoje */}
-      <div className="card-zelo fade-in-up relative overflow-hidden">
-        <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-success/5" />
-        <div className="absolute -right-2 -top-2 h-12 w-12 rounded-full bg-success/8" />
-        <div className="flex items-center justify-between mb-1">
+  /* ── Pode Gastar Hoje Card ── */
+  const renderPodeGastarCard = () => (
+    <div className="card-zelo fade-in-up relative overflow-hidden">
+      {/* Decorative circles */}
+      <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-success/5" />
+      <div className="absolute -right-2 -top-2 h-12 w-12 rounded-full bg-success/8" />
+
+      {/* Header row: title + info */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-success/15">
+            <Wallet size={14} className="text-success" />
+          </div>
           <p className="text-label">Pode Gastar Hoje</p>
-          <button
-            onClick={() => setInfoPopup("podeGastar")}
-            className="p-0.5 rounded text-muted-foreground/50 hover:text-muted-foreground active:scale-90 transition-all"
-          >
-            <Info size={11} />
-          </button>
         </div>
-        <div className="flex items-end gap-3">
-          <p className="text-4xl font-extrabold tracking-tight tabular-nums text-success">
-            {hideValues ? masked : fmt(dailyBudget).replace("R$\u00a0", "R$ ")}
-          </p>
-          {hasData && !hideValues && (
-            <span className={`mb-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${isHealthy ? "bg-success/15 text-success" : "bg-warning/15 text-warning"}`}>
-              {isHealthy ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
-              {isHealthy ? "Saudável" : "Atenção"}
-            </span>
-          )}
-        </div>
-        <p className="text-[11px] text-muted-foreground mt-2">
+        <button
+          onClick={() => setInfoPopup("podeGastar")}
+          className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground hover:text-foreground active:scale-90 transition-all"
+        >
+          <Info size={12} />
+        </button>
+      </div>
+
+      {/* Main value */}
+      <div className="flex items-end gap-3 mb-1">
+        <p className="text-4xl font-extrabold tracking-tight tabular-nums text-success">
+          {hideValues ? masked : fmt(dailyBudget).replace("R$\u00a0", "R$ ")}
+        </p>
+        {hasData && !hideValues && (
+          <span className={`mb-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${isHealthy ? "bg-success/15 text-success" : "bg-warning/15 text-warning"}`}>
+            {isHealthy ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+            {isHealthy ? "Saudável" : "Atenção"}
+          </span>
+        )}
+      </div>
+
+      {/* Subtitle with editable percent */}
+      <div className="flex items-center gap-1.5 mb-3">
+        <p className="text-[11px] text-muted-foreground">
           {hasData && !hideValues
             ? <>{spendPercent}% do saldo disponível (<span className="text-foreground font-medium">{fmt(spendablePool)}</span>)</>
-            : hideValues ? "Valores ocultos" : "Adicione sua renda e despesas para ver o orçamento diário"
+            : hideValues ? "Valores ocultos" : "Adicione sua renda e despesas"
           }
         </p>
         {!hideValues && (
-          <div className="mt-2">
-            <button onClick={() => setSimOpen(true)} className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 border border-primary/30 px-3.5 py-1.5 text-[11px] font-semibold text-primary cursor-pointer active:scale-95 transition-all hover:bg-primary/20">
-              <CalculatorIcon /> Simular
-            </button>
-          </div>
+          <button
+            onClick={() => setEditingPercent(!editingPercent)}
+            className="flex h-5 w-5 items-center justify-center rounded-md bg-muted/60 text-muted-foreground hover:text-foreground active:scale-90 transition-all"
+          >
+            <Pencil size={10} />
+          </button>
         )}
       </div>
+
+      {/* Inline percent editor */}
+      {editingPercent && (
+        <div className="mb-3 rounded-xl bg-muted/40 border border-border p-3 space-y-2 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-muted-foreground font-medium">Percentual de gasto</span>
+            <span className="text-xs font-bold text-primary tabular-nums">{spendPercent}%</span>
+          </div>
+          <input
+            type="range"
+            min={5}
+            max={50}
+            step={5}
+            value={spendPercent}
+            onChange={(e) => setSpendPercent(Number(e.target.value))}
+            className="w-full accent-primary h-1.5"
+          />
+          <div className="flex justify-between text-[9px] text-muted-foreground">
+            <span>5% (conservador)</span>
+            <span>50% (agressivo)</span>
+          </div>
+        </div>
+      )}
+
+      {/* Actions row */}
+      {!hideValues && (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setSimOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 border border-primary/30 px-3.5 py-1.5 text-[11px] font-semibold text-primary cursor-pointer active:scale-95 transition-all hover:bg-primary/20"
+          >
+            <CalculatorIcon /> Simular
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
       {/* Simulator Modal */}
       {simOpen && (
