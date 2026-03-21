@@ -98,10 +98,11 @@ const CreditCardManager = ({ open, onClose }: Props) => {
   const update = (updated: CreditCardData[]) => { setCards(updated); saveCards(updated); };
 
   const handleAddCard = () => {
-    if (!newBank.trim() || !newName.trim()) return;
+    const bankName = showCustomBank ? customBankName.trim() : newBank.trim();
+    if (!bankName || !newName.trim()) return;
     const limit = parseFloat(newLimit.replace(/\D/g, "")) / 100 || 0;
     const card: CreditCardData = {
-      id: crypto.randomUUID(), bankName: newBank, cardName: newName,
+      id: crypto.randomUUID(), bankName, cardName: newName,
       cardType: newType, cardFlag: newFlag,
       limit, usedAmount: 0, invoiceAmount: 0,
       dueDay: parseInt(newDueDay) || 10, closeDay: parseInt(newCloseDay) || 3,
@@ -109,7 +110,7 @@ const CreditCardManager = ({ open, onClose }: Props) => {
       paidInvoices: [], futureInvoices: [],
     };
     update([...cards, card]);
-    setNewBank(""); setNewName(""); setNewLimit(""); setNewDueDay("10"); setNewCloseDay("3"); setNewType("Crédito"); setNewFlag("");
+    setNewBank(""); setCustomBankName(""); setShowCustomBank(false); setNewName(""); setNewLimit(""); setNewDueDay("10"); setNewCloseDay("3"); setNewType("Crédito"); setNewFlag("");
     setShowAdd(false);
   };
 
