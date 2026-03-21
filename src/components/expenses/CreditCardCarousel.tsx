@@ -245,7 +245,7 @@ const CreditCardCarousel = () => {
           </div>
 
           {/* Transactions with edit/delete */}
-          <div className="card-zelo mb-4 border-l-primary">
+          <div className="card-zelo mb-4">
             <p className="text-xs font-semibold mb-2 flex items-center gap-1.5">
               <Receipt size={13} className="text-primary" /> Gastos do Mês
             </p>
