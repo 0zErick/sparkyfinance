@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { useFinancialData, fmt } from "@/hooks/useFinancialData";
 import { usePoints } from "@/hooks/usePoints";
 import { toast } from "sonner";
+import { useDockVisibility } from "@/hooks/useDockVisibility";
 
 interface Subscription {
   id: string;
@@ -49,6 +50,7 @@ const SubscriptionsCard = () => {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const { data, updateData } = useFinancialData();
   const { awardPoints, removePoints } = usePoints();
+  useDockVisibility(showAdd);
 
   const update = (updated: Subscription[]) => { setSubs(updated); saveSubs(updated); };
 
@@ -114,7 +116,7 @@ const SubscriptionsCard = () => {
       balance: data.balance + sub.amount,
       transactions: updatedTx,
     });
-    await removePoints("bill_paid");
+    await removePoints("bill_paid", `Pagou assinatura: ${sub.name}`);
     toast.success(`${sub.name} desmarcada — estorno e pontos removidos`);
   };
 

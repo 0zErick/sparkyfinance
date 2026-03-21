@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Wifi, WifiOff, RefreshCw, Building2, Loader2, CheckCircle2 } from "lucide-react";
 import { usePluggy } from "@/hooks/usePluggy";
+import { useDockVisibility } from "@/hooks/useDockVisibility";
 
 interface PluggyConnectModalProps {
   open: boolean;
@@ -20,6 +21,7 @@ const PluggyConnectModal = ({ open, onClose }: PluggyConnectModalProps) => {
   } = usePluggy();
 
   const [widgetOpen, setWidgetOpen] = useState(false);
+  useDockVisibility(open);
   const [connectToken, setConnectToken] = useState<string | null>(null);
 
   useEffect(() => {

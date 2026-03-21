@@ -72,7 +72,12 @@ export const useProfile = () => {
   }, [isDemo]);
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    if (isDemo || !profile) return;
+    if (!profile) return;
+    if (isDemo) {
+      // Update locally for demo mode
+      setProfile(prev => prev ? { ...prev, ...updates } : prev);
+      return;
+    }
     const { data } = await supabase
       .from("profiles")
       .update(updates)

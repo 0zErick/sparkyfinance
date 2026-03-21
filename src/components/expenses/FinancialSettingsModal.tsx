@@ -3,6 +3,7 @@ import { X, Link2, Trash2, AlertTriangle, Info, Bell, BellOff, CreditCard, Calen
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useFinancialData } from "@/hooks/useFinancialData";
+import { useDockVisibility } from "@/hooks/useDockVisibility";
 
 interface FinancialSettingsModalProps {
   open: boolean;
@@ -40,6 +41,7 @@ const loadSettings = (): FinSettings => {
 
 const FinancialSettingsModal = ({ open, onClose }: FinancialSettingsModalProps) => {
   const [settings, setSettings] = useState<FinSettings>(loadSettings);
+  useDockVisibility(open);
   const [confirmClear, setConfirmClear] = useState(false);
   const [showConnectionPopup, setShowConnectionPopup] = useState(false);
   const [showReserveInfo, setShowReserveInfo] = useState(false);

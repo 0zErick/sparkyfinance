@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useFinancialData } from "@/hooks/useFinancialData";
+import { useDockVisibility } from "@/hooks/useDockVisibility";
 
 interface Transaction {
   id: string;
@@ -22,6 +23,7 @@ interface ImportModalProps {
 
 const ImportModal = ({ open, onClose }: ImportModalProps) => {
   const [step, setStep] = useState<"input" | "review">("input");
+  useDockVisibility(open);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
