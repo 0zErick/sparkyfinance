@@ -49,6 +49,16 @@ const FLAG_OPTIONS = [
 
 const CARD_TYPES = ["Crédito", "Débito", "Múltiplo"];
 
+const RANDOM_COLORS = [
+  "bg-emerald-600", "bg-violet-600", "bg-rose-600", "bg-amber-600",
+  "bg-cyan-600", "bg-indigo-600", "bg-teal-600", "bg-fuchsia-600",
+  "bg-lime-600", "bg-pink-600",
+];
+
+const getRandomColor = () => RANDOM_COLORS[Math.floor(Math.random() * RANDOM_COLORS.length)];
+
+const capitalize = (s: string) => s.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+
 const getBankInfo = (name: string) => {
   const lower = name.toLowerCase();
   for (const [key, val] of Object.entries(BANK_DATA)) {
