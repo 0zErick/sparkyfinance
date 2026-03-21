@@ -62,6 +62,7 @@ const MONTHS = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Jul
 
 const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalProps) => {
   const now = new Date();
+  useDockVisibility(open);
   const [selectedPriority, setSelectedPriority] = useState("P3");
   const [recurring, setRecurring] = useState(false);
   const [recurringDay, setRecurringDay] = useState(String(now.getDate()));

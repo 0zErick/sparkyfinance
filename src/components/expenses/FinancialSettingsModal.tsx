@@ -3,6 +3,7 @@ import { X, Link2, Trash2, AlertTriangle, Info, Bell, BellOff, CreditCard, Calen
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useFinancialData } from "@/hooks/useFinancialData";
+import { useDockVisibility } from "@/hooks/useDockVisibility";
 
 interface FinancialSettingsModalProps {
   open: boolean;

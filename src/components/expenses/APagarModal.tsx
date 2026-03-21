@@ -14,6 +14,7 @@ interface APagarModalProps {
 const APagarModal = ({ open, onClose }: APagarModalProps) => {
   const { data, updateData } = useFinancialData();
   const { awardPoints, removePoints } = usePoints();
+  useDockVisibility(open);
   const [paidIds, setPaidIds] = useState<Set<string>>(() => {
     try {
       const stored = localStorage.getItem("sparky-paid-bills");

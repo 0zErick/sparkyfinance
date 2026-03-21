@@ -1,4 +1,5 @@
 import { X, CreditCard, ArrowLeft } from "lucide-react";
+import { useDockVisibility } from "@/hooks/useDockVisibility";
 
 interface DebtManagementModalProps {
   open: boolean;
