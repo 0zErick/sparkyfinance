@@ -75,6 +75,7 @@ const Login = () => {
 
     if (newCount >= 7) {
       localStorage.setItem("sparky-demo-mode", "true");
+      seedDemoData();
       toast.success("🎮 Modo Demo ativado!");
       setTapCount(0);
       navigate("/");
