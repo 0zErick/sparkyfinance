@@ -5,13 +5,13 @@ import { useFinancialData } from "./useFinancialData";
 
 // Points are scarce — only real financial discipline earns them
 export const POINTS_RULES = [
-  { id: "bill_paid", label: "Pagar uma conta em dia", points: 2, icon: "💳", desc: "Marque uma conta como paga no app" },
-  { id: "save_10", label: "Economizar 10% da renda", points: 3, icon: "🐷", desc: "Ter pelo menos 10% da receita sobrando no mês" },
-  { id: "save_20", label: "Economizar 20% da renda", points: 5, icon: "🏆", desc: "Ter pelo menos 20% da receita sobrando no mês" },
-  { id: "invest_deposit", label: "Depositar em meta de investimento", points: 2, icon: "📈", desc: "Adicionar qualquer valor a uma meta" },
-  { id: "month_green", label: "Fechar mês no verde", points: 5, icon: "✅", desc: "Terminar o mês com saldo positivo e gastos < receita" },
-  { id: "streak_7", label: "7 dias registrando gastos", points: 1, icon: "🔥", desc: "Registrar ao menos 1 transação por dia, 7 dias seguidos" },
-  { id: "no_impulse", label: "Mês sem compra impulsiva", points: 3, icon: "🧘", desc: "Não ultrapassar o limite diário em nenhum dia do mês" },
+  { id: "bill_paid", label: "Pagar uma conta em dia", points: 3, icon: "💳", desc: "Marque uma conta como paga no app" },
+  { id: "save_10", label: "Economizar 10% da renda", points: 5, icon: "🐷", desc: "Ter pelo menos 10% da receita sobrando no mês" },
+  { id: "save_20", label: "Economizar 20% da renda", points: 8, icon: "🏆", desc: "Ter pelo menos 20% da receita sobrando no mês" },
+  { id: "invest_deposit", label: "Depositar em meta de investimento", points: 4, icon: "📈", desc: "Adicionar qualquer valor a uma meta" },
+  { id: "month_green", label: "Fechar mês no verde", points: 10, icon: "✅", desc: "Terminar o mês com saldo positivo e gastos < receita" },
+  { id: "streak_7", label: "7 dias registrando gastos", points: 3, icon: "🔥", desc: "Registrar ao menos 1 transação por dia, 7 dias seguidos" },
+  { id: "no_impulse", label: "Mês sem compra impulsiva", points: 7, icon: "🧘", desc: "Não ultrapassar o limite diário em nenhum dia do mês" },
 ];
 
 const POINTS_LOG_KEY = "sparky-points-log";
