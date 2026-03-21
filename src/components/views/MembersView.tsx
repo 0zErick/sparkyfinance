@@ -65,7 +65,7 @@ const MembersView = () => {
       </div>
 
       {/* Your Points Card */}
-      <div className="card-zelo fade-in-up relative overflow-hidden border-l-warning">
+      <div className="card-zelo fade-in-up relative overflow-hidden">
         <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-warning/5" />
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
