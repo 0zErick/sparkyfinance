@@ -262,9 +262,8 @@ const Onboarding = () => {
         </p>
       </div>
     );
-  }
-
-  return (
+  } else {
+    content = (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
       <div className="flex flex-col items-center gap-3 mb-10 fade-in-up">
         <button
