@@ -49,6 +49,23 @@ const Login = () => {
   const [tapTimer, setTapTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
 
+  // Redirect if already authenticated (e.g. after Google OAuth redirect)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        localStorage.removeItem("sparky-demo-mode");
+        navigate("/");
+      }
+    });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        localStorage.removeItem("sparky-demo-mode");
+        navigate("/");
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
   const selectedCountry = COUNTRIES.find(c => c.code === countryCode) || COUNTRIES[0];
 
   const handleLogoTap = useCallback(() => {
