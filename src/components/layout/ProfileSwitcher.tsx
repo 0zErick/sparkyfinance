@@ -204,8 +204,18 @@ const ProfileSwitcher = () => {
 
   // Sub-view: Ranking
   if (subView === "ranking") {
-    const sorted = [...profiles].sort((a, b) => b.points - a.points);
+    const sorted = [...groupMembers].sort((a, b) => b.points - a.points);
     const quote = inspirationalQuotes[Math.floor(Math.random() * inspirationalQuotes.length)];
+    const renderGroupAvatar = (member: any, size: string, textSize: string) => {
+      if (member.avatar_url) {
+        return <img src={member.avatar_url} alt={member.name} className={cn(size, "rounded-full object-cover")} />;
+      }
+      return (
+        <div className={cn(size, "rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center font-bold text-white", textSize)}>
+          {member.name?.charAt(0).toUpperCase() || "?"}
+        </div>
+      );
+    };
     return (
       <div className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-sm overflow-y-auto">
         <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
@@ -213,7 +223,7 @@ const ProfileSwitcher = () => {
             <button onClick={() => setSubView(null)} className="text-muted-foreground hover:text-foreground"><ChevronDown size={20} className="rotate-90" /></button>
             <div>
               <h1 className="text-lg font-bold">Ranking do Grupo</h1>
-              <p className="text-xs text-muted-foreground">Compare seu desempenho com os outros membros</p>
+              <p className="text-xs text-muted-foreground">{sorted.length} membro{sorted.length !== 1 ? "s" : ""} no grupo</p>
             </div>
           </div>
 
@@ -227,7 +237,7 @@ const ProfileSwitcher = () => {
           {sorted.length >= 3 && (
             <div className="flex items-end justify-center gap-3 py-4">
               <div className="flex flex-col items-center">
-                {renderAvatar(sorted[1], "h-12 w-12", "text-sm")}
+                {renderGroupAvatar(sorted[1], "h-12 w-12", "text-sm")}
                 <p className="text-xs font-semibold mt-1">{sorted[1].name}</p>
                 <div className="bg-muted rounded-lg px-3 py-1 mt-1">
                   <span className="text-xs font-bold text-warning">{sorted[1].points} pts</span>
@@ -236,7 +246,7 @@ const ProfileSwitcher = () => {
               </div>
               <div className="flex flex-col items-center">
                 <Crown size={16} className="text-warning mb-1" />
-                {renderAvatar(sorted[0], "h-14 w-14", "text-base")}
+                {renderGroupAvatar(sorted[0], "h-14 w-14", "text-base")}
                 <p className="text-xs font-bold mt-1">{sorted[0].name}</p>
                 <div className="bg-warning/15 rounded-lg px-3 py-1 mt-1">
                   <span className="text-xs font-bold text-warning">{sorted[0].points} pts</span>
@@ -244,7 +254,7 @@ const ProfileSwitcher = () => {
                 <div className="bg-warning/20 rounded-t-lg w-16 h-20 mt-2 flex items-center justify-center text-lg font-bold text-warning">1º</div>
               </div>
               <div className="flex flex-col items-center">
-                {renderAvatar(sorted[2], "h-11 w-11", "text-xs")}
+                {renderGroupAvatar(sorted[2], "h-11 w-11", "text-xs")}
                 <p className="text-xs font-semibold mt-1">{sorted[2].name}</p>
                 <div className="bg-muted rounded-lg px-3 py-1 mt-1">
                   <span className="text-xs font-bold text-warning">{sorted[2].points} pts</span>
@@ -257,18 +267,23 @@ const ProfileSwitcher = () => {
           <p className="text-label px-1">CLASSIFICAÇÃO GERAL</p>
           <div className="space-y-2">
             {sorted.map((member, i) => {
-              const isCurrent = member.id === active;
-              const diff = member.points - current.points;
+              const isCurrent = member.user_id === dbProfile?.user_id;
+              const memberIsLeader = isGroupLeader(member);
+              const myPoints = dbProfile?.points || 0;
+              const diff = member.points - myPoints;
               return (
                 <div key={member.id} className={cn("card-zelo flex items-center gap-3", isCurrent ? "border-primary/30" : "")}>
                   <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
                     {i + 1}º
                   </div>
-                  {renderAvatar(member, "h-10 w-10", "text-sm")}
+                  {renderGroupAvatar(member, "h-10 w-10", "text-sm")}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className="text-sm font-semibold">{member.name}</p>
                       {isCurrent && <span className="text-[9px] rounded-full bg-primary/15 px-1.5 py-0.5 text-primary font-semibold">Você</span>}
+                      <span className={cn("text-[9px] rounded-full px-1.5 py-0.5 font-semibold", memberIsLeader ? "bg-warning/15 text-warning" : "bg-muted text-muted-foreground")}>
+                        {memberIsLeader ? "Líder" : "Membro"}
+                      </span>
                     </div>
                     {!isCurrent && (
                       <p className="text-[10px] text-muted-foreground mt-0.5">
