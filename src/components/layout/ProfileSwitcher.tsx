@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import {
   ChevronDown, Check, UserPlus, User, Trophy, Crown, Star,
   Settings, Users, LogOut, Gift, Camera, Mail, Calendar, X,
@@ -161,10 +162,8 @@ const ProfileSwitcher = () => {
       setEditName(current.name);
       setEditEmail(current.email);
     }
-    // Set subView FIRST, then close dropdown
-    // Using setTimeout to avoid race condition with closeAll backdrop
+    setSubView(view);
     setOpen(false);
-    setTimeout(() => setSubView(view), 50);
   };
 
   const closeAll = () => {
@@ -173,6 +172,11 @@ const ProfileSwitcher = () => {
     setAddingProfile(false);
     setShowNewPrize(false);
     setShowLogoutConfirm(false);
+  };
+
+  const renderLayer = (content: ReactNode) => {
+    if (typeof document === "undefined") return null;
+    return createPortal(content, document.body);
   };
 
   const renderAvatar = (profile: Profile, size: string, textSize: string) => {
@@ -188,7 +192,7 @@ const ProfileSwitcher = () => {
 
   // Logout confirmation modal
   if (showLogoutConfirm) {
-    return (
+    return renderLayer(
       <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
         <div className="w-full max-w-sm card-zelo space-y-4 text-center">
           <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-full bg-destructive/15">
@@ -201,7 +205,7 @@ const ProfileSwitcher = () => {
             <button onClick={handleLogout} className="flex-1 rounded-xl bg-destructive py-3 text-sm font-semibold text-destructive-foreground active:scale-[0.98]">Sair</button>
           </div>
         </div>
-      </div>
+      </div>,
     );
   }
 
@@ -219,8 +223,8 @@ const ProfileSwitcher = () => {
         </div>
       );
     };
-    return (
-      <div className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-sm overflow-y-auto">
+    return renderLayer(
+      <div className="fixed inset-0 z-[80] bg-background/95 backdrop-blur-sm overflow-y-auto" style={{ paddingTop: "env(safe-area-inset-top, 20px)", paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }}>
         <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
           <div className="flex items-center gap-3">
             <button onClick={() => setSubView(null)} className="text-muted-foreground hover:text-foreground"><ChevronDown size={20} className="rotate-90" /></button>
@@ -409,14 +413,14 @@ const ProfileSwitcher = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div>,
     );
   }
 
   // Sub-view: Meu Perfil
   if (subView === "profile") {
-    return (
-      <div className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-sm overflow-y-auto">
+    return renderLayer(
+      <div className="fixed inset-0 z-[80] bg-background/95 backdrop-blur-sm overflow-y-auto" style={{ paddingTop: "env(safe-area-inset-top, 20px)", paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }}>
         <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
           <div className="flex items-center gap-3">
             <button onClick={() => setSubView(null)} className="text-muted-foreground hover:text-foreground"><ChevronDown size={20} className="rotate-90" /></button>
@@ -518,14 +522,14 @@ const ProfileSwitcher = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div>,
     );
   }
 
   // Sub-view: Gerenciar Prêmios
   if (subView === "prizes") {
-    return (
-      <div className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-sm overflow-y-auto">
+    return renderLayer(
+      <div className="fixed inset-0 z-[80] bg-background/95 backdrop-blur-sm overflow-y-auto" style={{ paddingTop: "env(safe-area-inset-top, 20px)", paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }}>
         <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
           <div className="flex items-center gap-3">
             <button onClick={() => setSubView(null)} className="text-muted-foreground hover:text-foreground"><ChevronDown size={20} className="rotate-90" /></button>
@@ -593,7 +597,7 @@ const ProfileSwitcher = () => {
           )}
 
           {showNewPrize && (
-            <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+            <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
               <div className="w-full max-w-sm card-zelo space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -629,7 +633,7 @@ const ProfileSwitcher = () => {
             </div>
           )}
         </div>
-      </div>
+      </div>,
     );
   }
 
@@ -647,8 +651,8 @@ const ProfileSwitcher = () => {
         </div>
       );
     };
-    return (
-      <div className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-sm overflow-y-auto">
+    return renderLayer(
+      <div className="fixed inset-0 z-[80] bg-background/95 backdrop-blur-sm overflow-y-auto" style={{ paddingTop: "env(safe-area-inset-top, 20px)", paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }}>
         <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
           <div className="flex items-center gap-3">
             <button onClick={() => setSubView(null)} className="text-muted-foreground hover:text-foreground"><ChevronDown size={20} className="rotate-90" /></button>
@@ -742,13 +746,13 @@ const ProfileSwitcher = () => {
             )}
           </div>
         </div>
-      </div>
+      </div>,
     );
   }
 
   // Sub-view: Admin Panel
   if (subView === "admin") {
-    return <AdminPanel onClose={() => setSubView(null)} />;
+    return renderLayer(<AdminPanel onClose={() => setSubView(null)} />);
   }
 
   return (
@@ -765,7 +769,7 @@ const ProfileSwitcher = () => {
       {open && !isLoading && (
         <>
           <div className="fixed inset-0 z-40" onClick={closeAll} />
-          <div className="absolute right-0 top-11 z-50 w-72 rounded-2xl border border-border bg-card p-3 shadow-xl shadow-black/30 fade-in-up">
+          <div className="absolute right-0 top-11 z-50 w-72 rounded-2xl border border-border bg-card p-3 shadow-xl shadow-black/30 fade-in-up" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center gap-3 mb-3">
               {renderAvatar(current, "h-11 w-11", "text-sm")}
               <div className="flex-1 min-w-0">
