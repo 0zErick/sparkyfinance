@@ -187,6 +187,11 @@
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 4px;
