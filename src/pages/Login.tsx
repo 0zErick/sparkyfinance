@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { syncLocalDataOwner } from "@/lib/userLocalData";
 
 const CatLogo = () => (
   <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -54,14 +55,16 @@ const Login = () => {
   // Redirect if already authenticated (e.g. after Google OAuth redirect)
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+      if (session?.user) {
         localStorage.removeItem("sparky-demo-mode");
+        syncLocalDataOwner(session.user.id);
         navigate("/");
       }
     });
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+      if (session?.user) {
         localStorage.removeItem("sparky-demo-mode");
+        syncLocalDataOwner(session.user.id);
         navigate("/");
       }
     });
@@ -104,19 +107,16 @@ const Login = () => {
         ? { email, password }
         : { phone: `${countryCode}${phone.replace(/\D/g, "")}`, password };
 
-      const { error } = await supabase.auth.signInWithPassword(credentials);
+      const { data, error } = await supabase.auth.signInWithPassword(credentials);
       if (error) {
         if (error.message === "Invalid login credentials") {
           toast.error("E-mail ou senha incorretos");
         } else {
           toast.error(error.message);
         }
-      } else {
-        // Clear any demo/local data on real login
+      } else if (data.user) {
         localStorage.removeItem("sparky-demo-mode");
-        localStorage.removeItem("sparky-balance");
-        localStorage.removeItem("sparky-transactions");
-        localStorage.removeItem("sparky-chat-history");
+        syncLocalDataOwner(data.user.id);
         navigate("/");
       }
     } catch {

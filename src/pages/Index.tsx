@@ -8,6 +8,7 @@ import ExpensesView from "@/components/views/ExpensesView";
 import DocsView from "@/components/views/DocsView";
 import MembersView from "@/components/views/MembersView";
 import ChatView from "@/components/views/ChatView";
+import { syncLocalDataOwner } from "@/lib/userLocalData";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("home");
@@ -23,12 +24,16 @@ const Index = () => {
 
   useEffect(() => {
     const isDemo = localStorage.getItem("sparky-demo-mode") === "true";
-    if (isDemo) { setReady(true); return; }
+    if (isDemo) {
+      setReady(true);
+      return;
+    }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!session && !localStorage.getItem("sparky-demo-mode")) {
         navigate("/login");
-      } else {
+      } else if (session?.user) {
+        syncLocalDataOwner(session.user.id);
         setReady(true);
       }
     });
@@ -36,7 +41,8 @@ const Index = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session && !localStorage.getItem("sparky-demo-mode")) {
         navigate("/login");
-      } else {
+      } else if (session?.user) {
+        syncLocalDataOwner(session.user.id);
         setReady(true);
       }
     });

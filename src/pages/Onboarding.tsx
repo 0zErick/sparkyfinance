@@ -6,6 +6,7 @@ import { lovable } from "@/integrations/lovable";
 import { seedDemoData } from "@/utils/demoSeed";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { syncLocalDataOwner } from "@/lib/userLocalData";
 
 const CatLogo = () => (
   <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -135,12 +136,11 @@ const Onboarding = () => {
         } else {
           toast.error(error.message);
         }
-      } else if (data.session) {
-        // Auto-confirmed: user is logged in, proceed to group selection
+      } else if (data.session && data.user) {
+        syncLocalDataOwner(data.user.id);
         toast.success("Conta criada com sucesso!");
         setStep("welcome");
       } else {
-        // Fallback: email confirmation required
         toast.success("Conta criada! Verifique seu e-mail para confirmar.");
         navigate("/login");
       }

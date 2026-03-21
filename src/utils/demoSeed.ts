@@ -1,3 +1,5 @@
+import { clearUserLocalData, markDemoLocalDataOwner } from "@/lib/userLocalData";
+
 /**
  * Generates random realistic financial data for demo mode.
  * Each session produces different values.
@@ -31,7 +33,6 @@ function generateTransactions(income: number, expenses: number): any[] {
   const year = now.getFullYear();
   const txs: any[] = [];
 
-  // Income transactions
   const incomeItems = rand(1, 3);
   let remainingIncome = income;
   for (let i = 0; i < incomeItems; i++) {
@@ -48,14 +49,11 @@ function generateTransactions(income: number, expenses: number): any[] {
     });
   }
 
-  // Expense transactions (spread across categories)
   const numExpenses = rand(8, 18);
   let remainingExpenses = expenses;
-  const usedCategories = new Set<string>();
   for (let i = 0; i < numExpenses; i++) {
     const isLast = i === numExpenses - 1;
     const cat = pick(CATEGORIES);
-    usedCategories.add(cat);
     const maxAmt = isLast ? remainingExpenses : Math.min(remainingExpenses, rand(15, Math.floor(expenses * 0.25)));
     const amount = isLast ? remainingExpenses : Math.max(5, maxAmt);
     remainingExpenses = Math.max(0, remainingExpenses - amount);
@@ -85,7 +83,7 @@ function generateCreditCards(): any[] {
   const numCards = rand(1, 3);
   const selected = [...banks].sort(() => Math.random() - 0.5).slice(0, numCards);
 
-  return selected.map(bank => {
+  return selected.map((bank) => {
     const limit = rand(1500, 8000);
     const used = rand(Math.floor(limit * 0.1), Math.floor(limit * 0.6));
     const numTxs = rand(2, 5);
@@ -145,7 +143,7 @@ function generateGoals(): any[] {
     { type: "personal", name: "Notebook Novo" },
   ];
   const num = rand(1, 3);
-  return [...templates].sort(() => Math.random() - 0.5).slice(0, num).map(t => {
+  return [...templates].sort(() => Math.random() - 0.5).slice(0, num).map((t) => {
     const target = rand(500, 5000);
     return {
       id: uuid(),
@@ -157,6 +155,9 @@ function generateGoals(): any[] {
 }
 
 export function seedDemoData() {
+  clearUserLocalData();
+  markDemoLocalDataOwner();
+
   const income = rand(2800, 6500);
   const expenses = rand(Math.floor(income * 0.3), Math.floor(income * 0.7));
   const balance = rand(Math.floor(income * 0.6), Math.floor(income * 1.4));
@@ -175,10 +176,6 @@ export function seedDemoData() {
   localStorage.setItem("sparky-credit-cards", JSON.stringify(generateCreditCards()));
   localStorage.setItem("sparky-budgets", JSON.stringify(generateBudgets(expenses)));
   localStorage.setItem("sparky-investment-goals", JSON.stringify(generateGoals()));
-
-  // Clear demo AI chats on each new demo session
   localStorage.removeItem("sparky-chat-history");
-
-  // Dispatch event so hooks pick up the changes
   window.dispatchEvent(new Event("sparky-data-cleared"));
 }
