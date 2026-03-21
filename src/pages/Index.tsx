@@ -8,19 +8,8 @@ import ExpensesView from "@/components/views/ExpensesView";
 import DocsView from "@/components/views/DocsView";
 import MembersView from "@/components/views/MembersView";
 import ChatView from "@/components/views/ChatView";
-
-const Index = () => {
-  const [activeTab, setActiveTab] = useState("home");
-  const [ready, setReady] = useState(false);
-  const [, setTick] = useState(0);
-  const navigate = useNavigate();
-
-  // Subtle auto-refresh every 30s to keep data fresh
-  useEffect(() => {
-    const interval = setInterval(() => setTick(t => t + 1), 30000);
-    return () => clearInterval(interval);
-  }, []);
-
+import { syncLocalDataOwner } from "@/lib/userLocalData";
+...
   useEffect(() => {
     const isDemo = localStorage.getItem("sparky-demo-mode") === "true";
     if (isDemo) { setReady(true); return; }
@@ -28,7 +17,8 @@ const Index = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!session && !localStorage.getItem("sparky-demo-mode")) {
         navigate("/login");
-      } else {
+      } else if (session?.user) {
+        syncLocalDataOwner(session.user.id);
         setReady(true);
       }
     });
@@ -36,7 +26,8 @@ const Index = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session && !localStorage.getItem("sparky-demo-mode")) {
         navigate("/login");
-      } else {
+      } else if (session?.user) {
+        syncLocalDataOwner(session.user.id);
         setReady(true);
       }
     });
