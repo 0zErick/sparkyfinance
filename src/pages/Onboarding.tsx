@@ -53,6 +53,9 @@ const Onboarding = () => {
   const [joiningGroup, setJoiningGroup] = useState(false);
   const [tapCount, setTapCount] = useState(0);
   const [tapTimer, setTapTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [groupPopup, setGroupPopup] = useState<{ show: boolean; inviteCode: string }>({ show: false, inviteCode: "" });
+  const [welcomePopup, setWelcomePopup] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
   const navigate = useNavigate();
 
   const handleLogoTap = useCallback(() => {
