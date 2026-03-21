@@ -19,8 +19,7 @@ const PaceBar = () => {
   const getLabel = () => {
     if (!hasData) return "Sem dados";
     if (cashDays === 0) return "Sem reserva";
-    if (cashDays >= daysLeft * 3) return "Folga confortável";
-    if (cashDays >= daysLeft) return "Dentro do ritmo";
+    if (cashDays >= daysLeft) return "Folga confortável";
     return `Atenção: ${cashDays}d restantes`;
   };
 
