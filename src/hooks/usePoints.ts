@@ -73,7 +73,6 @@ export const usePoints = () => {
     const rule = POINTS_RULES.find(r => r.id === ruleId);
     if (!rule) return 0;
 
-    // Always read fresh log
     const freshLog = getLog();
     let idx = -1;
     for (let i = freshLog.length - 1; i >= 0; i--) {
@@ -88,14 +87,12 @@ export const usePoints = () => {
     freshLog.splice(idx, 1);
     saveLog(freshLog);
 
-    const freshPoints = profile?.points || 0;
+    const freshPoints = profileRef.current?.points || 0;
     const newTotal = Math.max(0, freshPoints - rule.points);
-    if (!isDemo && profile) {
-      await updateProfile({ points: newTotal });
-    }
+    await updateProfile({ points: newTotal });
 
     return rule.points;
-  }, [profile, isDemo, updateProfile]);
+  }, [updateProfile]);
 
   // Calculate monthly earnings
   const monthKey = new Date().toISOString().slice(0, 7);

@@ -114,7 +114,7 @@ const SubscriptionsCard = () => {
       balance: data.balance + sub.amount,
       transactions: updatedTx,
     });
-    await removePoints("bill_paid");
+    await removePoints("bill_paid", `Pagou assinatura: ${sub.name}`);
     toast.success(`${sub.name} desmarcada — estorno e pontos removidos`);
   };
 
