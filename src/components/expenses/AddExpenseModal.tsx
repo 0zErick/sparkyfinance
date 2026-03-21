@@ -85,7 +85,16 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
       toast.error("Preencha o nome");
       return;
     }
-    const numValue = parseFloat(value.replace(/[^\d.,]/g, "").replace(",", ".")) || 0;
+    // Parse Brazilian format: "2.600,50" → 2600.50, "2600" → 2600, "2600.50" → 2600.50
+    const cleanedValue = value.replace(/[^\d.,]/g, "");
+    let numValue: number;
+    if (cleanedValue.includes(",")) {
+      // Brazilian format: dots are thousands, comma is decimal
+      numValue = parseFloat(cleanedValue.replace(/\./g, "").replace(",", ".")) || 0;
+    } else {
+      // Plain number like "2600" or "2600.50"
+      numValue = parseFloat(cleanedValue) || 0;
+    }
     if (numValue <= 0) {
       toast.error("Informe um valor válido");
       return;
@@ -195,13 +204,15 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
           />
           <input
             type="text"
-            inputMode="numeric"
-            placeholder="Valor (R$)"
+            inputMode="decimal"
+            placeholder="Valor (R$) ex: 2600 ou 2.600,50"
             value={value}
             onChange={(e) => {
-              const nums = e.target.value.replace(/\D/g, "");
-              const val = (parseInt(nums) || 0) / 100;
-              setValue(val > 0 ? val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "");
+              // Allow user to type naturally: 2600, 2.600, 2600.50, 2.600,50
+              const raw = e.target.value;
+              // Only allow digits, dots, commas
+              const cleaned = raw.replace(/[^\d.,]/g, "");
+              setValue(cleaned);
             }}
             className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-all tabular-nums"
           />

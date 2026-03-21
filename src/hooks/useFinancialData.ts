@@ -78,7 +78,8 @@ export const useFinancialData = () => {
       "sparky-credit-cards", "sparky-budget", "sparky-goals",
       "sparky-chat-history", "sparky-investments", "sparky-planning",
       "sparky-income", "sparky-expenses", "sparky-sync-data",
-      "sparky-open-finance-cache", STORAGE_KEY,
+      "sparky-open-finance-cache", "sparky-chat-style",
+      "sparky-investment-goals", STORAGE_KEY,
     ];
     keys.forEach(k => localStorage.removeItem(k));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));

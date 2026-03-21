@@ -70,23 +70,26 @@ const ChatView = () => {
   useEffect(() => {
     if (!activeId || messages.length === 0) return;
     setConversations(prev => {
-      const updated = prev.map(c =>
-        c.id === activeId ? { ...c, messages, title: generateTitle(messages), summary: generateSummary(messages), lastActiveAt: new Date().toISOString() } : c
-      );
+      const exists = prev.find(c => c.id === activeId);
+      let updated;
+      if (exists) {
+        updated = prev.map(c =>
+          c.id === activeId ? { ...c, messages, title: generateTitle(messages), summary: generateSummary(messages), lastActiveAt: new Date().toISOString() } : c
+        );
+      } else {
+        // Create conversation entry only when there are messages
+        const now = new Date().toISOString();
+        const conv: Conversation = { id: activeId, title: generateTitle(messages), summary: generateSummary(messages), messages, createdAt: now, lastActiveAt: now };
+        updated = [conv, ...prev];
+      }
       saveConversations(updated);
       return updated;
     });
   }, [messages, activeId]);
 
   const startNewChat = useCallback(() => {
+    // Don't create a new empty conversation entry yet - wait until user sends first message
     const id = crypto.randomUUID();
-    const now = new Date().toISOString();
-    const conv: Conversation = { id, title: "Nova conversa", summary: "", messages: [], createdAt: now, lastActiveAt: now };
-    setConversations(prev => {
-      const updated = [conv, ...prev];
-      saveConversations(updated);
-      return updated;
-    });
     setActiveId(id);
     setMessages([]);
     setShowHistory(false);
@@ -147,16 +150,16 @@ const ChatView = () => {
 
   const getUserContext = () => {
     try {
-      const bal = JSON.parse(localStorage.getItem("sparky-balance") || "{}");
+      const fin = JSON.parse(localStorage.getItem("sparky-financial-data") || "{}");
       const cards = JSON.parse(localStorage.getItem("sparky-credit-cards") || "[]");
       const goals = JSON.parse(localStorage.getItem("sparky-investment-goals") || "[]");
       const chatStyle = localStorage.getItem("sparky-chat-style") || "";
       return {
-        available: bal.available || 3247.50,
-        real: bal.real || 4832,
-        toPay: bal.toPay || 1584.50,
-        income: bal.income || 6500,
-        expenses: bal.expenses || 3252.50,
+        available: fin.balance ? fin.balance - (fin.scheduled || 0) : 0,
+        real: fin.balance || 0,
+        toPay: fin.scheduled || 0,
+        income: fin.income || 0,
+        expenses: fin.expenses || 0,
         cards: cards.length > 0 ? cards.map((c: any) => `${c.cardName} (${c.bankName}): limite R$${c.limit}, usado R$${c.usedAmount || 0}`).join("; ") : "Nenhum cadastrado",
         goals: goals.length > 0 ? goals.map((g: any) => `${g.name}: R$${g.savedAmount}/${g.targetAmount}`).join("; ") : "Nenhuma definida",
         chatStyle,
