@@ -51,7 +51,7 @@ const StatusCards = () => {
 
   const statuses = [
     { label: "Saldo Real", value: fmt(data.balance), color: "text-foreground", sub: "em conta agora", icon: PiggyBank, iconColor: "text-primary", clickable: false, infoKey: "saldo" },
-    { label: "A Pagar", value: fmt(aPagar), color: "text-warning", sub: aPagarLabel, icon: CalendarClock, iconColor: "text-warning", clickable: true, infoKey: null },
+    { label: "A Pagar", value: fmt(aPagar), color: "text-warning", sub: aPagarLabel, icon: CalendarClock, iconColor: "text-warning", clickable: true, infoKey: "apagar" },
     { label: "Saldo Disponível", value: fmt(available), color: "text-success", sub: "livre após contas", icon: Banknote, iconColor: "text-success", clickable: false, infoKey: "disponivel" },
   ];
 
