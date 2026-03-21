@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { seedDemoData } from "@/utils/demoSeed";
 import { Mail, Lock, Eye, EyeOff, Phone, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,6 +75,7 @@ const Login = () => {
 
     if (newCount >= 7) {
       localStorage.setItem("sparky-demo-mode", "true");
+      seedDemoData();
       toast.success("🎮 Modo Demo ativado!");
       setTapCount(0);
       navigate("/");
