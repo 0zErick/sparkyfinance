@@ -281,6 +281,106 @@ const ProfileSwitcher = () => {
               );
             })}
           </div>
+
+          {/* Como funciona o sistema de pontos */}
+          <p className="text-label px-1">COMO FUNCIONA</p>
+          <div className="card-zelo space-y-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/15">
+                  <Trophy size={16} className="text-primary" />
+                </div>
+                <p className="text-sm font-bold">Sistema de Pontos</p>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Ganhe pontos praticando bons hábitos financeiros. Quanto mais disciplinado você for, mais rápido sobe no ranking do grupo.
+              </p>
+            </div>
+
+            <div>
+              <p className="text-[10px] font-semibold text-muted-foreground mb-2">COMO GANHAR PONTOS</p>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">💳</span>
+                    <span className="text-[11px]">Pagar contas em dia</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-warning">+2 pts</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">🐷</span>
+                    <span className="text-[11px]">Economizar 10% da renda</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-warning">+3 pts</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">🏆</span>
+                    <span className="text-[11px]">Economizar 20% da renda</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-warning">+5 pts</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">📈</span>
+                    <span className="text-[11px]">Depositar em meta de investimento</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-warning">+2 pts</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">✅</span>
+                    <span className="text-[11px]">Fechar mês no verde</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-warning">+5 pts</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">🧘</span>
+                    <span className="text-[11px]">Mês sem compra impulsiva</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-warning">+3 pts</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-[10px] font-semibold text-muted-foreground mb-2">NÍVEIS DE EVOLUÇÃO</p>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
+                  <span className="text-[11px] text-muted-foreground font-semibold">Novato</span>
+                  <span className="text-[10px] text-muted-foreground">0+ pts</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
+                  <span className="text-[11px] text-muted-foreground font-semibold">Iniciante</span>
+                  <span className="text-[10px] text-muted-foreground">5+ pts</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-success/10 px-3 py-2">
+                  <span className="text-[11px] text-success font-semibold">Economizador</span>
+                  <span className="text-[10px] text-success">20+ pts</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-primary/10 px-3 py-2">
+                  <span className="text-[11px] text-primary font-semibold">Investidor</span>
+                  <span className="text-[10px] text-primary">50+ pts</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg bg-warning/10 px-3 py-2">
+                  <span className="text-[11px] text-warning font-semibold">Mestre Financeiro</span>
+                  <span className="text-[10px] text-warning">100+ pts</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-primary/10 border border-primary/20 p-3">
+              <p className="text-xs font-bold text-primary mb-1">🎁 Para que servem os pontos?</p>
+              <ul className="text-[11px] text-muted-foreground space-y-1">
+                <li>• <strong>Ranking do grupo</strong> — compita e lidere entre os membros</li>
+                <li>• <strong>Níveis de conquista</strong> — evolua seu perfil financeiro</li>
+                <li>• <strong>Reconhecimento</strong> — mostre sua disciplina financeira</li>
+                <li>• <strong>Prêmios</strong> — troque pontos por recompensas no menu de prêmios</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     );

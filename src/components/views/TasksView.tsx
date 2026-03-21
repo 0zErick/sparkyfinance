@@ -104,7 +104,7 @@ const TasksView = () => {
     <div className="px-4 pb-24 space-y-4">
       <div className="pt-3">
         <h1 className="text-xl font-bold">Ranking & Pontos</h1>
-        <p className="text-xs text-muted-foreground mt-1">Compita com sua família e ganhe pontos por bons hábitos financeiros</p>
+        <p className="text-xs text-muted-foreground mt-1">Compita com seu grupo e ganhe pontos por bons hábitos financeiros</p>
       </div>
 
       <div>
