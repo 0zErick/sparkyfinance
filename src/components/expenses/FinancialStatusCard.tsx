@@ -58,7 +58,7 @@ const FinancialStatusCard = () => {
   const Icon = c.icon;
 
   return (
-    <div className={`rounded-2xl border ${c.border} ${c.bg} p-3.5 fade-in-up`}>
+    <div className={`rounded-2xl border ${c.border} ${c.bg} p-3.5 fade-in-up border-l-4 ${c.borderLeft}`}>
       <div className="flex items-start gap-3">
         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${c.iconBg}`}>
           <Icon size={18} className={c.iconColor} />
