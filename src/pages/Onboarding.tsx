@@ -401,7 +401,8 @@ const Onboarding = () => {
         <button onClick={() => navigate("/login")} className="text-primary font-medium">Fazer login</button>
       </p>
     </div>
-  );
+    );
+  }
 
   return (
     <>
