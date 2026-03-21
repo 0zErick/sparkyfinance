@@ -49,7 +49,7 @@ const SyncBanner = () => {
     { label: "Despesa", icon: TrendingDown, bg: "bg-destructive/15", color: "text-destructive", onClick: handleDespesa },
     { label: "Receita", icon: TrendingUp, bg: "bg-success/15", color: "text-success", onClick: handleReceita },
     { label: "Escanear", icon: ScanLine, bg: "bg-primary/15", color: "text-primary", onClick: handleScan },
-    { label: "Importar", icon: Download, bg: "bg-purple-500/15", color: "text-purple-400", onClick: handleImport },
+    { label: "Importar", icon: Download, bg: "bg-purple-500/15", color: "text-purple-400", onClick: () => setImportOpen(true) },
     { label: "Metas", icon: Target, bg: "bg-warning/15", color: "text-warning", onClick: () => {} },
   ];
 
