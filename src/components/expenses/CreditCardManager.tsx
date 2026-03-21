@@ -154,6 +154,26 @@ const CreditCardManager = ({ open, onClose }: Props) => {
 
   if (!open) return null;
 
+  // Delete confirmation popup
+  if (deleteConfirmId) {
+    const cardToDelete = cards.find(c => c.id === deleteConfirmId);
+    return (
+      <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+        <div className="w-full max-w-sm card-zelo space-y-4 text-center">
+          <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-full bg-destructive/15">
+            <Trash2 size={24} className="text-destructive" />
+          </div>
+          <h3 className="text-lg font-bold">Excluir cartão?</h3>
+          <p className="text-sm text-muted-foreground">Tem certeza que deseja excluir o cartão <strong>{cardToDelete?.cardName}</strong>? Essa ação não pode ser desfeita.</p>
+          <div className="flex gap-2">
+            <button onClick={() => setDeleteConfirmId(null)} className="flex-1 rounded-xl border border-border py-3 text-sm font-medium text-muted-foreground active:scale-[0.98]">Cancelar</button>
+            <button onClick={() => handleDeleteCard(deleteConfirmId)} className="flex-1 rounded-xl bg-destructive py-3 text-sm font-semibold text-destructive-foreground active:scale-[0.98]">Excluir</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const activeCard = cards.find(c => c.id === selectedCard);
 
   // Card detail view
