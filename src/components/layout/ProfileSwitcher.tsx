@@ -526,7 +526,7 @@ const ProfileSwitcher = () => {
           ) : (
             <div className="space-y-2">
               {prizes.map((p, i) => (
-                <div key={i} className="card-zelo space-y-2">
+                <div key={i} className="card-zelo space-y-2 border-l-warning">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/15">
                       <Gift size={18} className="text-warning" />
