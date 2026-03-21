@@ -11,7 +11,7 @@ interface SyncBannerProps {
 const SyncBanner = ({ onNavigateToMetas, hideSyncBanner }: SyncBannerProps) => {
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [expenseModalType, setExpenseModalType] = useState<"expense" | "income">("expense");
-  const [pluggyOpen, setPluggyOpen] = useState(false);
+  const [syncPopup, setSyncPopup] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
