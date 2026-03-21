@@ -17,6 +17,7 @@ interface GroupMember {
   points: number;
   avatar: string;
   isCurrentUser: boolean;
+  isLeader: boolean;
 }
 
 const TasksView = () => {
