@@ -178,7 +178,7 @@ const CreditCardCarousel = () => {
               <p className="text-[10px] text-muted-foreground">Limite</p>
               <p className="text-sm font-bold">{fmt(expandedCard.limit)}</p>
             </div>
-            <div className="card-zelo !py-3">
+            <div className="card-zelo !py-3 border-l-success">
               <p className="text-[10px] text-muted-foreground">Disponível</p>
               <p className="text-sm font-bold text-success">{fmt(available)}</p>
             </div>
