@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import TabBar from "@/components/layout/TabBar";
 import DashboardView from "@/components/views/DashboardView";
 import TasksView from "@/components/views/TasksView";
@@ -9,6 +11,33 @@ import ChatView from "@/components/views/ChatView";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("home");
+  const [ready, setReady] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const isDemo = localStorage.getItem("sparky-demo-mode") === "true";
+    if (isDemo) { setReady(true); return; }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!session && !localStorage.getItem("sparky-demo-mode")) {
+        navigate("/login");
+      } else {
+        setReady(true);
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session && !localStorage.getItem("sparky-demo-mode")) {
+        navigate("/login");
+      } else {
+        setReady(true);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  if (!ready) return null;
 
   const renderView = () => {
     switch (activeTab) {
