@@ -89,15 +89,7 @@ const ProfileSwitcher = () => {
   }, [dbProfile]);
 
   const current = profiles.find((p) => p.id === active) || profiles[0];
-  if (!current) {
-    // Show placeholder avatar while profile loads
-    return (
-      <div className="flex items-center gap-1.5">
-        <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
-        <ChevronDown size={14} className="text-muted-foreground" />
-      </div>
-    );
-  }
+  const isLoading = !current;
   const prizes = allPrizes[active] || [];
 
   const setPrizes = (newPrizes: Prize[]) => {
