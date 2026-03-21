@@ -680,7 +680,7 @@ const ProfileSwitcher = () => {
                   {active === p.id && <Check size={14} className="text-primary" />}
                 </button>
                 {/* Delete button - only for non-original profiles */}
-                {p.id !== defaultProfiles[0].id && (
+                {!p.isOriginal && (
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDeleteProfile(p.id); }}
                     className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 active:scale-95 transition-all"
