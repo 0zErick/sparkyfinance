@@ -105,7 +105,7 @@ const MembersView = () => {
       </div>
 
       {/* Points System Explainer */}
-      <div className="card-zelo fade-in-up stagger-1">
+      <div className="card-zelo fade-in-up stagger-1 border-l-primary">
         <button
           onClick={() => setShowPointsGuide(!showPointsGuide)}
           className="w-full flex items-center justify-between"
