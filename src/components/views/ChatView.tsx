@@ -437,7 +437,7 @@ const ChatView = () => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-5rem)]">
+    <div className="flex flex-col h-full">
       {showNewChatConfirm && <NewChatConfirmPopup />}
       {/* Header */}
       <div className="px-4 pt-3 pb-2 flex items-center justify-between">
