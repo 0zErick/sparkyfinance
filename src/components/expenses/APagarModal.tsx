@@ -3,6 +3,7 @@ import { X, CheckCircle2, Clock, Trash2, CalendarDays, Tag, DollarSign } from "l
 import { cn } from "@/lib/utils";
 import { useFinancialData, fmt, Transaction } from "@/hooks/useFinancialData";
 import { usePoints } from "@/hooks/usePoints";
+import { useDockVisibility } from "@/hooks/useDockVisibility";
 import { toast } from "sonner";
 
 interface APagarModalProps {
