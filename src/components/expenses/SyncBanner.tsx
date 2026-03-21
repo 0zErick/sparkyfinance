@@ -4,7 +4,11 @@ import AddExpenseModal from "@/components/expenses/AddExpenseModal";
 import PluggyConnectModal from "./PluggyConnectModal";
 import ImportModal from "./ImportModal";
 
-const SyncBanner = () => {
+interface SyncBannerProps {
+  onNavigateToMetas?: () => void;
+}
+
+const SyncBanner = ({ onNavigateToMetas }: SyncBannerProps) => {
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [expenseModalType, setExpenseModalType] = useState<"expense" | "income">("expense");
   const [pluggyOpen, setPluggyOpen] = useState(false);
@@ -50,7 +54,7 @@ const SyncBanner = () => {
     { label: "Receita", icon: TrendingUp, bg: "bg-success/15", color: "text-success", onClick: handleReceita },
     { label: "Escanear", icon: ScanLine, bg: "bg-primary/15", color: "text-primary", onClick: handleScan },
     { label: "Importar", icon: Download, bg: "bg-purple-500/15", color: "text-purple-400", onClick: () => setImportOpen(true) },
-    { label: "Metas", icon: Target, bg: "bg-warning/15", color: "text-warning", onClick: () => {} },
+    { label: "Metas", icon: Target, bg: "bg-warning/15", color: "text-warning", onClick: () => onNavigateToMetas?.() },
   ];
 
   return (

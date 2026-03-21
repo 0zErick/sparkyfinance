@@ -8,7 +8,11 @@ import SyncBanner from "@/components/expenses/SyncBanner";
 import SyncStatusBanner from "@/components/expenses/SyncStatusBanner";
 import { useFinancialData } from "@/hooks/useFinancialData";
 
-const VisaoGeralTab = () => {
+interface VisaoGeralTabProps {
+  onNavigateToMetas?: () => void;
+}
+
+const VisaoGeralTab = ({ onNavigateToMetas }: VisaoGeralTabProps) => {
   const { data, available, dailyBudget } = useFinancialData();
   const hasData = data.balance > 0 || data.income > 0 || data.expenses > 0;
 
@@ -47,7 +51,7 @@ const VisaoGeralTab = () => {
   return (
     <div className="space-y-3">
       <SyncStatusBanner />
-      <SyncBanner />
+      <SyncBanner onNavigateToMetas={onNavigateToMetas} />
       <BudgetAlert />
       <StatusCards />
       <CreditCardCarousel />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Plus, Settings, CreditCard } from "lucide-react";
 import AddExpenseModal from "@/components/expenses/AddExpenseModal";
 import FinancialSettingsModal from "@/components/expenses/FinancialSettingsModal";
@@ -16,11 +16,18 @@ const ExpensesView = () => {
   const [cardsOpen, setCardsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Visão Geral");
 
+  const handleNavigateToMetas = useCallback(() => {
+    setActiveTab("Planejamento");
+    setTimeout(() => {
+      document.getElementById("metas-investimento")?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  }, []);
+
   const renderTab = () => {
     switch (activeTab) {
       case "Extrato": return <ExtratoTab />;
       case "Planejamento": return <PlanejamentoTab />;
-      default: return <VisaoGeralTab />;
+      default: return <VisaoGeralTab onNavigateToMetas={handleNavigateToMetas} />;
     }
   };
 

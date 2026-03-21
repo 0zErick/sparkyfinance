@@ -1,36 +1,39 @@
 import { useState } from "react";
-import { Target, PiggyBank, TrendingUp, Calendar, Lightbulb, Plus, X, Wallet, Shield, Sparkles } from "lucide-react";
+import { Target, PiggyBank, TrendingUp, Calendar, Lightbulb, Plus, X, Wallet, Shield, Sparkles, DollarSign } from "lucide-react";
 import { BarChart, Bar, XAxis, ResponsiveContainer, RadialBarChart, RadialBar } from "recharts";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useFinancialData } from "@/hooks/useFinancialData";
 
 const BUDGET_KEY = "sparky-budgets";
 const GOALS_KEY = "sparky-investment-goals";
 
 const defaultBudgets = [
-  { name: "Moradia", budget: 2000, spent: 1985, color: "hsl(var(--primary))" },
-  { name: "Alimentação", budget: 1200, spent: 850, color: "hsl(var(--success))" },
-  { name: "Transporte", budget: 500, spent: 430, color: "hsl(var(--warning))" },
-  { name: "Lazer", budget: 400, spent: 335, color: "hsl(var(--info))" },
-  { name: "Outros", budget: 300, spent: 150, color: "hsl(var(--destructive))" },
+  { name: "Moradia", budget: 0, spent: 0, color: "hsl(var(--primary))" },
+  { name: "Alimentação", budget: 0, spent: 0, color: "hsl(var(--success))" },
+  { name: "Transporte", budget: 0, spent: 0, color: "hsl(var(--warning))" },
+  { name: "Lazer", budget: 0, spent: 0, color: "hsl(var(--info))" },
+  { name: "Outros", budget: 0, spent: 0, color: "hsl(var(--destructive))" },
 ];
 
-const monthComparison = [
-  { m: "Jan", plan: 4200, real: 4500 },
-  { m: "Fev", plan: 4200, real: 3900 },
-  { m: "Mar", plan: 4400, real: 3750 },
-  { m: "Abr", plan: 4400, real: 4100 },
-  { m: "Mai", plan: 4400, real: 4600 },
-  { m: "Jun", plan: 4400, real: 3250 },
-];
+const fmtLocal = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
 
-const savingsGoal = [{ name: "meta", value: 68, fill: "hsl(var(--success))" }];
-
-const fmt = (v: number) => v.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+const parseBRL = (str: string): number => {
+  const clean = str.replace(/[^\d.,]/g, "");
+  if (clean.includes(",")) {
+    const parts = clean.split(",");
+    const intPart = parts[0].replace(/\./g, "");
+    return parseFloat(`${intPart}.${parts[1]}`) || 0;
+  }
+  if ((clean.match(/\./g) || []).length > 1) {
+    return parseFloat(clean.replace(/\./g, "")) || 0;
+  }
+  return parseFloat(clean) || 0;
+};
 
 const tips = [
-  { title: "Reduza delivery", desc: "Você gasta R$ 320,00/mês com delivery. Cozinhar 2x por semana economiza ~R$ 160,00.", icon: "🍳" },
-  { title: "Revise assinaturas", desc: "3 serviços de streaming ativos. Cancele 1 e economize R$ 45,90/mês.", icon: "📺" },
+  { title: "Reduza delivery", desc: "Cozinhar mais vezes por semana pode economizar bastante no final do mês.", icon: "🍳" },
+  { title: "Revise assinaturas", desc: "Cancele serviços que não usa para economizar mensalmente.", icon: "📺" },
   { title: "Energia em horário reduzido", desc: "Use eletrodomésticos após 22h para reduzir a conta de luz em até 15%.", icon: "⚡" },
 ];
 
@@ -50,6 +53,7 @@ interface InvestmentGoal {
 }
 
 const PlanejamentoTab = () => {
+  const { data, updateData } = useFinancialData();
   const [budgetCategories, setBudgetCategories] = useState(() => {
     try { return JSON.parse(localStorage.getItem(BUDGET_KEY) || "null") || defaultBudgets; } catch { return defaultBudgets; }
   });
@@ -64,6 +68,21 @@ const PlanejamentoTab = () => {
   const [newGoalOpen, setNewGoalOpen] = useState(false);
   const [editingBudgets, setEditingBudgets] = useState(budgetCategories.map((c: any) => ({ ...c })));
   const [newGoal, setNewGoal] = useState({ type: "emergency", name: "", targetAmount: "" });
+  const [depositGoalId, setDepositGoalId] = useState<string | null>(null);
+  const [depositAmount, setDepositAmount] = useState("");
+
+  // Compute savings goal from real data
+  const totalSaved = investmentGoals.reduce((s, g) => s + g.savedAmount, 0);
+  const totalTarget = investmentGoals.reduce((s, g) => s + g.targetAmount, 0);
+  const savingsPct = totalTarget > 0 ? Math.round((totalSaved / totalTarget) * 100) : 0;
+  const savingsGoal = [{ name: "meta", value: savingsPct, fill: "hsl(var(--success))" }];
+
+  const monthComparison = budgetCategories[0]?.budget > 0
+    ? [
+        { m: "Plan", plan: totalBudget, real: 0 },
+        { m: "Real", plan: 0, real: totalSpent },
+      ]
+    : [];
 
   const saveBudgets = () => {
     setBudgetCategories(editingBudgets);
@@ -74,7 +93,7 @@ const PlanejamentoTab = () => {
 
   const saveGoal = () => {
     if (!newGoal.name.trim()) { toast.error("Preencha o nome"); return; }
-    const target = parseFloat(newGoal.targetAmount.replace(/[^\d.,]/g, "").replace(",", ".")) || 0;
+    const target = parseBRL(newGoal.targetAmount);
     if (target <= 0) { toast.error("Informe um valor"); return; }
     const goal: InvestmentGoal = {
       id: crypto.randomUUID(),
@@ -97,6 +116,37 @@ const PlanejamentoTab = () => {
     localStorage.setItem(GOALS_KEY, JSON.stringify(updated));
   };
 
+  const handleDeposit = () => {
+    const amount = parseBRL(depositAmount);
+    if (amount <= 0) { toast.error("Informe um valor válido"); return; }
+    const updated = investmentGoals.map(g =>
+      g.id === depositGoalId ? { ...g, savedAmount: g.savedAmount + amount } : g
+    );
+    setInvestmentGoals(updated);
+    localStorage.setItem(GOALS_KEY, JSON.stringify(updated));
+
+    // Deduct from balance as an expense
+    updateData({
+      balance: data.balance - amount,
+      expenses: data.expenses + amount,
+      transactions: [
+        ...data.transactions,
+        {
+          id: crypto.randomUUID(),
+          date: new Date().toISOString(),
+          description: `Depósito: ${investmentGoals.find(g => g.id === depositGoalId)?.name || "Meta"}`,
+          amount,
+          type: "expense" as const,
+          category: "Investimento",
+        },
+      ],
+    });
+
+    setDepositGoalId(null);
+    setDepositAmount("");
+    toast.success(`R$ ${fmtLocal(amount)} depositado na meta!`);
+  };
+
   return (
     <div className="space-y-3">
       {/* Savings goal radial */}
@@ -107,7 +157,9 @@ const PlanejamentoTab = () => {
           </div>
           <div className="flex-1">
             <p className="text-xs font-semibold">Meta de Economia</p>
-            <p className="text-[10px] text-muted-foreground">R$ 1.360,00 de R$ 2.000,00</p>
+            <p className="text-[10px] text-muted-foreground">
+              {totalTarget > 0 ? `R$ ${fmtLocal(totalSaved)} de R$ ${fmtLocal(totalTarget)}` : "Nenhuma meta definida"}
+            </p>
           </div>
           <button onClick={() => setGoalModalOpen(true)} className="text-[10px] text-primary font-medium active:scale-95 transition-transform">Editar</button>
         </div>
@@ -121,17 +173,16 @@ const PlanejamentoTab = () => {
           </div>
           <div className="space-y-2 flex-1">
             <div>
-              <p className="text-2xl font-extrabold tabular-nums text-success">68%</p>
+              <p className="text-2xl font-extrabold tabular-nums text-success">{savingsPct}%</p>
               <p className="text-[10px] text-muted-foreground">da meta atingida</p>
             </div>
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-success bg-success/10 px-2 py-0.5 rounded-full">
-              <TrendingUp size={10} /> No ritmo certo
-            </span>
+            {savingsPct > 0 && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-success bg-success/10 px-2 py-0.5 rounded-full">
+                <TrendingUp size={10} /> {savingsPct >= 100 ? "Meta atingida!" : "No ritmo certo"}
+              </span>
+            )}
           </div>
         </div>
-        <p className="text-[9px] text-muted-foreground/70 mt-2 leading-relaxed">
-          O gráfico radial mostra o progresso em relação à sua meta de economia mensal. O preenchimento verde indica o quanto já foi economizado proporcionalmente à meta definida.
-        </p>
       </div>
 
       {/* Smart Tips */}
@@ -159,7 +210,7 @@ const PlanejamentoTab = () => {
       </div>
 
       {/* Investment Goals */}
-      <div className="card-zelo fade-in-up stagger-2">
+      <div className="card-zelo fade-in-up stagger-2" id="metas-investimento">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-success/15">
@@ -200,10 +251,37 @@ const PlanejamentoTab = () => {
                   <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden mb-1">
                     <div className="h-full rounded-full bg-success transition-all" style={{ width: `${Math.min(pct, 100)}%` }} />
                   </div>
-                  <div className="flex justify-between text-[9px] text-muted-foreground">
-                    <span>R$ {fmt(goal.savedAmount)}</span>
-                    <span>R$ {fmt(goal.targetAmount)} ({pct}%)</span>
+                  <div className="flex justify-between text-[9px] text-muted-foreground mb-2">
+                    <span>R$ {fmtLocal(goal.savedAmount)}</span>
+                    <span>R$ {fmtLocal(goal.targetAmount)} ({pct}%)</span>
                   </div>
+
+                  {/* Deposit button */}
+                  {depositGoalId === goal.id ? (
+                    <div className="flex gap-2 mt-1">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={depositAmount}
+                        onChange={(e) => setDepositAmount(e.target.value)}
+                        placeholder="R$ 0,00"
+                        className="flex-1 rounded-lg border border-border bg-muted/50 px-3 py-2 text-xs outline-none tabular-nums focus:border-primary"
+                      />
+                      <button onClick={handleDeposit} className="rounded-lg bg-success/15 px-3 py-2 text-xs font-medium text-success active:scale-95">
+                        Depositar
+                      </button>
+                      <button onClick={() => { setDepositGoalId(null); setDepositAmount(""); }} className="rounded-lg bg-muted px-2 py-2 text-xs text-muted-foreground active:scale-95">
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setDepositGoalId(goal.id)}
+                      className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-primary/10 border border-primary/20 py-2 text-[11px] font-semibold text-primary active:scale-[0.97] transition-all"
+                    >
+                      <DollarSign size={13} /> Depositar valor
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -219,13 +297,13 @@ const PlanejamentoTab = () => {
             <p className="text-xs font-semibold">Orçamento por Categoria</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-muted-foreground tabular-nums">R$ {fmt(totalSpent)} / R$ {fmt(totalBudget)}</span>
+            <span className="text-[10px] text-muted-foreground tabular-nums">R$ {fmtLocal(totalSpent)} / R$ {fmtLocal(totalBudget)}</span>
             <button onClick={() => { setEditingBudgets(budgetCategories.map((c: any) => ({ ...c }))); setEditBudgetOpen(true); }} className="text-[10px] text-primary font-medium active:scale-95">Editar</button>
           </div>
         </div>
         <div className="space-y-3">
           {budgetCategories.map((cat: any) => {
-            const pct = Math.round((cat.spent / cat.budget) * 100);
+            const pct = cat.budget > 0 ? Math.round((cat.spent / cat.budget) * 100) : 0;
             const over = pct > 90;
             return (
               <div key={cat.name}>
@@ -237,8 +315,8 @@ const PlanejamentoTab = () => {
                   <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.min(pct, 100)}%`, background: over ? "hsl(var(--destructive))" : cat.color }} />
                 </div>
                 <div className="flex justify-between mt-0.5">
-                  <span className="text-[9px] text-muted-foreground tabular-nums">R$ {fmt(cat.spent)}</span>
-                  <span className="text-[9px] text-muted-foreground tabular-nums">R$ {fmt(cat.budget)}</span>
+                  <span className="text-[9px] text-muted-foreground tabular-nums">R$ {fmtLocal(cat.spent)}</span>
+                  <span className="text-[9px] text-muted-foreground tabular-nums">R$ {fmtLocal(cat.budget)}</span>
                 </div>
               </div>
             );
@@ -247,31 +325,33 @@ const PlanejamentoTab = () => {
       </div>
 
       {/* Planned vs Real */}
-      <div className="card-zelo fade-in-up stagger-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Calendar size={14} className="text-warning" />
-          <p className="text-xs font-semibold">Planejado vs Real</p>
-        </div>
-        <div className="h-32">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={monthComparison} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-              <XAxis dataKey="m" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(0 0% 40%)" }} />
-              <Bar dataKey="plan" radius={[3, 3, 0, 0]} fill="hsl(var(--muted))" />
-              <Bar dataKey="real" radius={[3, 3, 0, 0]} fill="hsl(var(--primary))" opacity={0.8} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="flex items-center gap-4 mt-2">
-          <div className="flex items-center gap-1.5">
-            <div className="h-2 w-2 rounded-full bg-muted" />
-            <span className="text-[10px] text-muted-foreground">Planejado</span>
+      {totalBudget > 0 && (
+        <div className="card-zelo fade-in-up stagger-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Calendar size={14} className="text-warning" />
+            <p className="text-xs font-semibold">Planejado vs Real</p>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="h-2 w-2 rounded-full bg-primary" />
-            <span className="text-[10px] text-muted-foreground">Real</span>
+          <div className="h-32">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={monthComparison} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                <XAxis dataKey="m" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "hsl(0 0% 40%)" }} />
+                <Bar dataKey="plan" radius={[3, 3, 0, 0]} fill="hsl(var(--muted))" />
+                <Bar dataKey="real" radius={[3, 3, 0, 0]} fill="hsl(var(--primary))" opacity={0.8} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex items-center gap-4 mt-2">
+            <div className="flex items-center gap-1.5">
+              <div className="h-2 w-2 rounded-full bg-muted" />
+              <span className="text-[10px] text-muted-foreground">Planejado</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="h-2 w-2 rounded-full bg-primary" />
+              <span className="text-[10px] text-muted-foreground">Real</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Edit Budget Modal */}
       {editBudgetOpen && (
@@ -350,11 +430,7 @@ const PlanejamentoTab = () => {
               <div>
                 <label className="text-[11px] text-muted-foreground mb-1.5 block">Valor da Meta (R$)</label>
                 <input type="text" inputMode="numeric" placeholder="R$ 0,00" value={newGoal.targetAmount}
-                  onChange={(e) => {
-                    const nums = e.target.value.replace(/\D/g, "");
-                    const val = (parseInt(nums) || 0) / 100;
-                    setNewGoal(prev => ({ ...prev, targetAmount: val > 0 ? val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "" }));
-                  }}
+                  onChange={(e) => setNewGoal(prev => ({ ...prev, targetAmount: e.target.value }))}
                   className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm outline-none tabular-nums focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
               </div>
             </div>
@@ -376,18 +452,9 @@ const PlanejamentoTab = () => {
                 <X size={20} />
               </button>
             </div>
-            <div className="space-y-3">
-              <div>
-                <label className="text-[11px] text-muted-foreground mb-1.5 block">Valor da Meta (R$)</label>
-                <input type="text" defaultValue="2.000,00" className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-all tabular-nums" />
-              </div>
-              <div>
-                <label className="text-[11px] text-muted-foreground mb-1.5 block">Prazo</label>
-                <input type="text" defaultValue="Mensal" className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
-              </div>
-            </div>
-            <button className="w-full mt-5 rounded-xl bg-primary py-3.5 text-sm font-bold text-primary-foreground transition-all active:scale-[0.98]">
-              Salvar Meta
+            <p className="text-[11px] text-muted-foreground mb-3">As metas de economia são calculadas automaticamente com base nas suas metas de investimento criadas abaixo.</p>
+            <button onClick={() => setGoalModalOpen(false)} className="w-full mt-3 rounded-xl bg-primary py-3.5 text-sm font-bold text-primary-foreground transition-all active:scale-[0.98]">
+              Entendi
             </button>
           </div>
         </div>
