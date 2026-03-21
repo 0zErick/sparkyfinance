@@ -27,6 +27,7 @@ const dailyPower = [
 
 const VisaoGeralTab = () => (
   <div className="space-y-3">
+    <SyncStatusBanner />
     <SyncBanner />
     <BudgetAlert />
     <StatusCards />
