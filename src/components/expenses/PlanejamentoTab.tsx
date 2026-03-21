@@ -4,6 +4,7 @@ import { BarChart, Bar, XAxis, ResponsiveContainer, RadialBarChart, RadialBar } 
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useFinancialData } from "@/hooks/useFinancialData";
+import { usePoints } from "@/hooks/usePoints";
 
 const BUDGET_KEY = "sparky-budgets";
 const GOALS_KEY = "sparky-investment-goals";
