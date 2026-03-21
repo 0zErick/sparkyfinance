@@ -149,7 +149,7 @@ const SpendingOverview = ({ hideValues = false }: SpendingOverviewProps) => {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg font-bold">Simulador de Impacto</h2>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Veja como uma compra afeta seu orçamento diário (base: 20% do saldo)</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Veja como uma compra afeta seu orçamento diário (base: {spendPercent}% do saldo)</p>
               </div>
               <button onClick={() => setSimOpen(false)} className="rounded-full p-1.5 text-muted-foreground hover:text-foreground active:scale-95 transition-all"><X size={20} /></button>
             </div>
