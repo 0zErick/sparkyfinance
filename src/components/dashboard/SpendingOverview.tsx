@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { TrendingUp, TrendingDown, ArrowUpRight, Wallet, CreditCard, X, Info } from "lucide-react";
+import { useState, useEffect } from "react";
+import { TrendingUp, TrendingDown, ArrowUpRight, Wallet, CreditCard, X, Info, Pencil } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, CartesianGrid, BarChart, Bar, Tooltip } from "recharts";
 import { useFinancialData, fmt } from "@/hooks/useFinancialData";
 import PaceBar from "@/components/expenses/PaceBar";
@@ -43,10 +43,19 @@ const SpendingOverview = ({ hideValues = false }: SpendingOverviewProps) => {
   const [simOpen, setSimOpen] = useState(false);
   const [simValue, setSimValue] = useState(0);
   const [infoPopup, setInfoPopup] = useState<string | null>(null);
+  const [editingPercent, setEditingPercent] = useState(false);
+  const [spendPercent, setSpendPercent] = useState(() => {
+    const saved = localStorage.getItem("sparky-spend-percent");
+    return saved ? Number(saved) : 20;
+  });
   const { data, available, daysLeft } = useFinancialData();
 
+  useEffect(() => {
+    localStorage.setItem("sparky-spend-percent", String(spendPercent));
+  }, [spendPercent]);
+
   const hasData = data.balance > 0 || data.income > 0 || data.expenses > 0;
-  const spendablePool = Math.max(0, available * 0.2);
+  const spendablePool = Math.max(0, available * (spendPercent / 100));
   const dailyBudget = daysLeft > 0 ? spendablePool / daysLeft : 0;
   const orcamentoDiarioNovo = Math.max(0, (spendablePool - simValue) / daysLeft);
   const reducao = dailyBudget - orcamentoDiarioNovo;
@@ -119,7 +128,7 @@ const SpendingOverview = ({ hideValues = false }: SpendingOverviewProps) => {
         </div>
         <p className="text-[11px] text-muted-foreground mt-2">
           {hasData && !hideValues
-            ? <>20% do saldo disponível (<span className="text-foreground font-medium">{fmt(spendablePool)}</span>) ÷ <span className="text-foreground font-medium">{daysLeft} dias</span> restantes</>
+            ? <>{spendPercent}% do saldo disponível (<span className="text-foreground font-medium">{fmt(spendablePool)}</span>)</>
             : hideValues ? "Valores ocultos" : "Adicione sua renda e despesas para ver o orçamento diário"
           }
         </p>
@@ -140,7 +149,7 @@ const SpendingOverview = ({ hideValues = false }: SpendingOverviewProps) => {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg font-bold">Simulador de Impacto</h2>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Veja como uma compra afeta seu orçamento diário (base: 20% do saldo)</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Veja como uma compra afeta seu orçamento diário (base: {spendPercent}% do saldo)</p>
               </div>
               <button onClick={() => setSimOpen(false)} className="rounded-full p-1.5 text-muted-foreground hover:text-foreground active:scale-95 transition-all"><X size={20} /></button>
             </div>

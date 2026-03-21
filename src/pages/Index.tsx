@@ -80,8 +80,10 @@ const Index = () => {
         overscrollBehavior: 'none',
       }}
     >
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden" style={{ overscrollBehavior: 'none', paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
+      <div className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden" style={{ overscrollBehavior: 'none', paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
         {renderView()}
+        {/* Bottom fade gradient */}
+        <div className="pointer-events-none sticky bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent" />
       </div>
       <TabBar activeTab={activeTab} onTabChange={handleTabChange} />
     </div>
