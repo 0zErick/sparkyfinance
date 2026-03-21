@@ -47,6 +47,7 @@ const VisaoGeralTab = ({ onNavigateToMetas }: VisaoGeralTabProps) => {
       <SyncStatusBanner />
       {/* Quick actions only — no sync banner */}
       <SyncBanner onNavigateToMetas={onNavigateToMetas} hideSyncBanner />
+      <FinancialStatusCard />
       <BudgetAlert />
       <StatusCards />
       <CreditCardCarousel />
