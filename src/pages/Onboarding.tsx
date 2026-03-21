@@ -76,15 +76,13 @@ const Onboarding = () => {
     setTapTimer(timer);
   }, [tapCount, tapTimer, navigate]);
 
-  // Redirect if already authenticated (e.g. after Google OAuth redirect)
+  // Only redirect to home if user is authenticated AND on register step (meaning they navigated here while logged in)
+  // Don't redirect during welcome/join steps - that's the intended flow
   useEffect(() => {
+    if (step !== "register") return;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        navigate("/");
-      }
-    });
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session && step === "register") {
+      // Only redirect if this is an existing session, not a fresh signup
+      if (event === "INITIAL_SESSION" && session) {
         navigate("/");
       }
     });
@@ -130,16 +128,21 @@ const Onboarding = () => {
             },
           };
 
-      const { error } = await supabase.auth.signUp(credentials);
+      const { data, error } = await supabase.auth.signUp(credentials);
       if (error) {
         if (error.message.includes("already registered")) {
           toast.error("Este e-mail já está cadastrado. Faça login.");
         } else {
           toast.error(error.message);
         }
-      } else {
+      } else if (data.session) {
+        // Auto-confirmed: user is logged in, proceed to group selection
         toast.success("Conta criada com sucesso!");
         setStep("welcome");
+      } else {
+        // Fallback: email confirmation required
+        toast.success("Conta criada! Verifique seu e-mail para confirmar.");
+        navigate("/login");
       }
     } catch {
       toast.error("Erro ao criar conta");
