@@ -111,7 +111,7 @@ const TasksView = () => {
         <p className="text-label mb-2 px-1">RANKING DO GRUPO</p>
         <div className="space-y-2">
           {members.length === 0 ? (
-            <div className="card-zelo text-center py-6 fade-in-up border-l-warning">
+            <div className="card-zelo text-center py-6 fade-in-up">
               <Crown size={24} className="text-warning mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">Carregando ranking...</p>
             </div>
@@ -121,8 +121,7 @@ const TasksView = () => {
                 key={i}
                 className={cn(
                   "card-zelo flex items-center gap-3 fade-in-up",
-                  `stagger-${i + 1}`,
-                  i === 0 ? "border-l-warning border-warning/30" : i === 1 ? "border-l-primary" : i === 2 ? "border-l-success" : ""
+                  `stagger-${i + 1}`
                 )}
               >
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground">
@@ -159,7 +158,7 @@ const TasksView = () => {
             const pctDone = a.total <= 1 ? (a.progress >= a.total ? 100 : 0) : Math.round((a.progress / a.total) * 100);
             const isDone = pctDone >= 100;
             return (
-              <div key={a.label} className={cn("card-zelo fade-in-up", `stagger-${i + 1}`, a.color === "text-success" ? "border-l-success" : a.color === "text-warning" ? "border-l-warning" : a.color === "text-orange-400" ? "border-l-warning" : "border-l-primary")}>
+              <div key={a.label} className={cn("card-zelo fade-in-up", `stagger-${i + 1}`)}>
                 <div className="flex items-center gap-3">
                   <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", a.bg)}>
                     <Icon size={18} className={a.color} />
