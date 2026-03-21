@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   ChevronDown, Check, UserPlus, User, Trophy, Crown, Star,
   Settings, Users, LogOut, Gift, Camera, Mail, Calendar, X,
@@ -7,6 +7,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useProfile } from "@/hooks/useProfile";
 
 interface Prize {
   name: string;
@@ -24,13 +25,8 @@ interface Profile {
   points: number;
   role: "admin" | "member";
   avatar?: string;
+  isOriginal?: boolean;
 }
-
-const defaultProfiles: Profile[] = [
-  { id: "erick", name: "Erick", initials: "E", color: "from-primary to-primary/60", email: "erick@sparky.com", points: 60, role: "admin" },
-  { id: "ana", name: "Ana", initials: "A", color: "from-pink-500 to-pink-500/60", email: "ana@sparky.com", points: 35, role: "member" },
-  { id: "casa", name: "Casa", initials: "C", color: "from-amber-500 to-amber-500/60", email: "casa@sparky.com", points: 15, role: "member" },
-];
 
 const inspirationalQuotes = [
   "💡 Riqueza não é ter muito, é precisar de pouco.",
@@ -44,9 +40,10 @@ type SubView = null | "profile" | "prizes" | "members" | "ranking";
 
 const ProfileSwitcher = () => {
   const navigate = useNavigate();
+  const { profile: dbProfile, isDemo } = useProfile();
   const [open, setOpen] = useState(false);
-  const [profiles, setProfiles] = useState<Profile[]>(defaultProfiles);
-  const [active, setActive] = useState("erick");
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [active, setActive] = useState("");
   const [subView, setSubView] = useState<SubView>(null);
   const [addingProfile, setAddingProfile] = useState(false);
   const [newName, setNewName] = useState("");
@@ -62,7 +59,37 @@ const ProfileSwitcher = () => {
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
 
-  const current = profiles.find((p) => p.id === active)!;
+  // Initialize profiles from DB profile
+  useEffect(() => {
+    if (dbProfile && profiles.length === 0) {
+      const initial: Profile = {
+        id: dbProfile.id,
+        name: dbProfile.name,
+        initials: dbProfile.name.charAt(0).toUpperCase(),
+        color: "from-primary to-primary/60",
+        email: dbProfile.email || "",
+        points: dbProfile.points,
+        role: dbProfile.role as "admin" | "member",
+        avatar: dbProfile.avatar_url || undefined,
+        isOriginal: true,
+      };
+      setProfiles([initial]);
+      setActive(dbProfile.id);
+    } else if (dbProfile) {
+      // Update the original profile data from DB
+      setProfiles(prev => prev.map(p => p.isOriginal ? {
+        ...p,
+        name: dbProfile.name,
+        email: dbProfile.email || p.email,
+        points: dbProfile.points,
+        role: dbProfile.role as "admin" | "member",
+        avatar: dbProfile.avatar_url || p.avatar,
+      } : p));
+    }
+  }, [dbProfile]);
+
+  const current = profiles.find((p) => p.id === active) || profiles[0];
+  if (!current) return null;
   const prizes = allPrizes[active] || [];
 
   const setPrizes = (newPrizes: Prize[]) => {
