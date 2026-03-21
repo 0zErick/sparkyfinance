@@ -70,6 +70,14 @@ const PlanejamentoTab = () => {
   const totalBudget = budgetCategories.reduce((s: number, c: any) => s + c.budget, 0);
   const totalSpent = budgetCategories.reduce((s: number, c: any) => s + c.spent, 0);
   const [activeTip, setActiveTip] = useState(0);
+
+  // Auto-rotate tips every 8 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveTip(prev => (prev + 1) % tips.length);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, []);
   const [goalModalOpen, setGoalModalOpen] = useState(false);
   const [editBudgetOpen, setEditBudgetOpen] = useState(false);
   const [newGoalOpen, setNewGoalOpen] = useState(false);
