@@ -295,7 +295,7 @@ const CreditCardCarousel = () => {
           </div>
 
           {expandedCard.futureInvoices.length > 0 && (
-            <div className="card-zelo mb-4">
+            <div className="card-zelo mb-4 border-l-warning">
               <p className="text-xs font-semibold mb-2 flex items-center gap-1.5">
                 <Calendar size={13} className="text-warning" /> Faturas Futuras
               </p>
