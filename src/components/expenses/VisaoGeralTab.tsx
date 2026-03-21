@@ -6,6 +6,7 @@ import PaceBar from "@/components/expenses/PaceBar";
 import BudgetAlert from "@/components/expenses/BudgetAlert";
 import SyncStatusBanner from "@/components/expenses/SyncStatusBanner";
 import SyncBanner from "@/components/expenses/SyncBanner";
+import FinancialStatusCard from "@/components/expenses/FinancialStatusCard";
 import { useFinancialData } from "@/hooks/useFinancialData";
 
 interface VisaoGeralTabProps {
