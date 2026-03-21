@@ -41,17 +41,25 @@ export const useProfile = () => {
     }
 
     const fetchProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { setLoading(false); return; }
 
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
 
-      if (data) setProfile(data as Profile);
-      setLoading(false);
+        if (error) {
+          console.error("Profile fetch error:", error.message);
+        }
+        if (data) setProfile(data as Profile);
+      } catch (err) {
+        console.error("Profile fetch exception:", err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchProfile();
