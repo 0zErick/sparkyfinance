@@ -86,6 +86,8 @@ const CreditCardManager = ({ open, onClose }: Props) => {
   const [payFull, setPayFull] = useState(true);
 
   const [newBank, setNewBank] = useState("");
+  const [customBankName, setCustomBankName] = useState("");
+  const [showCustomBank, setShowCustomBank] = useState(false);
   const [newName, setNewName] = useState("");
   const [newLimit, setNewLimit] = useState("");
   const [newDueDay, setNewDueDay] = useState("10");
