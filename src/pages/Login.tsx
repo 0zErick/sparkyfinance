@@ -55,14 +55,16 @@ const Login = () => {
   // Redirect if already authenticated (e.g. after Google OAuth redirect)
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+      if (session?.user) {
         localStorage.removeItem("sparky-demo-mode");
+        syncLocalDataOwner(session.user.id);
         navigate("/");
       }
     });
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+      if (session?.user) {
         localStorage.removeItem("sparky-demo-mode");
+        syncLocalDataOwner(session.user.id);
         navigate("/");
       }
     });
