@@ -75,7 +75,7 @@ const SpendingOverview = ({ hideValues = false }: SpendingOverviewProps) => {
   return (
     <div className="space-y-3">
       {/* Pode gastar hoje */}
-      <div className="card-zelo fade-in-up relative overflow-hidden border-l-success">
+      <div className="card-zelo fade-in-up relative overflow-hidden">
         <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-success/5" />
         <div className="absolute -right-2 -top-2 h-12 w-12 rounded-full bg-success/8" />
         <p className="text-label mb-1">Pode Gastar Hoje</p>
