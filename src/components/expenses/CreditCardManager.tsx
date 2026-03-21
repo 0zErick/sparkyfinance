@@ -322,17 +322,23 @@ const CreditCardManager = ({ open, onClose }: Props) => {
                     <span className="truncate w-full text-center">{bank.name}</span>
                   </button>
                 ))}
-                <button onClick={() => setNewBank("Outro")}
+                <button onClick={() => { setShowCustomBank(true); setNewBank(""); }}
                   className={cn("flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 text-[10px] font-medium transition-all border",
-                    !BANK_OPTIONS.find(b => b.name === newBank) && newBank ? "border-primary bg-primary/10" : "border-border bg-muted/20 hover:border-primary/40")}>
+                    showCustomBank ? "border-primary bg-primary/10" : "border-border bg-muted/20 hover:border-primary/40")}>
                   <div className="h-7 w-7 rounded-lg flex items-center justify-center bg-muted text-muted-foreground text-[9px] font-bold">+</div>
                   <span>Outro</span>
                 </button>
               </div>
-              {newBank === "Outro" && (
+              {showCustomBank && (
                 <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/30 px-3 py-2.5 mt-2">
                   <Building2 size={14} className="text-muted-foreground" />
-                  <input value={newBank === "Outro" ? "" : newBank} onChange={(e) => setNewBank(e.target.value)} placeholder="Nome do banco..." className="bg-transparent text-sm flex-1 outline-none" />
+                  <input
+                    value={customBankName}
+                    onChange={(e) => setCustomBankName(e.target.value)}
+                    placeholder="Nome do banco..."
+                    className="bg-transparent text-sm flex-1 outline-none"
+                    autoFocus
+                  />
                 </div>
               )}
             </div>
