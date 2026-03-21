@@ -70,9 +70,18 @@ const ChatView = () => {
   useEffect(() => {
     if (!activeId || messages.length === 0) return;
     setConversations(prev => {
-      const updated = prev.map(c =>
-        c.id === activeId ? { ...c, messages, title: generateTitle(messages), summary: generateSummary(messages), lastActiveAt: new Date().toISOString() } : c
-      );
+      const exists = prev.find(c => c.id === activeId);
+      let updated;
+      if (exists) {
+        updated = prev.map(c =>
+          c.id === activeId ? { ...c, messages, title: generateTitle(messages), summary: generateSummary(messages), lastActiveAt: new Date().toISOString() } : c
+        );
+      } else {
+        // Create conversation entry only when there are messages
+        const now = new Date().toISOString();
+        const conv: Conversation = { id: activeId, title: generateTitle(messages), summary: generateSummary(messages), messages, createdAt: now, lastActiveAt: now };
+        updated = [conv, ...prev];
+      }
       saveConversations(updated);
       return updated;
     });
