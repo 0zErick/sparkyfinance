@@ -154,7 +154,7 @@ const TasksView = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold">{member.name}</p>
-                  <p className="text-[10px] text-muted-foreground">{member.isCurrentUser ? "Você" : "Membro"}</p>
+                  <p className="text-[10px] text-muted-foreground">{member.isLeader ? "Líder" : member.isCurrentUser ? "Você" : "Membro"}</p>
                 </div>
                 <div className="flex items-center gap-1.5 rounded-full bg-warning/15 px-2.5 py-1">
                   {i === 0 ? <Trophy size={12} className="text-warning" /> : <Star size={12} className="text-warning" />}
