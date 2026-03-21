@@ -43,6 +43,7 @@ type SubView = null | "profile" | "prizes" | "members" | "ranking" | "admin";
 const ProfileSwitcher = () => {
   const navigate = useNavigate();
   const { profile: dbProfile, isDemo } = useProfile();
+  const { members: groupMembers, isLeader: isGroupLeader } = useGroupMembers();
   const [open, setOpen] = useState(false);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [active, setActive] = useState("");
