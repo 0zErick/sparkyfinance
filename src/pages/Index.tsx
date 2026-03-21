@@ -52,7 +52,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background max-w-lg mx-auto relative">
+    <div className="min-h-screen bg-background relative mx-auto max-w-lg lg:max-w-4xl xl:max-w-6xl transition-all">
       <div className="pb-20">
         {renderView()}
       </div>
