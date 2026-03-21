@@ -645,7 +645,7 @@ const ProfileSwitcher = () => {
               <p className="text-lg font-bold">{profiles.length}</p>
               <p className="text-[9px] text-muted-foreground">Total</p>
             </div>
-            <div className="card-zelo flex flex-col items-center py-3">
+            <div className="card-zelo flex flex-col items-center py-3 border-l-warning">
               <Crown size={16} className="text-warning mb-1" />
               <p className="text-lg font-bold">{admins.length}</p>
               <p className="text-[9px] text-muted-foreground">Admins</p>
