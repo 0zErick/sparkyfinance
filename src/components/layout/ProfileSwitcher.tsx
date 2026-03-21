@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Prize {
   name: string;
@@ -116,9 +117,11 @@ const ProfileSwitcher = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setShowLogoutConfirm(false);
     closeAll();
+    localStorage.removeItem("sparky-demo-mode");
+    await supabase.auth.signOut();
     navigate("/login");
   };
 

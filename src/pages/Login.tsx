@@ -56,10 +56,6 @@ const Login = () => {
 
     if (newCount >= 7) {
       localStorage.setItem("sparky-demo-mode", "true");
-      localStorage.setItem("sparky-profiles", JSON.stringify([
-        { id: "demo", name: "Usuário Demo", email: "demo@sparky.app", avatar: "", isOriginal: true }
-      ]));
-      localStorage.setItem("sparky-active-profile", "demo");
       toast.success("🎮 Modo Demo ativado!");
       setTapCount(0);
       navigate("/");
@@ -91,8 +87,6 @@ const Login = () => {
       if (error) {
         if (error.message === "Invalid login credentials") {
           toast.error("Credenciais incorretas");
-        } else if (error.message.includes("Email not confirmed")) {
-          toast.error("Confirme seu e-mail antes de fazer login");
         } else {
           toast.error(error.message);
         }
@@ -124,7 +118,6 @@ const Login = () => {
         )}
       </div>
 
-      {/* Login method toggle */}
       <div className="flex gap-1 rounded-xl bg-muted/50 p-1 w-full max-w-sm mb-4 fade-in-up stagger-1">
         <button
           type="button"

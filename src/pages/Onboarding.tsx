@@ -35,8 +35,6 @@ const COUNTRIES = [
   { code: "+52", flag: "🇲🇽", name: "México" },
 ];
 
-const VALID_CODES = ["RFL45QUH", "SPARKY01", "DEMO2026"];
-
 const Onboarding = () => {
   const [step, setStep] = useState<"register" | "welcome" | "join">("register");
   const [registerMethod, setRegisterMethod] = useState<"email" | "phone">("email");
@@ -50,6 +48,7 @@ const Onboarding = () => {
   const [loading, setLoading] = useState(false);
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState("");
+  const [joiningGroup, setJoiningGroup] = useState(false);
   const navigate = useNavigate();
 
   const selectedCountry = COUNTRIES.find(c => c.code === countryCode) || COUNTRIES[0];
@@ -99,16 +98,7 @@ const Onboarding = () => {
           toast.error(error.message);
         }
       } else {
-        // Create profile
-        localStorage.setItem("sparky-profiles", JSON.stringify([
-          { id: crypto.randomUUID(), name: name.trim(), email: registerMethod === "email" ? email : `${countryCode}${phone}`, avatar: "", isOriginal: true }
-        ]));
-        localStorage.setItem("sparky-active-profile", "0");
-        if (registerMethod === "email") {
-          toast.success("Conta criada! Verifique seu e-mail para confirmar.");
-        } else {
-          toast.success("Conta criada com sucesso!");
-        }
+        toast.success("Conta criada com sucesso!");
         setStep("welcome");
       }
     } catch {
@@ -122,17 +112,38 @@ const Onboarding = () => {
     navigate("/");
   };
 
-  const handleJoinGroup = () => {
+  const handleJoinGroup = async () => {
     const trimmed = code.trim().toUpperCase();
     if (trimmed.length < 6) {
       setCodeError("Código deve ter pelo menos 6 caracteres");
       return;
     }
-    if (!VALID_CODES.includes(trimmed)) {
+    setJoiningGroup(true);
+    setCodeError("");
+
+    // Check if invite code exists in any profile
+    const { data: groupProfiles } = await supabase
+      .from("profiles")
+      .select("invite_code, group_code")
+      .eq("invite_code", trimmed);
+
+    if (!groupProfiles || groupProfiles.length === 0) {
       setCodeError("Código inválido. Verifique e tente novamente.");
+      setJoiningGroup(false);
       return;
     }
-    setCodeError("");
+
+    // Update current user's group_code to match
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const targetGroup = groupProfiles[0].group_code || trimmed;
+      await supabase
+        .from("profiles")
+        .update({ group_code: targetGroup, role: "member" })
+        .eq("user_id", user.id);
+    }
+
+    setJoiningGroup(false);
     toast.success("Você entrou no grupo com sucesso!");
     navigate("/");
   };
@@ -161,7 +172,9 @@ const Onboarding = () => {
               <p className="text-[11px] text-destructive mt-1.5 text-center">{codeError}</p>
             )}
           </div>
-          <button onClick={handleJoinGroup} disabled={code.length < 6} className="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-primary-foreground transition-all active:scale-[0.98] disabled:opacity-40">Entrar no Grupo</button>
+          <button onClick={handleJoinGroup} disabled={code.length < 6 || joiningGroup} className="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-primary-foreground transition-all active:scale-[0.98] disabled:opacity-40">
+            {joiningGroup ? "Entrando..." : "Entrar no Grupo"}
+          </button>
           <button onClick={() => setStep("welcome")} className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors">← Voltar</button>
         </div>
       </div>
@@ -214,7 +227,6 @@ const Onboarding = () => {
         <p className="text-sm text-muted-foreground">Crie sua conta para começar</p>
       </div>
 
-      {/* Register method toggle */}
       <div className="flex gap-1 rounded-xl bg-muted/50 p-1 w-full max-w-sm mb-4 fade-in-up stagger-1">
         <button
           type="button"
