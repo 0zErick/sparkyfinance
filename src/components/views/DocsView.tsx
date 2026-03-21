@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Search, FolderOpen, Plus, Upload, Check, X, Trash2, Eye, ClipboardList, FileText, FileSignature, IdCard, BookOpen, Folder, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useDockVisibility } from "@/hooks/useDockVisibility";
 
 const filters = [
   { label: "Todos", icon: ClipboardList, color: "text-warning" },
