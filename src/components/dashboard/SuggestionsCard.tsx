@@ -16,7 +16,7 @@ const ALL_TIPS = [
 ];
 
 const SuggestionsCard = () => {
-  const [pluggyOpen, setPluggyOpen] = useState(false);
+  const [syncPopup, setSyncPopup] = useState(false);
   const [whatsappPopup, setWhatsappPopup] = useState(false);
   const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * ALL_TIPS.length));
   const { data, available, dailyBudget, daysLeft } = useFinancialData();
