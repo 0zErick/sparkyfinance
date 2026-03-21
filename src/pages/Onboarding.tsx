@@ -172,22 +172,20 @@ const Onboarding = () => {
     setJoiningGroup(true);
     setCodeError("");
 
-    // Check if invite code exists in any profile
-    const { data: groupProfiles } = await supabase
-      .from("profiles")
-      .select("invite_code, group_code")
-      .eq("invite_code", trimmed);
+    // Validate invite code using secure DB function (bypasses RLS)
+    const { data: result, error } = await supabase.rpc("validate_invite_code", { _code: trimmed });
 
-    if (!groupProfiles || groupProfiles.length === 0) {
+    if (error || !result || !(result as any).valid) {
       setCodeError("Código inválido. Verifique e tente novamente.");
       setJoiningGroup(false);
       return;
     }
 
+    const targetGroup = (result as any).group_code || trimmed;
+
     // Update current user's group_code to match
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const targetGroup = groupProfiles[0].group_code || trimmed;
       await supabase
         .from("profiles")
         .update({ group_code: targetGroup, role: "member" })
