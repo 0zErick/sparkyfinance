@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { X, Link2 } from "lucide-react";
+import { X, Link2, Trash2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PluggyConnectModal from "./PluggyConnectModal";
+import { toast } from "sonner";
 
 interface FinancialSettingsModalProps {
   open: boolean;
@@ -15,8 +16,24 @@ const FinancialSettingsModal = ({ open, onClose }: FinancialSettingsModalProps) 
   const [lowBalanceAlert, setLowBalanceAlert] = useState("500");
   const [alertsEnabled, setAlertsEnabled] = useState(true);
   const [pluggyOpen, setPluggyOpen] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
 
   if (!open) return null;
+
+  const handleClearAllData = () => {
+    const keysToRemove = [
+      "sparky-balance", "sparky-transactions", "sparky-cards",
+      "sparky-credit-cards", "sparky-budget", "sparky-goals",
+      "sparky-chat-history", "sparky-investments", "sparky-planning",
+      "sparky-income", "sparky-expenses", "sparky-sync-data",
+      "sparky-open-finance-cache"
+    ];
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+    setConfirmClear(false);
+    toast.success("Todos os dados foram apagados com sucesso. Sua conta está zerada.");
+    onClose();
+    setTimeout(() => window.location.reload(), 600);
+  };
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center">
@@ -139,6 +156,25 @@ const FinancialSettingsModal = ({ open, onClose }: FinancialSettingsModalProps) 
               />
             </div>
           </div>
+
+          {/* Limpar Todos os Dados */}
+          <div className="card-zelo border border-destructive/20">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/15">
+                <Trash2 size={16} className="text-destructive" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-destructive">Zona de Perigo</p>
+                <p className="text-[10px] text-muted-foreground">Apague todos os dados financeiros</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setConfirmClear(true)}
+              className="w-full rounded-xl border border-destructive/30 bg-destructive/10 py-2.5 text-xs font-medium text-destructive hover:bg-destructive/20 active:scale-[0.98] transition-all"
+            >
+              Limpar Todos os Dados
+            </button>
+          </div>
         </div>
 
         <button className="w-full mt-5 rounded-xl bg-primary py-3.5 text-sm font-bold text-primary-foreground transition-all active:scale-[0.98]">
@@ -146,6 +182,38 @@ const FinancialSettingsModal = ({ open, onClose }: FinancialSettingsModalProps) 
         </button>
 
         <PluggyConnectModal open={pluggyOpen} onClose={() => setPluggyOpen(false)} />
+
+        {/* Confirmation Popup */}
+        {confirmClear && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setConfirmClear(false)} />
+            <div className="relative w-[90%] max-w-sm rounded-2xl bg-card border border-border p-6 space-y-4 animate-scale-in">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/15">
+                  <AlertTriangle size={20} className="text-destructive" />
+                </div>
+                <h3 className="text-base font-bold">Tem certeza?</h3>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Esta ação irá <span className="font-semibold text-destructive">apagar permanentemente</span> todos os seus dados financeiros: saldos, cartões de crédito, receitas, despesas, histórico de transações, metas e dados sincronizados pelo Open Finance. Você precisará preencher tudo novamente.
+              </p>
+              <div className="flex gap-3 pt-1">
+                <button
+                  onClick={() => setConfirmClear(false)}
+                  className="flex-1 rounded-xl border border-border py-3 text-sm font-medium text-muted-foreground hover:text-foreground active:scale-[0.97] transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleClearAllData}
+                  className="flex-1 rounded-xl bg-destructive py-3 text-sm font-bold text-destructive-foreground active:scale-[0.97] transition-all"
+                >
+                  Apagar Tudo
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
