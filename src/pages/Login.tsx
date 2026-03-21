@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Mail, Lock, Eye, EyeOff, Phone, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,6 +48,23 @@ const Login = () => {
   const [tapCount, setTapCount] = useState(0);
   const [tapTimer, setTapTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
+
+  // Redirect if already authenticated (e.g. after Google OAuth redirect)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        localStorage.removeItem("sparky-demo-mode");
+        navigate("/");
+      }
+    });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        localStorage.removeItem("sparky-demo-mode");
+        navigate("/");
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const selectedCountry = COUNTRIES.find(c => c.code === countryCode) || COUNTRIES[0];
 

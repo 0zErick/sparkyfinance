@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Users, LogIn, Mail, Lock, Eye, EyeOff, User, Phone, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +51,21 @@ const Onboarding = () => {
   const [codeError, setCodeError] = useState("");
   const [joiningGroup, setJoiningGroup] = useState(false);
   const navigate = useNavigate();
+
+  // Redirect if already authenticated (e.g. after Google OAuth redirect)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        navigate("/");
+      }
+    });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session && step === "register") {
+        navigate("/");
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [navigate, step]);
 
   const selectedCountry = COUNTRIES.find(c => c.code === countryCode) || COUNTRIES[0];
 
