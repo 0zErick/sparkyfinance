@@ -110,9 +110,10 @@ const ProfileSwitcher = () => {
   };
 
   const handleDeleteProfile = (id: string) => {
-    if (id === defaultProfiles[0].id) return; // Can't delete first profile
+    const original = profiles.find(p => p.isOriginal);
+    if (!original || id === original.id) return;
     setProfiles(prev => prev.filter(p => p.id !== id));
-    if (active === id) setActive(defaultProfiles[0].id);
+    if (active === id) setActive(original.id);
   };
 
   const handleAddPrize = () => {
