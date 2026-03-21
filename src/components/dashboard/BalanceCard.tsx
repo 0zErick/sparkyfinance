@@ -19,6 +19,8 @@ const BalanceCard = ({ onVisibilityChange }: BalanceCardProps) => {
     onVisibilityChange?.(visible);
   }, [visible, onVisibilityChange]);
 
+  const dailyBudget = available * 0.20;
+
   const handleAdjust = () => {
     const raw = adjustValue.replace(/\./g, "").replace(",", ".");
     const val = parseFloat(raw);
@@ -53,17 +55,10 @@ const BalanceCard = ({ onVisibilityChange }: BalanceCardProps) => {
       <div className="flex items-center justify-between mb-1">
         <span className="text-label">Saldo Disponível</span>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setEditing(!editing)}
-            className="text-muted-foreground active:scale-95 transition-transform"
-            title="Ajustar saldo"
-          >
+          <button onClick={() => setEditing(!editing)} className="text-muted-foreground active:scale-95 transition-transform" title="Ajustar saldo">
             <Pencil size={14} />
           </button>
-          <button
-            onClick={() => setVisible(!visible)}
-            className="text-muted-foreground active:scale-95 transition-transform"
-          >
+          <button onClick={() => setVisible(!visible)} className="text-muted-foreground active:scale-95 transition-transform">
             {visible ? <Eye size={16} /> : <EyeOff size={16} />}
           </button>
         </div>
@@ -78,54 +73,31 @@ const BalanceCard = ({ onVisibilityChange }: BalanceCardProps) => {
           <span>Despesas: <span className="text-destructive font-medium">{visible ? fmt(data.expenses) : "••••••"}</span></span>
         </div>
         <p className="text-[10px] text-muted-foreground">
-          Livre após contas agendadas
+          Pode gastar hoje: <span className="font-semibold text-primary">{visible ? fmt(dailyBudget) : "••••••"}</span> (20% do saldo)
         </p>
       </div>
 
       {editing && (
         <div className="mt-3 pt-3 border-t border-border space-y-2 fade-in-up">
           <div className="flex gap-1.5">
-            <button
-              onClick={() => setAdjustType("add")}
-              className={`flex-1 flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium transition-all ${adjustType === "add" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}
-            >
+            <button onClick={() => setAdjustType("add")}
+              className={`flex-1 flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium transition-all ${adjustType === "add" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
               <Plus size={12} /> Adicionar
             </button>
-            <button
-              onClick={() => setAdjustType("sub")}
-              className={`flex-1 flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium transition-all ${adjustType === "sub" ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"}`}
-            >
+            <button onClick={() => setAdjustType("sub")}
+              className={`flex-1 flex items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium transition-all ${adjustType === "sub" ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"}`}>
               <Minus size={12} /> Subtrair
             </button>
           </div>
-          <input
-            type="text"
-            inputMode="decimal"
-            placeholder="Digite o valor"
-            value={adjustValue}
+          <input type="text" inputMode="decimal" placeholder="Digite o valor" value={adjustValue}
             onChange={(e) => setAdjustValue(e.target.value)}
-            className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:border-primary"
-          />
-          <input
-            type="text"
-            placeholder="Descrição (opcional)"
-            value={adjustDesc}
+            className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:border-primary" />
+          <input type="text" placeholder="Descrição (opcional)" value={adjustDesc}
             onChange={(e) => setAdjustDesc(e.target.value)}
-            className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:border-primary"
-          />
+            className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm outline-none placeholder:text-muted-foreground focus:border-primary" />
           <div className="flex gap-2">
-            <button
-              onClick={() => setEditing(false)}
-              className="flex-1 rounded-lg border border-border py-2 text-xs font-medium text-muted-foreground"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleAdjust}
-              className="flex-1 rounded-lg bg-primary py-2 text-xs font-bold text-primary-foreground"
-            >
-              Salvar Ajuste
-            </button>
+            <button onClick={() => setEditing(false)} className="flex-1 rounded-lg border border-border py-2 text-xs font-medium text-muted-foreground">Cancelar</button>
+            <button onClick={handleAdjust} className="flex-1 rounded-lg bg-primary py-2 text-xs font-bold text-primary-foreground">Salvar Ajuste</button>
           </div>
         </div>
       )}

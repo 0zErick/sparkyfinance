@@ -7,6 +7,7 @@ import BudgetAlert from "@/components/expenses/BudgetAlert";
 import SyncStatusBanner from "@/components/expenses/SyncStatusBanner";
 import SyncBanner from "@/components/expenses/SyncBanner";
 import FinancialStatusCard from "@/components/expenses/FinancialStatusCard";
+import SubscriptionsCard from "@/components/expenses/SubscriptionsCard";
 import { useFinancialData } from "@/hooks/useFinancialData";
 
 interface VisaoGeralTabProps {
@@ -17,7 +18,6 @@ const VisaoGeralTab = ({ onNavigateToMetas }: VisaoGeralTabProps) => {
   const { data, available, dailyBudget } = useFinancialData();
   const hasData = data.balance > 0 || data.income > 0 || data.expenses > 0;
 
-  // Always show balance history — zeroed when no data
   const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"];
   const balanceHistory = months.map(name => ({
     name,
@@ -45,12 +45,12 @@ const VisaoGeralTab = ({ onNavigateToMetas }: VisaoGeralTabProps) => {
   return (
     <div className="space-y-3">
       <SyncStatusBanner />
-      {/* Quick actions only — no sync banner */}
       <SyncBanner onNavigateToMetas={onNavigateToMetas} hideSyncBanner />
       <FinancialStatusCard />
       <BudgetAlert />
       <StatusCards />
       <CreditCardCarousel />
+      <SubscriptionsCard />
       <TrendChart title="Histórico de Saldo" data={balanceHistory} color="hsl(var(--primary))" gradientId="balGrad" />
       <TrendChart title="Projeção de Saldo" data={projectionData} color="hsl(var(--success))" gradientId="projGrad" legend="Estimativa do saldo nas próximas semanas com base nos seus gastos e receitas recorrentes." />
       <TrendChart title="Poder de Compra Diário" data={dailyPower} color="hsl(var(--warning))" gradientId="dailyGrad" legend="Quanto você pode gastar por dia sem comprometer o orçamento do mês." />
