@@ -277,11 +277,11 @@ const CreditCardManager = ({ open, onClose }: Props) => {
           </div>
 
           {/* Preview */}
-          {newBank && (
+          {(showCustomBank ? customBankName : newBank) && (
             <div className="flex items-center gap-3 mb-4 p-3 rounded-xl bg-muted/30 border border-border">
-              <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center text-white text-sm font-bold", bankInfo.color)}>{bankInfo.abbr}</div>
+              <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center text-white text-sm font-bold", getBankInfo(showCustomBank ? customBankName : newBank).color)}>{getBankInfo(showCustomBank ? customBankName : newBank).abbr}</div>
               <div>
-                <p className="text-sm font-bold">{newBank}</p>
+                <p className="text-sm font-bold">{showCustomBank ? customBankName : newBank}</p>
                 <p className="text-[10px] text-muted-foreground">{newName || "Nome do cartão"} {newFlag && `• ${newFlag}`}</p>
               </div>
             </div>
