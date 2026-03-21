@@ -17,6 +17,7 @@ type Conversation = { id: string; title: string; summary: string; messages: Msg[
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sparky-chat`;
 const BASE_STORAGE_KEY = "sparky-chat-history";
 const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 const getStorageKey = (): string => {
@@ -185,6 +186,34 @@ const ChatView = () => {
     setMessages([]);
     setShowMenu(false);
   };
+
+  // Auto-clear chat on app close (beforeunload) and 5min inactivity
+  useEffect(() => {
+    const clearChat = () => {
+      setMessages([]);
+      setActiveId(null);
+    };
+
+    // Clear on page unload / app close
+    const handleUnload = () => clearChat();
+    window.addEventListener("beforeunload", handleUnload);
+
+    // Clear on 5min inactivity
+    let idleTimer: ReturnType<typeof setTimeout>;
+    const resetIdle = () => {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(clearChat, IDLE_TIMEOUT);
+    };
+    const events = ["pointerdown", "keydown", "scroll", "touchstart"];
+    events.forEach(e => window.addEventListener(e, resetIdle, { passive: true }));
+    resetIdle();
+
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+      events.forEach(e => window.removeEventListener(e, resetIdle));
+      clearTimeout(idleTimer);
+    };
+  }, []);
 
   useEffect(() => {
     if (!activeId) {
