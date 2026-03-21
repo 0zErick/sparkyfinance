@@ -13,14 +13,13 @@ const PaceBar = () => {
   const progress = hasData && (displayCashDays + daysLeft) > 0
     ? Math.min(100, (displayCashDays / (displayCashDays + daysLeft)) * 100)
     : 0;
-  const accelerated = hasData && cashDays < daysLeft;
+  const accelerated = hasData && cashDays > 0 && cashDays < daysLeft;
 
   // Descriptive label instead of raw number
   const getLabel = () => {
     if (!hasData) return "Sem dados";
     if (cashDays === 0) return "Sem reserva";
-    if (cashDays >= daysLeft * 3) return "Folga confortável";
-    if (cashDays >= daysLeft) return "Dentro do ritmo";
+    if (cashDays >= daysLeft) return "Folga confortável";
     return `Atenção: ${cashDays}d restantes`;
   };
 
