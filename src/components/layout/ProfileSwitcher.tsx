@@ -280,7 +280,6 @@ const ProfileSwitcher = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className="text-sm font-semibold">{member.name}</p>
-                      {isCurrent && <span className="text-[9px] rounded-full bg-primary/15 px-1.5 py-0.5 text-primary font-semibold">Você</span>}
                       <span className={cn("text-[9px] rounded-full px-1.5 py-0.5 font-semibold", memberIsLeader ? "bg-warning/15 text-warning" : "bg-muted text-muted-foreground")}>
                         {memberIsLeader ? "Líder" : "Membro"}
                       </span>
