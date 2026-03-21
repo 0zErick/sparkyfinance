@@ -3,6 +3,7 @@ import { X, Sparkles, Trash2, CheckSquare, Square, Loader2, ArrowLeft } from "lu
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useFinancialData } from "@/hooks/useFinancialData";
 
 interface Transaction {
   id: string;
@@ -19,14 +20,13 @@ interface ImportModalProps {
   onClose: () => void;
 }
 
-const TRANSACTIONS_KEY = "sparky-transactions";
-const BALANCE_KEY = "sparky-balance";
-
 const ImportModal = ({ open, onClose }: ImportModalProps) => {
   const [step, setStep] = useState<"input" | "review">("input");
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  const { data, updateData } = useFinancialData();
 
   const totalIncome = transactions.filter(t => t.selected && t.type === "in").reduce((s, t) => s + t.value, 0);
   const totalExpense = transactions.filter(t => t.selected && t.type === "out").reduce((s, t) => s + t.value, 0);
@@ -38,11 +38,11 @@ const ImportModal = ({ open, onClose }: ImportModalProps) => {
     if (!text.trim()) { toast.error("Cole o texto do extrato"); return; }
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("sparky-import", {
+      const { data: resData, error } = await supabase.functions.invoke("sparky-import", {
         body: { text: text.trim() },
       });
       if (error) throw error;
-      const parsed = (data?.transactions || []).map((t: any, i: number) => ({
+      const parsed = (resData?.transactions || []).map((t: any) => ({
         ...t, id: crypto.randomUUID(), selected: true,
       }));
       if (parsed.length === 0) { toast.error("Nenhuma transação encontrada no texto"); setLoading(false); return; }
@@ -71,38 +71,30 @@ const ImportModal = ({ open, onClose }: ImportModalProps) => {
     const selected = transactions.filter(t => t.selected);
     if (selected.length === 0) { toast.error("Selecione ao menos uma transação"); return; }
 
-    // Save to localStorage transactions
-    try {
-      const existing = JSON.parse(localStorage.getItem(TRANSACTIONS_KEY) || "[]");
-      const newTxs = selected.map(t => ({
-        id: t.id,
-        name: t.description,
-        value: t.value,
-        type: t.type === "in" ? "income" : "expense",
-        category: t.category,
-        priority: t.type === "out" ? "P3" : null,
-        recurring: false, split: false, installments: 1, cardId: null,
-        date: (() => {
+    // Convert to central format and update financial data
+    const newTxs = selected.map(t => ({
+      id: t.id,
+      date: (() => {
+        try {
           const [d, m, y] = t.date.split("/");
           return new Date(+y, +m - 1, +d).toISOString();
-        })(),
-        importedAt: new Date().toISOString(),
-      }));
-      localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify([...newTxs, ...existing]));
-    } catch {}
+        } catch { return new Date().toISOString(); }
+      })(),
+      description: t.description,
+      amount: t.value,
+      type: (t.type === "in" ? "income" : "expense") as "income" | "expense",
+      category: t.category,
+    }));
 
-    // Update balance
-    try {
-      const bal = JSON.parse(localStorage.getItem(BALANCE_KEY) || "{}");
-      const incomeSum = selected.filter(t => t.type === "in").reduce((s, t) => s + t.value, 0);
-      const expenseSum = selected.filter(t => t.type === "out").reduce((s, t) => s + t.value, 0);
-      bal.income = (bal.income || 6500) + incomeSum;
-      bal.expenses = (bal.expenses || 3252.50) + expenseSum;
-      bal.real = (bal.real || 4832) + incomeSum - expenseSum;
-      bal.available = (bal.available || 3247.50) + incomeSum - expenseSum;
-      localStorage.setItem(BALANCE_KEY, JSON.stringify(bal));
-      window.dispatchEvent(new Event("sparky-balance-update"));
-    } catch {}
+    const incomeSum = selected.filter(t => t.type === "in").reduce((s, t) => s + t.value, 0);
+    const expenseSum = selected.filter(t => t.type === "out").reduce((s, t) => s + t.value, 0);
+
+    updateData({
+      income: data.income + incomeSum,
+      expenses: data.expenses + expenseSum,
+      balance: data.balance + incomeSum - expenseSum,
+      transactions: [...newTxs, ...data.transactions],
+    });
 
     toast.success(`Sucesso! ${selected.length} transações foram integradas ao seu Sparky e o saldo foi atualizado.`);
     handleClose();
@@ -148,7 +140,6 @@ const ImportModal = ({ open, onClose }: ImportModalProps) => {
 
         {step === "input" ? (
           <div className="p-5 flex-1 overflow-y-auto space-y-4">
-            {/* Instructions */}
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-2">
               <p className="text-xs font-semibold text-primary">Como funciona:</p>
               <ol className="text-[11px] text-muted-foreground space-y-1 list-decimal list-inside">
@@ -160,15 +151,13 @@ const ImportModal = ({ open, onClose }: ImportModalProps) => {
               </ol>
             </div>
 
-            {/* Text area */}
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder={`Exemplo:\n20/03/2026  PIX Recebido João    2.500,00 C\n19/03/2026  Supermercado Extra   342,50  D\n18/03/2026  Netflix              55,90   D\n17/03/2026  Uber                 28,90   D`}
+              placeholder={`Exemplo:\n20/03/2026  PIX Recebido João    2.500,00 C\n19/03/2026  Supermercado Extra   342,50  D\n18/03/2026  Netflix              55,90   D`}
               className="w-full min-h-[200px] rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/50 focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none font-mono"
             />
 
-            {/* Process button */}
             <button
               onClick={handleProcess}
               disabled={loading || !text.trim()}
@@ -189,9 +178,7 @@ const ImportModal = ({ open, onClose }: ImportModalProps) => {
           </div>
         ) : (
           <>
-            {/* Review step */}
             <div className="flex-1 overflow-y-auto">
-              {/* Summary stats */}
               <div className="grid grid-cols-2 gap-3 p-5 pb-3">
                 <div className="rounded-xl border border-success/20 bg-success/5 p-3">
                   <p className="text-[10px] text-muted-foreground font-medium">Receitas</p>
@@ -207,7 +194,6 @@ const ImportModal = ({ open, onClose }: ImportModalProps) => {
                 </div>
               </div>
 
-              {/* Select all */}
               <div className="px-5 pb-2">
                 <button
                   onClick={toggleAll}
@@ -218,7 +204,6 @@ const ImportModal = ({ open, onClose }: ImportModalProps) => {
                 </button>
               </div>
 
-              {/* Transaction list */}
               <div className="px-5 space-y-2 pb-4">
                 {transactions.map((t) => (
                   <div
@@ -255,7 +240,6 @@ const ImportModal = ({ open, onClose }: ImportModalProps) => {
               </div>
             </div>
 
-            {/* Footer */}
             <div className="border-t border-border p-4 flex items-center justify-between gap-3">
               <div className="text-[10px] text-muted-foreground space-y-0.5">
                 <p>{selectedCount} de {transactions.length} selecionadas</p>

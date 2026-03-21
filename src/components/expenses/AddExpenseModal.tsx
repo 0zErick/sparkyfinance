@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { X, Zap, Droplets, Wifi, Flame, ShoppingCart, UtensilsCrossed, CreditCard, ChevronUp, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useFinancialData } from "@/hooks/useFinancialData";
 
 interface AddExpenseModalProps {
   open: boolean;
@@ -27,8 +28,6 @@ const priorities = [
 ];
 
 const CARDS_KEY = "sparky-credit-cards";
-const TRANSACTIONS_KEY = "sparky-transactions";
-const BALANCE_KEY = "sparky-balance";
 
 const BANK_COLORS: Record<string, string> = {
   nubank: "bg-purple-600", inter: "bg-orange-500", itaú: "bg-orange-600", itau: "bg-orange-600",
@@ -68,6 +67,8 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
   const [name, setName] = useState("");
   const [value, setValue] = useState("");
 
+  const { data, updateData } = useFinancialData();
+
   const cards = (() => {
     try { return JSON.parse(localStorage.getItem(CARDS_KEY) || "[]"); } catch { return []; }
   })();
@@ -78,23 +79,6 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
   const isCardCategory = selectedCategory === "Cartão";
   const title = isIncome ? "Adicionar Receita" : "Adicionar Despesa";
   const saveLabel = isIncome ? "Salvar Receita • +10 pts" : isCardCategory ? "Lançar na Fatura • +10 pts" : "Salvar Despesa • +10 pts";
-
-  const updateBalance = (amount: number, isExpense: boolean) => {
-    try {
-      const bal = JSON.parse(localStorage.getItem(BALANCE_KEY) || "{}");
-      if (isExpense) {
-        bal.expenses = (bal.expenses || 3252.50) + amount;
-        bal.available = (bal.available || 3247.50) - amount;
-        bal.toPay = (bal.toPay || 1584.50) + amount;
-      } else {
-        bal.income = (bal.income || 6500) + amount;
-        bal.real = (bal.real || 4832) + amount;
-        bal.available = (bal.available || 3247.50) + amount;
-      }
-      localStorage.setItem(BALANCE_KEY, JSON.stringify(bal));
-      window.dispatchEvent(new Event("sparky-balance-update"));
-    } catch {}
-  };
 
   const handleSave = () => {
     if (!name.trim()) {
@@ -107,28 +91,34 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
       return;
     }
 
-    const transaction = {
+    // Create transaction for the central store
+    const newTransaction = {
       id: crypto.randomUUID(),
-      name: name.trim(),
-      value: numValue,
-      type: isIncome ? "income" : "expense",
-      category: selectedCategory || "Outros",
-      priority: isIncome ? null : selectedPriority,
-      recurring, split,
-      installments: isCardCategory ? installments : 1,
-      cardId: isCardCategory ? selectedCardId : null,
       date: new Date().toISOString(),
+      description: name.trim(),
+      amount: numValue,
+      type: (isIncome ? "income" : "expense") as "income" | "expense",
+      category: selectedCategory || "Outros",
+      cardId: isCardCategory ? selectedCardId : undefined,
     };
 
-    try {
-      const existing = JSON.parse(localStorage.getItem(TRANSACTIONS_KEY) || "[]");
-      existing.unshift(transaction);
-      localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(existing));
-    } catch {}
+    // Update central financial data
+    const newTransactions = [newTransaction, ...data.transactions];
+    if (isIncome) {
+      updateData({
+        income: data.income + numValue,
+        balance: data.balance + numValue,
+        transactions: newTransactions,
+      });
+    } else {
+      updateData({
+        expenses: data.expenses + numValue,
+        balance: data.balance - numValue,
+        transactions: newTransactions,
+      });
+    }
 
-    // Update balance
-    updateBalance(numValue, !isIncome);
-
+    // Update credit card if applicable
     if (isCardCategory && selectedCardId) {
       try {
         const allCards = JSON.parse(localStorage.getItem(CARDS_KEY) || "[]");
@@ -224,7 +214,6 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
             </p>
             <div>
               <label className="text-[10px] text-muted-foreground font-medium mb-1.5 block">Cartão</label>
-              {/* Custom card picker */}
               <button
                 onClick={() => setShowCardPicker(!showCardPicker)}
                 className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-left flex items-center justify-between transition-all hover:border-primary/50 active:scale-[0.99]"
