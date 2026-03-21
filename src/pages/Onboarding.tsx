@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Users, LogIn, Mail, Lock, Eye, EyeOff, User, Phone, ChevronDown } from "lucide-react";
+import { Users, LogIn, Mail, Lock, Eye, EyeOff, User, Phone, ChevronDown, Copy, CheckCircle2, PartyPopper } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
