@@ -34,6 +34,8 @@ const saveLog = (log: PointsEntry[]) => {
 export const usePoints = () => {
   const { profile, updateProfile, isDemo } = useProfile();
   const { data } = useFinancialData();
+  const profileRef = useRef(profile);
+  profileRef.current = profile;
 
   const currentPoints = profile?.points || 0;
   const log = getLog();
@@ -42,16 +44,13 @@ export const usePoints = () => {
     const rule = POINTS_RULES.find(r => r.id === ruleId);
     if (!rule) return 0;
 
-    // Always read fresh log to avoid stale closure
     const freshLog = getLog();
     const today = new Date().toISOString().slice(0, 10);
     const monthKey = today.slice(0, 7);
 
-    // Prevent double-awarding
     const monthlyRules = ["save_10", "save_20", "month_green", "no_impulse"];
     if (monthlyRules.includes(ruleId) && freshLog.some(e => e.ruleId === ruleId && e.date.startsWith(monthKey))) return 0;
 
-    // For bill_paid, allow multiple per day (one per unique description)
     if (ruleId === "bill_paid" && description) {
       if (freshLog.some(e => e.ruleId === ruleId && e.date === today && e.description === description)) return 0;
     } else {
@@ -59,25 +58,16 @@ export const usePoints = () => {
       if (dailyRules.includes(ruleId) && freshLog.some(e => e.ruleId === ruleId && e.date === today)) return 0;
     }
 
-    const entry: PointsEntry = {
-      ruleId,
-      points: rule.points,
-      date: today,
-      description: description || rule.label,
-    };
-
+    const entry: PointsEntry = { ruleId, points: rule.points, date: today, description: description || rule.label };
     const newLog = [...freshLog, entry];
     saveLog(newLog);
 
-    // Read fresh profile points to accumulate correctly
-    const freshPoints = profile?.points || 0;
+    const freshPoints = profileRef.current?.points || 0;
     const newTotal = freshPoints + rule.points;
-    if (!isDemo && profile) {
-      await updateProfile({ points: newTotal });
-    }
+    await updateProfile({ points: newTotal });
 
     return rule.points;
-  }, [profile, isDemo, updateProfile]);
+  }, [updateProfile]);
 
   const removePoints = useCallback(async (ruleId: string, description?: string) => {
     const rule = POINTS_RULES.find(r => r.id === ruleId);
