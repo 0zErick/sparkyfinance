@@ -102,7 +102,7 @@ const SuggestionsCard = () => {
         </button>
       </div>
 
-      <div className="card-zelo fade-in-up stagger-4 flex items-center gap-3 border-l-success">
+      <div className="card-zelo fade-in-up stagger-4 flex items-center gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-success/15">
           <MessageCircle size={18} className="text-success" />
         </div>

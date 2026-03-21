@@ -193,7 +193,7 @@ const SpendingOverview = ({ hideValues = false }: SpendingOverviewProps) => {
 
       {/* Entradas vs Saídas */}
       {hasData && (
-        <div className="card-zelo fade-in-up stagger-4 border-l-primary">
+        <div className="card-zelo fade-in-up stagger-4">
           <p className="text-label mb-3">ENTRADAS VS SAÍDAS</p>
           <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
