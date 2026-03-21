@@ -106,6 +106,19 @@ const ChatView = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
+  // Set current user ID for scoped chat storage
+  useEffect(() => {
+    const isDemo = localStorage.getItem("sparky-demo-mode") === "true";
+    if (isDemo) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.id) {
+        localStorage.setItem("sparky-current-user-id", session.user.id);
+        // Reload conversations for this user
+        setConversations(loadConversations());
+      }
+    });
+  }, []);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
