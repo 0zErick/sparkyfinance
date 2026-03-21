@@ -76,15 +76,13 @@ const Onboarding = () => {
     setTapTimer(timer);
   }, [tapCount, tapTimer, navigate]);
 
-  // Redirect if already authenticated (e.g. after Google OAuth redirect)
+  // Only redirect to home if user is authenticated AND on register step (meaning they navigated here while logged in)
+  // Don't redirect during welcome/join steps - that's the intended flow
   useEffect(() => {
+    if (step !== "register") return;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        navigate("/");
-      }
-    });
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session && step === "register") {
+      // Only redirect if this is an existing session, not a fresh signup
+      if (event === "INITIAL_SESSION" && session) {
         navigate("/");
       }
     });
