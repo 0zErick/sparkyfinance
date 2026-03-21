@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Target, PiggyBank, TrendingUp, Calendar, Lightbulb, Plus, X, Wallet, Shield, Sparkles, DollarSign } from "lucide-react";
 import { BarChart, Bar, XAxis, ResponsiveContainer, RadialBarChart, RadialBar } from "recharts";
 import { cn } from "@/lib/utils";
