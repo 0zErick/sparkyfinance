@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
 import { Landmark, MessageCircle, ArrowLeft, Lightbulb, TrendingDown, PiggyBank, Target, Sparkles, Zap, BookOpen, Shield, Heart } from "lucide-react";
-import PluggyConnectModal from "@/components/expenses/PluggyConnectModal";
 import { useFinancialData, fmt } from "@/hooks/useFinancialData";
 
 const ALL_TIPS = [
