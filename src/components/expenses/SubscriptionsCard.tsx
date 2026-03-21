@@ -50,6 +50,7 @@ const SubscriptionsCard = () => {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const { data, updateData } = useFinancialData();
   const { awardPoints, removePoints } = usePoints();
+  useDockVisibility(showAdd);
 
   const update = (updated: Subscription[]) => { setSubs(updated); saveSubs(updated); };
 
