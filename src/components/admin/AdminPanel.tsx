@@ -119,11 +119,12 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
       }
 
       const data = await res.json();
-      toast.success(`${data.deleted} usuários removidos`);
       setDeleteAllConfirm(false);
+      setResultPopup({ show: true, success: true, message: `${data.deleted} usuário(s) removido(s) com sucesso!` });
       fetchUsers();
     } catch (e: any) {
-      toast.error(e.message || "Erro ao deletar usuários");
+      setDeleteAllConfirm(false);
+      setResultPopup({ show: true, success: false, message: e.message || "Erro ao deletar usuários. Tente novamente." });
     } finally {
       setActionLoading(false);
     }
