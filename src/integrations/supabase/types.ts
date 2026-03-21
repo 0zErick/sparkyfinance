@@ -62,6 +62,7 @@ export type Database = {
     }
     Functions: {
       get_user_group_code: { Args: { _user_id: string }; Returns: string }
+      validate_invite_code: { Args: { _code: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never
