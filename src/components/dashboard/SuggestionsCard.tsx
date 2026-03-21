@@ -1,16 +1,37 @@
-import { useState, useMemo } from "react";
-import { Landmark, MessageCircle, ArrowLeft, Lightbulb, TrendingDown, PiggyBank, Target, Sparkles } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Landmark, MessageCircle, ArrowLeft, Lightbulb, TrendingDown, PiggyBank, Target, Sparkles, Zap, BookOpen, Shield, Heart } from "lucide-react";
 import PluggyConnectModal from "@/components/expenses/PluggyConnectModal";
 import { useFinancialData, fmt } from "@/hooks/useFinancialData";
+
+const ALL_TIPS = [
+  { icon: Lightbulb, bg: "bg-primary/15", color: "text-primary", title: "Regra 50-30-20", desc: "Divida sua renda: 50% necessidades, 30% desejos, 20% poupança/investimentos." },
+  { icon: BookOpen, bg: "bg-accent/15", color: "text-accent-foreground", title: "Revise assinaturas", desc: "Cancele serviços que você não usa. Pequenos valores somam muito no ano." },
+  { icon: Shield, bg: "bg-success/15", color: "text-success", title: "Reserva de emergência", desc: "Tenha pelo menos 6 meses de despesas guardados para imprevistos." },
+  { icon: Zap, bg: "bg-warning/15", color: "text-warning", title: "Evite compras por impulso", desc: "Espere 48h antes de comprar algo não essencial. A vontade geralmente passa." },
+  { icon: Heart, bg: "bg-destructive/15", color: "text-destructive", title: "Invista em você", desc: "Educação financeira é o melhor investimento. Leia, estude e pratique." },
+  { icon: PiggyBank, bg: "bg-success/15", color: "text-success", title: "Automatize a poupança", desc: "Configure transferências automáticas no dia do pagamento para sua reserva." },
+  { icon: Target, bg: "bg-primary/15", color: "text-primary", title: "Defina metas claras", desc: "Metas específicas com prazo motivam mais do que 'quero economizar'." },
+  { icon: Lightbulb, bg: "bg-warning/15", color: "text-warning", title: "Negocie contas fixas", desc: "Ligue para operadoras e peça descontos. Funciona mais do que você imagina." },
+  { icon: Zap, bg: "bg-accent/15", color: "text-accent-foreground", title: "Planeje as refeições", desc: "Cozinhar em casa pode economizar até 60% comparado com delivery." },
+  { icon: BookOpen, bg: "bg-primary/15", color: "text-primary", title: "Acompanhe diariamente", desc: "Anotar cada gasto cria consciência e reduz desperdícios naturalmente." },
+];
 
 const SuggestionsCard = () => {
   const [pluggyOpen, setPluggyOpen] = useState(false);
   const [whatsappPopup, setWhatsappPopup] = useState(false);
+  const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * ALL_TIPS.length));
   const { data, available, dailyBudget, daysLeft } = useFinancialData();
 
   const hasFinancialData = data.balance > 0 || data.income > 0 || data.expenses > 0;
 
-  // Dynamic tips based on user's real financial data
+  // Rotate tips every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTipIndex(prev => (prev + 1) % ALL_TIPS.length);
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const dynamicTips = useMemo(() => {
     const tips: { icon: any; bg: string; color: string; title: string; desc: string }[] = [];
 
@@ -20,22 +41,19 @@ const SuggestionsCard = () => {
         title: "Comece agora!",
         desc: "Adicione sua primeira receita ou despesa para ativar seus insights financeiros.",
       });
+      tips.push(ALL_TIPS[tipIndex]);
       return tips;
     }
 
     const expenseRatio = data.income > 0 ? data.expenses / data.income : 0;
 
-    // High spending warning
     if (expenseRatio > 0.8) {
       tips.push({
         icon: TrendingDown, bg: "bg-destructive/15", color: "text-destructive",
         title: "Atenção aos gastos!",
         desc: `Você já gastou ${(expenseRatio * 100).toFixed(0)}% da sua receita. Reduza despesas não essenciais.`,
       });
-    }
-
-    // Savings encouragement
-    if (available > 0 && expenseRatio < 0.6) {
+    } else if (available > 0 && expenseRatio < 0.6) {
       tips.push({
         icon: PiggyBank, bg: "bg-success/15", color: "text-success",
         title: "Ótimo ritmo de economia!",
@@ -43,35 +61,20 @@ const SuggestionsCard = () => {
       });
     }
 
-    // Daily budget tip
-    if (dailyBudget > 0) {
-      tips.push({
-        icon: Target, bg: "bg-warning/15", color: "text-warning",
-        title: `${fmt(dailyBudget)}/dia`,
-        desc: `Seu limite diário para os próximos ${daysLeft} dias. Fique dentro para fechar o mês no verde!`,
-      });
-    }
-
-    // General motivation
-    if (tips.length === 0) {
-      tips.push({
-        icon: Lightbulb, bg: "bg-primary/15", color: "text-primary",
-        title: "Dica do Sparky",
-        desc: "Revise seus gastos semanalmente para identificar oportunidades de economia.",
-      });
-    }
+    // Always add a rotating general tip
+    tips.push(ALL_TIPS[tipIndex]);
 
     return tips.slice(0, 2);
-  }, [hasFinancialData, data, available, dailyBudget, daysLeft]);
+  }, [hasFinancialData, data, available, dailyBudget, daysLeft, tipIndex]);
 
   return (
     <div className="space-y-2">
-      <p className="text-label px-1">SUGESTÕES PARA VOCÊ</p>
+      <p className="text-label px-1">DICAS INTELIGENTES</p>
 
       {dynamicTips.map((tip, i) => {
         const Icon = tip.icon;
         return (
-          <div key={i} className={`card-zelo fade-in-up stagger-${i + 1} flex items-center gap-3`}>
+          <div key={`${tip.title}-${tipIndex}-${i}`} className={`card-zelo fade-in-up stagger-${i + 1} flex items-center gap-3`}>
             <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tip.bg}`}>
               <Icon size={18} className={tip.color} />
             </div>
