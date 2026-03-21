@@ -2,8 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import {
   ChevronDown, Check, UserPlus, User, Trophy, Crown, Star,
   Settings, Users, LogOut, Gift, Camera, Mail, Calendar, X,
-  Image, Sparkles, Clock, Trash2
+  Image, Sparkles, Clock, Trash2, Shield
 } from "lucide-react";
+import AdminPanel from "@/components/admin/AdminPanel";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
