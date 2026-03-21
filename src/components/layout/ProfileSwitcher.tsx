@@ -722,7 +722,7 @@ const ProfileSwitcher = () => {
         <ChevronDown size={14} className={cn("text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
 
-      {open && (
+      {open && !isLoading && (
         <>
           <div className="fixed inset-0 z-40" onClick={closeAll} />
           <div className="absolute right-0 top-11 z-50 w-72 rounded-2xl border border-border bg-card p-3 shadow-xl shadow-black/30 fade-in-up">
