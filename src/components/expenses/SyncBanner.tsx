@@ -4,7 +4,11 @@ import AddExpenseModal from "@/components/expenses/AddExpenseModal";
 import PluggyConnectModal from "./PluggyConnectModal";
 import ImportModal from "./ImportModal";
 
-const SyncBanner = () => {
+interface SyncBannerProps {
+  onNavigateToMetas?: () => void;
+}
+
+const SyncBanner = ({ onNavigateToMetas }: SyncBannerProps) => {
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [expenseModalType, setExpenseModalType] = useState<"expense" | "income">("expense");
   const [pluggyOpen, setPluggyOpen] = useState(false);
