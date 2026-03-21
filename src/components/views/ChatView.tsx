@@ -150,16 +150,16 @@ const ChatView = () => {
 
   const getUserContext = () => {
     try {
-      const bal = JSON.parse(localStorage.getItem("sparky-balance") || "{}");
+      const fin = JSON.parse(localStorage.getItem("sparky-financial-data") || "{}");
       const cards = JSON.parse(localStorage.getItem("sparky-credit-cards") || "[]");
       const goals = JSON.parse(localStorage.getItem("sparky-investment-goals") || "[]");
       const chatStyle = localStorage.getItem("sparky-chat-style") || "";
       return {
-        available: bal.available || 3247.50,
-        real: bal.real || 4832,
-        toPay: bal.toPay || 1584.50,
-        income: bal.income || 6500,
-        expenses: bal.expenses || 3252.50,
+        available: fin.balance ? fin.balance - (fin.scheduled || 0) : 0,
+        real: fin.balance || 0,
+        toPay: fin.scheduled || 0,
+        income: fin.income || 0,
+        expenses: fin.expenses || 0,
         cards: cards.length > 0 ? cards.map((c: any) => `${c.cardName} (${c.bankName}): limite R$${c.limit}, usado R$${c.usedAmount || 0}`).join("; ") : "Nenhum cadastrado",
         goals: goals.length > 0 ? goals.map((g: any) => `${g.name}: R$${g.savedAmount}/${g.targetAmount}`).join("; ") : "Nenhuma definida",
         chatStyle,
