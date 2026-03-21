@@ -2,11 +2,13 @@ import { useState, useRef } from "react";
 import { Wallet, TrendingDown, TrendingUp, ScanLine, Download, Target } from "lucide-react";
 import AddExpenseModal from "@/components/expenses/AddExpenseModal";
 import PluggyConnectModal from "./PluggyConnectModal";
+import ImportModal from "./ImportModal";
 
 const SyncBanner = () => {
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
   const [expenseModalType, setExpenseModalType] = useState<"expense" | "income">("expense");
   const [pluggyOpen, setPluggyOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDespesa = () => {
@@ -47,7 +49,7 @@ const SyncBanner = () => {
     { label: "Despesa", icon: TrendingDown, bg: "bg-destructive/15", color: "text-destructive", onClick: handleDespesa },
     { label: "Receita", icon: TrendingUp, bg: "bg-success/15", color: "text-success", onClick: handleReceita },
     { label: "Escanear", icon: ScanLine, bg: "bg-primary/15", color: "text-primary", onClick: handleScan },
-    { label: "Importar", icon: Download, bg: "bg-purple-500/15", color: "text-purple-400", onClick: handleImport },
+    { label: "Importar", icon: Download, bg: "bg-purple-500/15", color: "text-purple-400", onClick: () => setImportOpen(true) },
     { label: "Metas", icon: Target, bg: "bg-warning/15", color: "text-warning", onClick: () => {} },
   ];
 
@@ -100,6 +102,7 @@ const SyncBanner = () => {
 
       <AddExpenseModal open={expenseModalOpen} onClose={() => setExpenseModalOpen(false)} type={expenseModalType} />
       <PluggyConnectModal open={pluggyOpen} onClose={() => setPluggyOpen(false)} />
+      <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
     </div>
   );
 };
