@@ -1,53 +1,46 @@
 import { useState } from "react";
 import { ArrowDownLeft, ArrowUpRight, ChevronDown, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const transactions = [
-  { id: 1, name: "Aluguel", category: "Moradia", value: -1800, date: "20 Mar", day: "20 DE MARÇO", month: 3, year: 2026, type: "out" },
-  { id: 8, name: "iFood", category: "Alimentação", value: -67.8, date: "20 Mar", day: "20 DE MARÇO", month: 3, year: 2026, type: "out" },
-  { id: 2, name: "Salário", category: "Receita", value: 6500, date: "19 Mar", day: "19 DE MARÇO", month: 3, year: 2026, type: "in" },
-  { id: 3, name: "Supermercado Extra", category: "Alimentação", value: -342.5, date: "19 Mar", day: "19 DE MARÇO", month: 3, year: 2026, type: "out" },
-  { id: 4, name: "Uber", category: "Transporte", value: -28.9, date: "19 Mar", day: "19 DE MARÇO", month: 3, year: 2026, type: "out" },
-  { id: 5, name: "Netflix", category: "Lazer", value: -55.9, date: "17 Mar", day: "17 DE MARÇO", month: 3, year: 2026, type: "out" },
-  { id: 6, name: "Freelance", category: "Receita", value: 1200, date: "12 Mar", day: "12 DE MARÇO", month: 3, year: 2026, type: "in" },
-  { id: 7, name: "Conta de Luz", category: "Moradia", value: -185, date: "10 Mar", day: "10 DE MARÇO", month: 3, year: 2026, type: "out" },
-  { id: 9, name: "Nubank", category: "Cartão", value: -790.71, date: "19 Mar", day: "19 DE MARÇO", month: 3, year: 2026, type: "out" },
-  { id: 10, name: "Pix Recebido", category: "Receita", value: 2600, date: "20 Mar", day: "20 DE MARÇO", month: 3, year: 2026, type: "in" },
-  // February data
-  { id: 11, name: "Aluguel", category: "Moradia", value: -1800, date: "20 Fev", day: "20 DE FEVEREIRO", month: 2, year: 2026, type: "out" },
-  { id: 12, name: "Salário", category: "Receita", value: 6500, date: "15 Fev", day: "15 DE FEVEREIRO", month: 2, year: 2026, type: "in" },
-];
+import { useFinancialData, fmt } from "@/hooks/useFinancialData";
 
 const filterOptions = ["Todos", "Receitas", "Despesas"];
 const months = [
-  { value: 1, label: "Janeiro" }, { value: 2, label: "Fevereiro" }, { value: 3, label: "Março" },
-  { value: 4, label: "Abril" }, { value: 5, label: "Maio" }, { value: 6, label: "Junho" },
-  { value: 7, label: "Julho" }, { value: 8, label: "Agosto" }, { value: 9, label: "Setembro" },
-  { value: 10, label: "Outubro" }, { value: 11, label: "Novembro" }, { value: 12, label: "Dezembro" },
+  { value: 0, label: "Janeiro" }, { value: 1, label: "Fevereiro" }, { value: 2, label: "Março" },
+  { value: 3, label: "Abril" }, { value: 4, label: "Maio" }, { value: 5, label: "Junho" },
+  { value: 6, label: "Julho" }, { value: 7, label: "Agosto" }, { value: 8, label: "Setembro" },
+  { value: 9, label: "Outubro" }, { value: 10, label: "Novembro" }, { value: 11, label: "Dezembro" },
 ];
 const years = [2024, 2025, 2026];
 
 const ExtratoTab = () => {
   const [filter, setFilter] = useState("Todos");
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState(3);
-  const [selectedYear, setSelectedYear] = useState(2026);
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [datePickerOpen, setDatePickerOpen] = useState(false);
 
-  const filtered = transactions.filter((t) => {
-    if (t.month !== selectedMonth || t.year !== selectedYear) return false;
-    if (filter === "Receitas") return t.type === "in";
-    if (filter === "Despesas") return t.type === "out";
+  const { data } = useFinancialData();
+
+  // Filter transactions by month/year and type
+  const filtered = data.transactions.filter((t) => {
+    const d = new Date(t.date);
+    if (d.getMonth() !== selectedMonth || d.getFullYear() !== selectedYear) return false;
+    if (filter === "Receitas") return t.type === "income";
+    if (filter === "Despesas") return t.type === "expense";
     return true;
   });
 
-  const totalIn = filtered.filter(t => t.type === "in").reduce((s, t) => s + t.value, 0);
-  const totalOut = filtered.filter(t => t.type === "out").reduce((s, t) => s + Math.abs(t.value), 0);
+  const totalIn = filtered.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0);
+  const totalOut = filtered.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
 
-  const grouped: Record<string, typeof transactions> = {};
+  // Group by day label
+  const grouped: Record<string, typeof filtered> = {};
   filtered.forEach((t) => {
-    if (!grouped[t.day]) grouped[t.day] = [];
-    grouped[t.day].push(t);
+    const d = new Date(t.date);
+    const dayLabel = d.toLocaleDateString("pt-BR", { day: "numeric", month: "long" }).toUpperCase().replace(" DE ", " DE ");
+    if (!grouped[dayLabel]) grouped[dayLabel] = [];
+    grouped[dayLabel].push(t);
   });
 
   const selectedMonthLabel = months.find(m => m.value === selectedMonth)?.label || "";
@@ -91,7 +84,7 @@ const ExtratoTab = () => {
                     onClick={() => { setSelectedMonth(m.value); setDatePickerOpen(false); }}
                     className={cn(
                       "rounded-lg py-2 text-[11px] font-medium transition-colors active:scale-[0.97]",
-                      selectedMonth === m.value && selectedYear
+                      selectedMonth === m.value
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:bg-muted/50"
                     )}
@@ -138,18 +131,14 @@ const ExtratoTab = () => {
             <ArrowUpRight size={14} className="text-success" />
             <span className="text-[10px] text-muted-foreground font-medium">Entradas</span>
           </div>
-          <p className="text-base font-bold tabular-nums text-success">
-            R$ {totalIn.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-          </p>
+          <p className="text-base font-bold tabular-nums text-success">{fmt(totalIn)}</p>
         </div>
         <div className="card-zelo fade-in-up stagger-2">
           <div className="flex items-center gap-2 mb-1">
             <ArrowDownLeft size={14} className="text-destructive" />
             <span className="text-[10px] text-muted-foreground font-medium">Saídas</span>
           </div>
-          <p className="text-base font-bold tabular-nums text-destructive">
-            R$ {totalOut.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-          </p>
+          <p className="text-base font-bold tabular-nums text-destructive">{fmt(totalOut)}</p>
         </div>
       </div>
 
@@ -167,22 +156,22 @@ const ExtratoTab = () => {
               <div key={t.id} className="flex items-center gap-3 px-4 py-3">
                 <div className={cn(
                   "flex h-8 w-8 items-center justify-center rounded-xl",
-                  t.type === "in" ? "bg-success/15" : "bg-destructive/15"
+                  t.type === "income" ? "bg-success/15" : "bg-destructive/15"
                 )}>
-                  {t.type === "in"
+                  {t.type === "income"
                     ? <ArrowUpRight size={14} className="text-success" />
                     : <ArrowDownLeft size={14} className="text-destructive" />
                   }
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{t.name}</p>
+                  <p className="text-sm font-medium truncate">{t.description}</p>
                   <p className="text-[10px] text-muted-foreground">{t.category}</p>
                 </div>
                 <span className={cn(
                   "text-sm font-bold tabular-nums",
-                  t.type === "in" ? "text-success" : "text-foreground"
+                  t.type === "income" ? "text-success" : "text-foreground"
                 )}>
-                  {t.type === "in" ? "+" : "−"} R$ {Math.abs(t.value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  {t.type === "income" ? "+" : "−"} {fmt(t.amount)}
                 </span>
               </div>
             ))}
