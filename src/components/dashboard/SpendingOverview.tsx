@@ -3,6 +3,7 @@ import { TrendingUp, TrendingDown, ArrowUpRight, Wallet, CreditCard, X, Info, Pe
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, CartesianGrid, BarChart, Bar, Tooltip } from "recharts";
 import { useFinancialData, fmt } from "@/hooks/useFinancialData";
 import PaceBar from "@/components/expenses/PaceBar";
+import { useDockVisibility } from "@/hooks/useDockVisibility";
 
 const CalculatorIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="shrink-0">
