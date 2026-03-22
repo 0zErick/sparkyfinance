@@ -19,9 +19,6 @@ const BalanceCard = ({ onVisibilityChange }: BalanceCardProps) => {
     onVisibilityChange?.(visible);
   }, [visible, onVisibilityChange]);
 
-  // Use the hook's dailyBudget which has proper 30% accumulation logic
-  const { dailyBudget: hookDailyBudget } = useFinancialData();
-  const dailyBudget = hookDailyBudget;
 
   const handleAdjust = async () => {
     const raw = adjustValue.replace(/\./g, "").replace(",", ".");
