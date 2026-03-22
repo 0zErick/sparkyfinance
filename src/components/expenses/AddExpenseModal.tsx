@@ -201,8 +201,8 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
           <input type="text" placeholder={isIncome ? "Fonte da receita" : "Descrição da despesa"} value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary transition-all" />
-          <input type="text" inputMode="decimal" placeholder="Digite o valor (R$)" value={value}
-            onChange={(e) => setValue(e.target.value.replace(/[^\d.,]/g, ""))}
+          <input type="text" inputMode="numeric" placeholder="R$ 0,00" value={value}
+            onChange={(e) => setValue(handleBRLChange(e.target.value))}
             className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary transition-all tabular-nums" />
         </div>
 
