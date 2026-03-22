@@ -109,7 +109,7 @@ const PlanejamentoTab = () => {
 
   const saveGoal = () => {
     if (!newGoal.name.trim()) { toast.error("Preencha o nome"); return; }
-    const target = parseBRL(newGoal.targetAmount);
+    const target = parseBRLInput(newGoal.targetAmount);
     if (target <= 0) { toast.error("Informe um valor"); return; }
     const goal: InvestmentGoal = {
       id: crypto.randomUUID(),

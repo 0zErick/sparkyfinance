@@ -412,7 +412,7 @@ const CreditCardManager = ({ open, onClose }: Props) => {
               <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/30 px-3 py-2.5">
                 <Wallet size={14} className="text-muted-foreground" />
                 <input type="text" inputMode="numeric" value={newLimit}
-                  onChange={(e) => { const nums = e.target.value.replace(/\D/g, ""); const val = (parseInt(nums) || 0) / 100; setNewLimit(val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })); }}
+                  onChange={(e) => setNewLimit(handleBRLChange(e.target.value))}
                   placeholder="R$ 0,00" className="bg-transparent text-sm flex-1 outline-none" />
               </div>
             </div>
