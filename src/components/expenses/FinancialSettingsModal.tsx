@@ -179,8 +179,8 @@ const FinancialSettingsModal = ({ open, onClose }: FinancialSettingsModalProps) 
               <div className="space-y-3">
                 <div>
                   <label className="text-[11px] text-muted-foreground mb-1.5 block">Alerta de saldo baixo (R$)</label>
-                  <input type="text" value={settings.lowBalanceAlert}
-                    onChange={(e) => updateSetting("lowBalanceAlert", e.target.value)}
+                  <input type="text" inputMode="numeric" value={settings.lowBalanceAlert}
+                    onChange={(e) => updateSetting("lowBalanceAlert", handleBRLChange(e.target.value))}
                     className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary transition-all tabular-nums" />
                 </div>
                 <label className="flex items-center justify-between">

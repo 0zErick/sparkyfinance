@@ -389,9 +389,9 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
                 <ChevronUp size={16} />
               </button>
             </div>
-            {value && (
+            {value && parseBRLInput(value) > 0 && (
               <p className="text-[10px] text-muted-foreground mt-2 text-center">
-                Cada pessoa paga: {(parseFloat(value.replace(/\./g, "").replace(",", ".")) / splitPeople || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                Cada pessoa paga: {(parseBRLInput(value) / splitPeople).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
               </p>
             )}
           </div>

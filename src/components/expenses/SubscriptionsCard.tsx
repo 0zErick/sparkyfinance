@@ -311,7 +311,7 @@ const SubscriptionsCard = () => {
               <div>
                 <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Valor mensal</label>
                 <input type="text" inputMode="numeric" value={newAmount} placeholder="R$ 0,00"
-                  onChange={e => { const nums = e.target.value.replace(/\D/g, ""); const val = (parseInt(nums) || 0) / 100; setNewAmount(val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })); }}
+                  onChange={e => setNewAmount(handleBRLChange(e.target.value))}
                   className="w-full rounded-xl border border-border bg-muted/30 px-3 py-2.5 text-sm outline-none focus:border-primary" />
               </div>
               <div>
