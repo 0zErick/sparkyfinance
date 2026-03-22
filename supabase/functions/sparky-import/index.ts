@@ -58,8 +58,9 @@ REGRAS RIGOROSAS:
                         date: { type: "string", description: "DD/MM/AAAA" },
                         description: { type: "string" },
                         category: { type: "string", enum: ["Alimentação", "Transporte", "Moradia", "Saúde", "Lazer", "Educação", "Receita", "Transferência", "Cartão", "Outros"] },
-                        value: { type: "number" },
-                        type: { type: "string", enum: ["in", "out"] }
+                        value: { type: "number", description: "Valor positivo como float (ex: 1234.56)" },
+                        type: { type: "string", enum: ["in", "out"] },
+                        confidence: { type: "number", description: "Confiança na leitura desta transação (0-1)" }
                       },
                       required: ["date", "description", "category", "value", "type"],
                       additionalProperties: false
