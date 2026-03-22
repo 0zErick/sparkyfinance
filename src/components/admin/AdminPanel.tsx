@@ -65,8 +65,10 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
   const [actionLoading, setActionLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<AdminTab>("users");
   const [searchQuery, setSearchQuery] = useState("");
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [resultPopup, setResultPopup] = useState<{ show: boolean; success: boolean; message: string }>({ show: false, success: false, message: "" });
+
+  // Maintenance mode — persisted to localStorage
+  const [maintenanceMode, setMaintenanceMode] = useState(() => localStorage.getItem("sparky-maintenance-mode") === "true");
 
   // Dangerous action confirmation
   const [dangerModal, setDangerModal] = useState<{ show: boolean; title: string; description: string; action: () => void } | null>(null);
@@ -90,16 +92,13 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
   const [notifMessage, setNotifMessage] = useState("");
 
   // System config
-  const [pointsRate, setPointsRate] = useState("1.0");
-  const [withdrawLimit, setWithdrawLimit] = useState("500");
+  const [pointsRate, setPointsRate] = useState(() => localStorage.getItem("sparky-points-rate") || "1.0");
+  const [withdrawLimit, setWithdrawLimit] = useState(() => localStorage.getItem("sparky-withdraw-limit") || "500");
 
   // Feature Flags
   const [featureFlags, setFeatureFlags] = useState<FeatureFlag[]>([]);
   const [showFlagForm, setShowFlagForm] = useState(false);
   const [flagForm, setFlagForm] = useState({ name: "", description: "", targetGroup: "all" as FeatureFlag["targetGroup"] });
-
-  // Impersonate
-  const [impersonating, setImpersonating] = useState<AdminUser | null>(null);
 
   // Maintenance scheduler
   const [maintenanceTimer, setMaintenanceTimer] = useState<number>(0);
@@ -114,6 +113,19 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
 
   // Session timeline for selected user
   const [showTimeline, setShowTimeline] = useState(false);
+
+  // CMS — Visual Identity Editor
+  const [showCMS, setShowCMS] = useState(false);
+  const [cmsColors, setCmsColors] = useState(() => {
+    const saved = localStorage.getItem("sparky-cms-colors");
+    return saved ? JSON.parse(saved) : { primary: "#3b82f6", accent: "#8b5cf6" };
+  });
+
+  // Direct support chat
+  const [showSupportChat, setShowSupportChat] = useState(false);
+  const [supportChatTarget, setSupportChatTarget] = useState<AdminUser | null>(null);
+  const [supportMessages, setSupportMessages] = useState<{ from: string; text: string; time: string }[]>([]);
+  const [supportInput, setSupportInput] = useState("");
 
   const addAuditLog = useCallback((action: string, target: string, details: string) => {
     const log: AuditLog = {
@@ -170,7 +182,7 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
       setMaintenanceTimer(prev => {
         if (prev <= 1) {
           setMaintenanceTimerActive(false);
-          setMaintenanceMode(true);
+          toggleMaintenance(true);
           addAuditLog("MAINTENANCE_AUTO", "Sistema", "Manutenção ativada automaticamente pelo timer");
           toast.success("Modo manutenção ativado!");
           return 0;
@@ -180,6 +192,22 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
     }, 1000);
     return () => clearInterval(interval);
   }, [maintenanceTimerActive, maintenanceTimer, addAuditLog]);
+
+  // Persist maintenance timer to localStorage so header can read it
+  useEffect(() => {
+    if (maintenanceTimerActive && maintenanceTimer > 0) {
+      localStorage.setItem("sparky-maintenance-timer", JSON.stringify({ active: true, endsAt: Date.now() + maintenanceTimer * 1000 }));
+    } else {
+      localStorage.removeItem("sparky-maintenance-timer");
+    }
+    window.dispatchEvent(new Event("sparky-maintenance-update"));
+  }, [maintenanceTimerActive, maintenanceTimer]);
+
+  const toggleMaintenance = (val: boolean) => {
+    setMaintenanceMode(val);
+    localStorage.setItem("sparky-maintenance-mode", val ? "true" : "false");
+    window.dispatchEvent(new Event("sparky-maintenance-update"));
+  };
 
   const savePrizes = (p: Prize[]) => {
     setPrizes(p);
@@ -326,10 +354,13 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
 
   // CRITICAL FIX: Close selectedUser modal BEFORE opening danger confirm
   const openDangerConfirm = (title: string, description: string, action: () => void) => {
-    setSelectedUser(null); // ← Fix: close user modal first
+    setSelectedUser(null);
     setAdjustPoints("");
+    setShowTimeline(false);
     setDangerConfirmText("");
-    setDangerModal({ show: true, title, description, action });
+    setTimeout(() => {
+      setDangerModal({ show: true, title, description, action });
+    }, 50);
   };
 
   const handleSuspendUser = (user: AdminUser) => {
@@ -370,6 +401,16 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
     );
   };
 
+  const handleImpersonate = (user: AdminUser) => {
+    // Save impersonate data to localStorage so Index.tsx can read it
+    localStorage.setItem("sparky-impersonate", JSON.stringify({ id: user.id, name: user.name, email: user.email, avatar_url: user.avatar_url }));
+    addAuditLog("IMPERSONATE", user.name, "Admin visualizando como este usuário");
+    toast.success(`Visualizando como ${user.name}`);
+    setSelectedUser(null);
+    window.dispatchEvent(new Event("sparky-impersonate-update"));
+    onClose(); // Close admin panel and go to home
+  };
+
   const toggleFeatureFlag = (flagId: string) => {
     const updated = featureFlags.map(f => f.id === flagId ? { ...f, enabled: !f.enabled } : f);
     saveFlags(updated);
@@ -398,6 +439,35 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
     saveFlags(featureFlags.filter(f => f.id !== flag.id));
     addAuditLog("DELETE_FLAG", flag.name, "Feature flag removida");
     toast.success("Feature flag removida!");
+  };
+
+  const handleSaveCMS = () => {
+    localStorage.setItem("sparky-cms-colors", JSON.stringify(cmsColors));
+    addAuditLog("UPDATE_CMS", "Identidade Visual", `Primary: ${cmsColors.primary}, Accent: ${cmsColors.accent}`);
+    toast.success("Identidade visual atualizada!");
+    setShowCMS(false);
+  };
+
+  const handleSendSupportMessage = () => {
+    if (!supportInput.trim() || !supportChatTarget) return;
+    const msg = { from: "admin", text: supportInput, time: new Date().toISOString() };
+    setSupportMessages(prev => [...prev, msg]);
+    // Persist to localStorage per user
+    const key = `sparky-support-chat-${supportChatTarget.id}`;
+    const existing = JSON.parse(localStorage.getItem(key) || "[]");
+    existing.push(msg);
+    localStorage.setItem(key, JSON.stringify(existing));
+    addAuditLog("SUPPORT_CHAT", supportChatTarget.name, supportInput);
+    setSupportInput("");
+  };
+
+  const openSupportChat = (user: AdminUser) => {
+    setSupportChatTarget(user);
+    const key = `sparky-support-chat-${user.id}`;
+    const msgs = JSON.parse(localStorage.getItem(key) || "[]");
+    setSupportMessages(msgs);
+    setShowSupportChat(true);
+    setSelectedUser(null);
   };
 
   const recentUsers = [...users].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5);
@@ -447,8 +517,13 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
           </div>
           <div className="flex items-center gap-1">
             {maintenanceTimerActive && (
-              <span className="text-[10px] font-mono text-warning bg-warning/15 rounded-lg px-2 py-1 flex items-center gap-1">
+              <span className="text-[10px] font-mono text-yellow-500 bg-yellow-500/15 rounded-lg px-2 py-1 flex items-center gap-1">
                 <Timer size={10} /> {formatTimer(maintenanceTimer)}
+              </span>
+            )}
+            {maintenanceMode && (
+              <span className="text-[10px] font-mono text-yellow-500 bg-yellow-500/15 rounded-lg px-2 py-1 flex items-center gap-1">
+                <Settings size={10} /> MANUTENÇÃO
               </span>
             )}
             <button onClick={fetchUsers} className={cn("p-2 rounded-xl hover:bg-muted/50 transition-colors", loading && "animate-spin")}>
@@ -456,21 +531,6 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
             </button>
           </div>
         </div>
-
-        {/* Impersonating Banner */}
-        {impersonating && (
-          <div className="rounded-xl border border-warning/50 bg-warning/10 p-3 flex items-center gap-3">
-            <Eye size={16} className="text-warning shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-warning">Visualizando como: {impersonating.name}</p>
-              <p className="text-[9px] text-muted-foreground">{impersonating.email}</p>
-            </div>
-            <button onClick={() => { setImpersonating(null); addAuditLog("STOP_IMPERSONATE", impersonating.name, "Encerrou visualização"); toast.success("Visualização encerrada"); }}
-              className="text-[10px] font-semibold text-warning bg-warning/20 rounded-lg px-2.5 py-1.5 active:scale-95">
-              Sair
-            </button>
-          </div>
-        )}
 
         {/* Tab Navigation - scrollable */}
         <div className="flex gap-1 rounded-xl bg-muted/50 p-1 overflow-x-auto no-scrollbar">
@@ -572,7 +632,7 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
                       </div>
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={() => { setSelectedUser(user); setAdjustPoints(String(user.points)); }}
+                          onClick={() => { setSelectedUser(user); setAdjustPoints(String(user.points)); setShowTimeline(false); }}
                           className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all active:scale-95"
                           title="Gerenciar"
                         >
@@ -751,6 +811,7 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
               { icon: Download, label: "Exportar Usuários (CSV)", desc: "Baixe a lista completa de usuários", color: "bg-primary/15 text-primary", onClick: exportUsersCSV },
               { icon: Database, label: "Sincronizar Banco de Dados", desc: "Recarregar dados do servidor", color: "bg-green-500/15 text-green-500", onClick: () => { fetchUsers(); toast.success("Dados sincronizados!"); addAuditLog("SYNC_DB", "Sistema", "Dados recarregados"); } },
               { icon: Bell, label: "Enviar Notificação Global", desc: "Envie um aviso para todos os usuários", color: "bg-blue-500/15 text-blue-500", onClick: () => setShowNotifModal(true) },
+              { icon: Palette, label: "Editor de Identidade Visual", desc: "Altere cores, logo e favicon do app", color: "bg-purple-500/15 text-purple-500", onClick: () => setShowCMS(true) },
             ].map((btn, i) => (
               <button key={i} onClick={btn.onClick}
                 className="w-full card-zelo flex items-center gap-3 active:scale-[0.98] transition-transform hover:border-primary/50">
@@ -767,9 +828,10 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
             {/* Maintenance mode */}
             <button
               onClick={() => {
-                setMaintenanceMode(!maintenanceMode);
-                addAuditLog("MAINTENANCE", "Sistema", maintenanceMode ? "Desativado" : "Ativado");
-                toast.success(maintenanceMode ? "Modo manutenção desativado" : "Modo manutenção ativado");
+                const newVal = !maintenanceMode;
+                toggleMaintenance(newVal);
+                addAuditLog("MAINTENANCE", "Sistema", newVal ? "Ativado" : "Desativado");
+                toast.success(newVal ? "Modo manutenção ativado — usuários bloqueados!" : "Modo manutenção desativado");
               }}
               className={cn("w-full card-zelo flex items-center gap-3 active:scale-[0.98] transition-transform",
                 maintenanceMode ? "border-yellow-500/50 bg-yellow-500/5" : "hover:border-primary/50"
@@ -842,7 +904,12 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
                 <input type="text" inputMode="numeric" value={withdrawLimit} onChange={(e) => setWithdrawLimit(e.target.value.replace(/\D/g, ""))}
                   className="w-full rounded-xl border border-border bg-muted/30 px-3 py-2.5 text-sm outline-none focus:border-primary" />
               </div>
-              <button onClick={() => { addAuditLog("UPDATE_CONFIG", "Sistema", `Taxa: ${pointsRate}, Limite: R$${withdrawLimit}`); toast.success("Configurações salvas!"); }}
+              <button onClick={() => {
+                localStorage.setItem("sparky-points-rate", pointsRate);
+                localStorage.setItem("sparky-withdraw-limit", withdrawLimit);
+                addAuditLog("UPDATE_CONFIG", "Sistema", `Taxa: ${pointsRate}, Limite: R$${withdrawLimit}`);
+                toast.success("Configurações salvas!");
+              }}
                 className="w-full rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground active:scale-[0.98]">
                 Salvar Configurações
               </button>
@@ -1043,7 +1110,7 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
       {/* ═══ MODALS ═══ */}
 
       {/* Delete single user confirm */}
-      {deleteTarget && (
+      {deleteTarget && !dangerModal?.show && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
           <div className="w-full max-w-sm card-zelo space-y-4 text-center">
             <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-full bg-destructive/15">
@@ -1110,13 +1177,13 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
         </div>
       )}
 
-      {/* User detail / adjust modal */}
+      {/* User detail / adjust modal — hidden when danger modal is open */}
       {selectedUser && !dangerModal?.show && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
           <div className="w-full max-w-sm card-zelo space-y-4 overflow-y-auto max-h-[85vh]">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold">Gerenciar Usuário</h3>
-              <button onClick={() => { setSelectedUser(null); setAdjustPoints(""); }} className="text-muted-foreground"><X size={16} /></button>
+              <button onClick={() => { setSelectedUser(null); setAdjustPoints(""); setShowTimeline(false); }} className="text-muted-foreground"><X size={16} /></button>
             </div>
 
             <div className="flex items-center gap-3">
@@ -1149,14 +1216,15 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
             </div>
 
             {/* Impersonate */}
-            <button onClick={() => {
-              setImpersonating(selectedUser);
-              addAuditLog("IMPERSONATE", selectedUser.name, "Admin visualizando como este usuário");
-              toast.success(`Visualizando como ${selectedUser.name}`);
-              setSelectedUser(null);
-            }}
+            <button onClick={() => handleImpersonate(selectedUser)}
               className="w-full rounded-xl border border-border bg-muted/30 py-2.5 text-sm font-medium flex items-center justify-center gap-2 active:scale-[0.98] hover:border-primary/50">
               <Eye size={14} className="text-muted-foreground" /> Visualizar como este Usuário
+            </button>
+
+            {/* Support Chat */}
+            <button onClick={() => openSupportChat(selectedUser)}
+              className="w-full rounded-xl border border-border bg-muted/30 py-2.5 text-sm font-medium flex items-center justify-center gap-2 active:scale-[0.98] hover:border-blue-500/50">
+              <MessageSquare size={14} className="text-blue-500" /> Chat de Suporte
             </button>
 
             {/* Session Timeline */}
@@ -1194,7 +1262,7 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
             </div>
 
             <div className="flex gap-2">
-              <button onClick={() => { setSelectedUser(null); setAdjustPoints(""); }} className="flex-1 rounded-xl border border-border py-2.5 text-sm font-medium text-muted-foreground active:scale-[0.98]">
+              <button onClick={() => { setSelectedUser(null); setAdjustPoints(""); setShowTimeline(false); }} className="flex-1 rounded-xl border border-border py-2.5 text-sm font-medium text-muted-foreground active:scale-[0.98]">
                 Cancelar
               </button>
               <button onClick={() => handleAdjustPoints(selectedUser.id, parseInt(adjustPoints) || 0)}
@@ -1318,6 +1386,109 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
               <button onClick={() => setShowFlagForm(false)} className="flex-1 rounded-xl border border-border py-2.5 text-sm font-medium text-muted-foreground active:scale-[0.98]">Cancelar</button>
               <button onClick={handleCreateFlag} disabled={!flagForm.name.trim()}
                 className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground active:scale-[0.98] disabled:opacity-50">Criar Flag</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CMS — Visual Identity Editor */}
+      {showCMS && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-sm card-zelo space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold flex items-center gap-2"><Palette size={14} className="text-purple-500" /> Editor de Identidade Visual</h3>
+                <p className="text-[10px] text-muted-foreground">Customize cores e branding do app</p>
+              </div>
+              <button onClick={() => setShowCMS(false)} className="text-muted-foreground"><X size={16} /></button>
+            </div>
+
+            <div>
+              <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Cor Primária</label>
+              <div className="flex items-center gap-3">
+                <input type="color" value={cmsColors.primary} onChange={(e) => setCmsColors({ ...cmsColors, primary: e.target.value })}
+                  className="h-10 w-10 rounded-lg border border-border cursor-pointer" />
+                <input type="text" value={cmsColors.primary} onChange={(e) => setCmsColors({ ...cmsColors, primary: e.target.value })}
+                  className="flex-1 rounded-xl border border-border bg-muted/30 px-3 py-2.5 text-sm outline-none focus:border-primary font-mono" />
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Cor de Acento</label>
+              <div className="flex items-center gap-3">
+                <input type="color" value={cmsColors.accent} onChange={(e) => setCmsColors({ ...cmsColors, accent: e.target.value })}
+                  className="h-10 w-10 rounded-lg border border-border cursor-pointer" />
+                <input type="text" value={cmsColors.accent} onChange={(e) => setCmsColors({ ...cmsColors, accent: e.target.value })}
+                  className="flex-1 rounded-xl border border-border bg-muted/30 px-3 py-2.5 text-sm outline-none focus:border-primary font-mono" />
+              </div>
+            </div>
+
+            {/* Preview */}
+            <div className="rounded-xl border border-border p-3">
+              <p className="text-[10px] text-muted-foreground font-medium mb-2">PRÉ-VISUALIZAÇÃO</p>
+              <div className="flex gap-2">
+                <div className="h-8 flex-1 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: cmsColors.primary }}>
+                  Primária
+                </div>
+                <div className="h-8 flex-1 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style={{ backgroundColor: cmsColors.accent }}>
+                  Acento
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button onClick={() => setShowCMS(false)} className="flex-1 rounded-xl border border-border py-2.5 text-sm font-medium text-muted-foreground active:scale-[0.98]">Cancelar</button>
+              <button onClick={handleSaveCMS}
+                className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground active:scale-[0.98]">
+                Salvar Identidade
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Support Chat Modal */}
+      {showSupportChat && supportChatTarget && (
+        <div className="fixed inset-0 z-[75] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-sm card-zelo space-y-3 flex flex-col" style={{ maxHeight: "80vh" }}>
+            <div className="flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <MessageSquare size={14} className="text-blue-500" />
+                <div>
+                  <h3 className="text-sm font-bold">Chat com {supportChatTarget.name}</h3>
+                  <p className="text-[9px] text-muted-foreground">{supportChatTarget.email}</p>
+                </div>
+              </div>
+              <button onClick={() => { setShowSupportChat(false); setSupportChatTarget(null); }} className="text-muted-foreground"><X size={16} /></button>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 min-h-0 overflow-y-auto space-y-2 rounded-xl border border-border bg-muted/20 p-3">
+              {supportMessages.length === 0 ? (
+                <p className="text-center text-[10px] text-muted-foreground py-8">Nenhuma mensagem ainda. Inicie a conversa!</p>
+              ) : (
+                supportMessages.map((msg, i) => (
+                  <div key={i} className={cn("max-w-[80%] rounded-xl px-3 py-2", msg.from === "admin" ? "ml-auto bg-primary/20 text-right" : "bg-muted")}>
+                    <p className="text-[11px]">{msg.text}</p>
+                    <p className="text-[8px] text-muted-foreground mt-0.5">{formatDate(msg.time)}</p>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Input */}
+            <div className="flex gap-2 shrink-0">
+              <input
+                type="text"
+                value={supportInput}
+                onChange={(e) => setSupportInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSendSupportMessage()}
+                placeholder="Digite sua mensagem..."
+                className="flex-1 rounded-xl border border-border bg-muted/30 px-3 py-2.5 text-sm outline-none focus:border-primary"
+              />
+              <button onClick={handleSendSupportMessage} disabled={!supportInput.trim()}
+                className="rounded-xl bg-primary px-3 py-2.5 text-primary-foreground active:scale-95 disabled:opacity-50">
+                <Send size={14} />
+              </button>
             </div>
           </div>
         </div>

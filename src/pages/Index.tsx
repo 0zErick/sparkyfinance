@@ -9,6 +9,7 @@ import DocsView from "@/components/views/DocsView";
 import MembersView from "@/components/views/MembersView";
 import ChatView from "@/components/views/ChatView";
 import { syncLocalDataOwner } from "@/lib/userLocalData";
+import { Settings, Timer, Eye, X } from "lucide-react";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("home");
@@ -16,9 +17,68 @@ const Index = () => {
   const [, setTick] = useState(0);
   const navigate = useNavigate();
 
+  // Maintenance mode blocking
+  const [maintenanceActive, setMaintenanceActive] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [maintenanceCountdown, setMaintenanceCountdown] = useState("");
+
+  // Impersonate mode
+  const [impersonating, setImpersonating] = useState<{ id: string; name: string; email: string | null; avatar_url: string | null } | null>(null);
+
   useEffect(() => {
     const interval = setInterval(() => setTick(t => t + 1), 30000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Check maintenance mode
+  useEffect(() => {
+    const checkMaintenance = () => {
+      const active = localStorage.getItem("sparky-maintenance-mode") === "true";
+      setMaintenanceActive(active);
+
+      // Check timer
+      const timerData = localStorage.getItem("sparky-maintenance-timer");
+      if (timerData) {
+        try {
+          const { active: timerActive, endsAt } = JSON.parse(timerData);
+          if (timerActive && endsAt) {
+            const remaining = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+            if (remaining > 0) {
+              const m = Math.floor(remaining / 60);
+              const s = remaining % 60;
+              setMaintenanceCountdown(`${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
+            } else {
+              setMaintenanceCountdown("");
+            }
+          }
+        } catch {}
+      } else {
+        setMaintenanceCountdown("");
+      }
+    };
+
+    checkMaintenance();
+    const interval = setInterval(checkMaintenance, 1000);
+    window.addEventListener("sparky-maintenance-update", checkMaintenance);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("sparky-maintenance-update", checkMaintenance);
+    };
+  }, []);
+
+  // Check impersonate mode
+  useEffect(() => {
+    const checkImpersonate = () => {
+      const data = localStorage.getItem("sparky-impersonate");
+      if (data) {
+        try { setImpersonating(JSON.parse(data)); } catch { setImpersonating(null); }
+      } else {
+        setImpersonating(null);
+      }
+    };
+    checkImpersonate();
+    window.addEventListener("sparky-impersonate-update", checkImpersonate);
+    return () => window.removeEventListener("sparky-impersonate-update", checkImpersonate);
   }, []);
 
   useEffect(() => {
@@ -34,6 +94,8 @@ const Index = () => {
       } else if (session?.user) {
         syncLocalDataOwner(session.user.id);
         setReady(true);
+        // Check if admin
+        setIsAdmin(session.user.email === "admin@sparky.app");
       }
     });
 
@@ -43,6 +105,7 @@ const Index = () => {
       } else if (session?.user) {
         syncLocalDataOwner(session.user.id);
         setReady(true);
+        setIsAdmin(session.user.email === "admin@sparky.app");
       }
     });
 
@@ -56,6 +119,12 @@ const Index = () => {
     if (scrollContainer) scrollContainer.scrollTop = 0;
   };
 
+  const exitImpersonate = () => {
+    localStorage.removeItem("sparky-impersonate");
+    setImpersonating(null);
+    window.dispatchEvent(new Event("sparky-impersonate-update"));
+  };
+
   // Register global callback for chat back button
   useEffect(() => {
     (window as any).__sparkyGoHome = () => handleTabChange("home");
@@ -63,6 +132,34 @@ const Index = () => {
   }, []);
 
   if (!ready) return null;
+
+  // Maintenance blocking screen — only for non-admins
+  if (maintenanceActive && !isAdmin) {
+    return (
+      <div className="bg-background flex flex-col items-center justify-center text-center px-8" style={{ height: '100dvh' }}>
+        <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/5 p-8 max-w-sm w-full space-y-4">
+          <div className="h-16 w-16 rounded-2xl bg-yellow-500/20 flex items-center justify-center mx-auto">
+            <Settings size={32} className="text-yellow-500 animate-spin" style={{ animationDuration: "3s" }} />
+          </div>
+          <h1 className="text-xl font-bold text-foreground">Em Manutenção</h1>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            O Sparky está passando por uma manutenção programada. Voltaremos em breve!
+          </p>
+          {maintenanceCountdown && (
+            <div className="rounded-xl bg-muted/50 py-3 px-4">
+              <p className="text-[10px] text-muted-foreground mb-1">TEMPO ESTIMADO</p>
+              <p className="text-2xl font-mono font-bold text-yellow-500 flex items-center justify-center gap-2">
+                <Timer size={20} /> {maintenanceCountdown}
+              </p>
+            </div>
+          )}
+          <p className="text-[10px] text-muted-foreground">
+            Pedimos desculpa pelo inconveniente. ⚡
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const renderView = () => {
     switch (activeTab) {
@@ -88,6 +185,34 @@ const Index = () => {
         overscrollBehavior: 'none',
       }}
     >
+      {/* Impersonate floating bar */}
+      {impersonating && (
+        <div className="shrink-0 flex items-center gap-2 px-4 py-2 bg-yellow-500/10 border-b border-yellow-500/30" style={{ zIndex: 55 }}>
+          <Eye size={14} className="text-yellow-500 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-semibold text-yellow-500 truncate">
+              Visualizando como: {impersonating.name}
+            </p>
+          </div>
+          <button
+            onClick={exitImpersonate}
+            className="flex items-center gap-1 rounded-lg bg-yellow-500/20 px-2.5 py-1 text-[10px] font-semibold text-yellow-500 active:scale-95 shrink-0"
+          >
+            <X size={10} /> Sair
+          </button>
+        </div>
+      )}
+
+      {/* Maintenance countdown bar for admin */}
+      {isAdmin && maintenanceCountdown && !maintenanceActive && (
+        <div className="shrink-0 flex items-center justify-center gap-2 px-4 py-1.5 bg-yellow-500/10 border-b border-yellow-500/30">
+          <Timer size={12} className="text-yellow-500" />
+          <p className="text-[10px] font-mono font-bold text-yellow-500">
+            Manutenção em: {maintenanceCountdown}
+          </p>
+        </div>
+      )}
+
       <div data-main-scroll className={`relative flex-1 min-h-0 overflow-x-hidden ${activeTab === 'chat' ? 'overflow-hidden' : 'overflow-y-auto'}`} style={{ overscrollBehavior: 'none', paddingBottom: activeTab === 'chat' ? '0' : 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
         {renderView()}
       </div>
