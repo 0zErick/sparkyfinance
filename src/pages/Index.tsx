@@ -219,7 +219,9 @@ const Index = () => {
       )}
 
       <div data-main-scroll className={`relative flex-1 min-h-0 overflow-x-hidden ${activeTab === 'chat' ? 'overflow-hidden' : 'overflow-y-auto'}`} style={{ overscrollBehavior: 'none', paddingBottom: activeTab === 'chat' ? '0' : 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
-        {renderView()}
+        <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+          {renderView()}
+        </Suspense>
       </div>
       {activeTab !== 'chat' && <TabBar activeTab={activeTab} onTabChange={handleTabChange} />}
     </div>
