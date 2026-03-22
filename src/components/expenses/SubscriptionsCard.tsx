@@ -43,6 +43,8 @@ const SubscriptionsCard = () => {
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [menuId, setMenuId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
   const [newAmount, setNewAmount] = useState("R$ 0,00");
   const [newDueDay, setNewDueDay] = useState("10");
