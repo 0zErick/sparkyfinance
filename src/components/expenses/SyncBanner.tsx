@@ -27,14 +27,8 @@ const SyncBanner = ({ onNavigateToMetas, hideSyncBanner }: SyncBannerProps) => {
     setExpenseModalOpen(true);
   };
 
-  const handleScan = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-      stream.getTracks().forEach(t => t.stop());
-      alert("Funcionalidade de escaneamento de NFC-e será implementada com OCR/IA.");
-    } catch {
-      alert("Não foi possível acessar a câmera. Verifique as permissões.");
-    }
+  const handleScan = () => {
+    setScanOpen(true);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
