@@ -280,7 +280,7 @@ const PlanejamentoTab = () => {
                         type="text"
                         inputMode="numeric"
                         value={depositAmount}
-                        onChange={(e) => setDepositAmount(e.target.value)}
+                        onChange={(e) => setDepositAmount(handleBRLChange(e.target.value))}
                         placeholder="R$ 0,00"
                         className="flex-1 rounded-lg border border-border bg-muted/50 px-3 py-2 text-xs outline-none tabular-nums focus:border-primary"
                       />
