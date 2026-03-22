@@ -1,16 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import TabBar from "@/components/layout/TabBar";
-import DashboardView from "@/components/views/DashboardView";
-import TasksView from "@/components/views/TasksView";
-import ExpensesView from "@/components/views/ExpensesView";
-import DocsView from "@/components/views/DocsView";
-import MembersView from "@/components/views/MembersView";
-import ChatView from "@/components/views/ChatView";
 import { syncLocalDataOwner } from "@/lib/userLocalData";
 import GlobalNotificationPopup from "@/components/layout/GlobalNotificationPopup";
-import { Settings, Timer, Eye, X, ShieldAlert, Ban } from "lucide-react";
+import { Settings, Timer, Eye, X } from "lucide-react";
+
+const DashboardView = lazy(() => import("@/components/views/DashboardView"));
+const TasksView = lazy(() => import("@/components/views/TasksView"));
+const ExpensesView = lazy(() => import("@/components/views/ExpensesView"));
+const DocsView = lazy(() => import("@/components/views/DocsView"));
+const MembersView = lazy(() => import("@/components/views/MembersView"));
+const ChatView = lazy(() => import("@/components/views/ChatView"));
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("home");
@@ -134,49 +135,6 @@ const Index = () => {
 
   if (!ready) return null;
 
-  // Check if user is suspended or banned
-  const checkAccountStatus = () => {
-    try {
-      const userId = localStorage.getItem("sparky-current-user-id");
-      if (!userId || isAdmin) return null;
-      const suspended = JSON.parse(localStorage.getItem("sparky-suspended-users") || "[]");
-      if (suspended.includes(userId)) return "suspended";
-      const banned = JSON.parse(localStorage.getItem("sparky-banned-users") || "[]");
-      if (banned.includes(userId)) return "banned";
-    } catch {}
-    return null;
-  };
-
-  const accountStatus = checkAccountStatus();
-
-  // Suspended/Banned blocking screen
-  if (accountStatus) {
-    return (
-      <div className="bg-background flex flex-col items-center justify-center text-center px-8" style={{ height: '100dvh' }}>
-        <div className={`rounded-2xl border p-8 max-w-sm w-full space-y-4 ${accountStatus === "banned" ? "border-destructive/30 bg-destructive/5" : "border-yellow-500/30 bg-yellow-500/5"}`}>
-          <div className={`h-16 w-16 rounded-2xl flex items-center justify-center mx-auto ${accountStatus === "banned" ? "bg-destructive/20" : "bg-yellow-500/20"}`}>
-            {accountStatus === "banned"
-              ? <Ban size={32} className="text-destructive" />
-              : <ShieldAlert size={32} className="text-yellow-500" />
-            }
-          </div>
-          <h1 className="text-xl font-bold text-foreground">
-            {accountStatus === "banned" ? "Conta Banida" : "Conta Suspensa"}
-          </h1>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {accountStatus === "banned"
-              ? "Sua conta foi banida por violar os termos de uso. Se acredita que isso foi um erro, entre em contato com o suporte."
-              : "Sua conta foi temporariamente suspensa pelo administrador. Seus dados estão preservados e serão restaurados quando a suspensão for removida."
-            }
-          </p>
-          <p className="text-[10px] text-muted-foreground">
-            {accountStatus === "banned" ? "Código: ACCOUNT_BANNED" : "Código: ACCOUNT_SUSPENDED"}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   // Maintenance blocking screen — only for non-admins
   if (maintenanceActive && !isAdmin) {
     return (
@@ -261,7 +219,9 @@ const Index = () => {
       )}
 
       <div data-main-scroll className={`relative flex-1 min-h-0 overflow-x-hidden ${activeTab === 'chat' ? 'overflow-hidden' : 'overflow-y-auto'}`} style={{ overscrollBehavior: 'none', paddingBottom: activeTab === 'chat' ? '0' : 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
-        {renderView()}
+        <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+          {renderView()}
+        </Suspense>
       </div>
       {activeTab !== 'chat' && <TabBar activeTab={activeTab} onTabChange={handleTabChange} />}
     </div>
