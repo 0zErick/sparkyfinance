@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useFinancialData } from "@/hooks/useFinancialData";
 import { usePoints } from "@/hooks/usePoints";
+import { useDockVisibility } from "@/hooks/useDockVisibility";
 
 const BUDGET_KEY = "sparky-budgets";
 const GOALS_KEY = "sparky-investment-goals";
