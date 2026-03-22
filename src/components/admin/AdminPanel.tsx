@@ -319,9 +319,17 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
 
   const handleSendNotification = () => {
     if (!notifMessage.trim()) return;
-    const notifs = JSON.parse(localStorage.getItem("sparky-global-notifications") || "[]");
-    notifs.unshift({ id: Date.now().toString(), message: notifMessage, date: new Date().toISOString(), read: false });
-    localStorage.setItem("sparky-global-notifications", JSON.stringify(notifs));
+    // Store as a blocking notification with 5-second delay
+    const notif = {
+      id: Date.now().toString(),
+      message: notifMessage,
+      date: new Date().toISOString(),
+      read: false,
+      blocking: true,
+      minDisplaySeconds: 5,
+    };
+    localStorage.setItem("sparky-active-notification", JSON.stringify(notif));
+    window.dispatchEvent(new Event("sparky-notification-push"));
     addAuditLog("SEND_NOTIFICATION", "Todos os usuários", notifMessage);
     toast.success("Notificação enviada para todos os usuários!");
     setNotifMessage("");
@@ -366,11 +374,17 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
   const handleSuspendUser = (user: AdminUser) => {
     openDangerConfirm(
       "⚠️ Suspender Conta",
-      `Tem certeza que deseja suspender a conta de "${user.name}"? O usuário será removido do sistema permanentemente.`,
+      `Suspender a conta de "${user.name}"? O acesso será bloqueado indefinidamente, mas pode ser revertido. Todos os dados serão preservados.`,
       async () => {
-        await handleDeleteUser(user.id);
+        // Mark user as suspended (preserving data)
+        const suspended = JSON.parse(localStorage.getItem("sparky-suspended-users") || "[]");
+        if (!suspended.includes(user.id)) suspended.push(user.id);
+        localStorage.setItem("sparky-suspended-users", JSON.stringify(suspended));
+        addAuditLog("SUSPEND_USER", user.name, "Conta suspensa — acesso bloqueado, dados preservados");
         setDangerModal(null);
         setDangerConfirmText("");
+        setResultPopup({ show: true, success: true, message: `Conta de ${user.name} suspensa com sucesso! O usuário verá um aviso ao tentar acessar.` });
+        fetchUsers();
       }
     );
   };
@@ -378,14 +392,40 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
   const handleBanUser = (user: AdminUser) => {
     openDangerConfirm(
       "🚫 Banir Conta",
-      `Tem certeza que deseja BANIR a conta de "${user.name}"? Esta ação é irreversível e todos os dados serão perdidos.`,
+      `Banir a conta de "${user.name}"? O acesso será totalmente bloqueado. Esta ação é reversível e todos os dados serão preservados no banco de dados.`,
       async () => {
-        await handleDeleteUser(user.id);
-        addAuditLog("BAN_USER", user.name, "Conta banida permanentemente");
+        const banned = JSON.parse(localStorage.getItem("sparky-banned-users") || "[]");
+        if (!banned.includes(user.id)) banned.push(user.id);
+        localStorage.setItem("sparky-banned-users", JSON.stringify(banned));
+        addAuditLog("BAN_USER", user.name, "Conta banida — acesso bloqueado, dados preservados para reversão");
         setDangerModal(null);
         setDangerConfirmText("");
+        setResultPopup({ show: true, success: true, message: `Conta de ${user.name} banida com sucesso! O usuário verá um aviso ao tentar acessar.` });
+        fetchUsers();
       }
     );
+  };
+
+  const handleUnsuspendUser = (user: AdminUser) => {
+    const suspended = JSON.parse(localStorage.getItem("sparky-suspended-users") || "[]");
+    localStorage.setItem("sparky-suspended-users", JSON.stringify(suspended.filter((id: string) => id !== user.id)));
+    const banned = JSON.parse(localStorage.getItem("sparky-banned-users") || "[]");
+    localStorage.setItem("sparky-banned-users", JSON.stringify(banned.filter((id: string) => id !== user.id)));
+    addAuditLog("UNSUSPEND_USER", user.name, "Conta reativada");
+    toast.success(`Conta de ${user.name} reativada!`);
+    fetchUsers();
+  };
+
+  const isUserSuspended = (userId: string) => {
+    try {
+      return JSON.parse(localStorage.getItem("sparky-suspended-users") || "[]").includes(userId);
+    } catch { return false; }
+  };
+
+  const isUserBanned = (userId: string) => {
+    try {
+      return JSON.parse(localStorage.getItem("sparky-banned-users") || "[]").includes(userId);
+    } catch { return false; }
   };
 
   const handleGlobalLogout = () => {
@@ -1299,15 +1339,38 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
 
             {/* Suspend & Ban - separate buttons */}
             <div className="flex gap-2">
-              <button onClick={() => handleSuspendUser(selectedUser)}
-                className="flex-1 rounded-xl border border-yellow-500/30 bg-yellow-500/5 py-2.5 text-sm font-semibold text-yellow-500 flex items-center justify-center gap-2 active:scale-[0.98]">
-                <Lock size={14} /> Suspender
-              </button>
-              <button onClick={() => handleBanUser(selectedUser)}
-                className="flex-1 rounded-xl border border-destructive/30 bg-destructive/5 py-2.5 text-sm font-semibold text-destructive flex items-center justify-center gap-2 active:scale-[0.98]">
-                <Ban size={14} /> Banir
-              </button>
+              {(isUserSuspended(selectedUser.id) || isUserBanned(selectedUser.id)) ? (
+                <button onClick={() => { handleUnsuspendUser(selectedUser); setSelectedUser(null); }}
+                  className="flex-1 rounded-xl border border-success/30 bg-success/5 py-2.5 text-sm font-semibold text-success flex items-center justify-center gap-2 active:scale-[0.98]">
+                  <Unlock size={14} /> Reativar Conta
+                </button>
+              ) : (
+                <>
+                  <button onClick={() => handleSuspendUser(selectedUser)}
+                    className="flex-1 rounded-xl border border-yellow-500/30 bg-yellow-500/5 py-2.5 text-sm font-semibold text-yellow-500 flex items-center justify-center gap-2 active:scale-[0.98]">
+                    <Lock size={14} /> Suspender
+                  </button>
+                  <button onClick={() => handleBanUser(selectedUser)}
+                    className="flex-1 rounded-xl border border-destructive/30 bg-destructive/5 py-2.5 text-sm font-semibold text-destructive flex items-center justify-center gap-2 active:scale-[0.98]">
+                    <Ban size={14} /> Banir
+                  </button>
+                </>
+              )}
             </div>
+
+            {/* Status badges */}
+            {isUserSuspended(selectedUser.id) && (
+              <div className="rounded-xl bg-yellow-500/10 border border-yellow-500/30 px-3 py-2 flex items-center gap-2">
+                <Lock size={12} className="text-yellow-500" />
+                <span className="text-[10px] font-semibold text-yellow-500">Conta Suspensa — dados preservados</span>
+              </div>
+            )}
+            {isUserBanned(selectedUser.id) && (
+              <div className="rounded-xl bg-destructive/10 border border-destructive/30 px-3 py-2 flex items-center gap-2">
+                <Ban size={12} className="text-destructive" />
+                <span className="text-[10px] font-semibold text-destructive">Conta Banida — dados preservados</span>
+              </div>
+            )}
           </div>
         </div>
       )}
