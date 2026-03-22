@@ -1,15 +1,53 @@
 import { useState } from "react";
-import { Copy, Check, Crown, Star, Shield, Users, Trophy, Zap, Gift, ChevronDown, ChevronUp } from "lucide-react";
+import { Copy, Check, Crown, Star, Shield, Users, Trophy, Zap, Gift, ChevronDown, ChevronUp, Award, Pencil, X, Clock } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { usePoints, POINTS_RULES } from "@/hooks/usePoints";
 import { useGroupMembers } from "@/hooks/useGroupMembers";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+interface Prize {
+  id: string;
+  name: string;
+  pointsCost: number;
+  stock: number;
+}
+
+interface Redemption {
+  id: string;
+  prizeId: string;
+  prizeName: string;
+  userName: string;
+  date: string;
+}
+
+const PRIZES_KEY = "sparky-admin-prizes";
+const REDEMPTIONS_KEY = "sparky-redemption-history";
+
+const loadPrizes = (): Prize[] => {
+  try { return JSON.parse(localStorage.getItem(PRIZES_KEY) || "[]"); } catch { return []; }
+};
+
+const loadRedemptions = (): Redemption[] => {
+  try { return JSON.parse(localStorage.getItem(REDEMPTIONS_KEY) || "[]"); } catch { return []; }
+};
 
 const MembersView = () => {
   const [copied, setCopied] = useState(false);
   const [showPointsGuide, setShowPointsGuide] = useState(false);
+  const [showPrizes, setShowPrizes] = useState(false);
+  const [editPrize, setEditPrize] = useState<Prize | null>(null);
+  const [editForm, setEditForm] = useState({ name: "", pointsCost: "", stock: "" });
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<Prize | null>(null);
   const { profile } = useProfile();
   const { currentPoints, monthlyEarnings, recentActivity } = usePoints();
   const { members, isLeader } = useGroupMembers();
+
+  const prizes = loadPrizes();
+  const redemptions = loadRedemptions();
+
+  // Check if current user is leader (owner)
+  const isOwner = profile ? isLeader({ invite_code: profile.invite_code, group_code: profile.group_code } as any) : false;
 
   const groupCode = profile?.group_code || profile?.invite_code || "--------";
 
@@ -17,6 +55,57 @@ const MembersView = () => {
     navigator.clipboard.writeText(groupCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleRedeem = (prize: Prize) => {
+    if (currentPoints < prize.pointsCost) {
+      toast.error("Pontos insuficientes para resgatar este prêmio!");
+      return;
+    }
+    if (prize.stock <= 0) {
+      toast.error("Este prêmio está esgotado!");
+      return;
+    }
+
+    // Deduct points
+    const newPoints = currentPoints - prize.pointsCost;
+    // Update prize stock
+    const updatedPrizes = prizes.map(p => p.id === prize.id ? { ...p, stock: p.stock - 1 } : p);
+    localStorage.setItem(PRIZES_KEY, JSON.stringify(updatedPrizes));
+
+    // Log redemption
+    const newRedemption: Redemption = {
+      id: Date.now().toString(),
+      prizeId: prize.id,
+      prizeName: prize.name,
+      userName: profile?.name || "Usuário",
+      date: new Date().toISOString(),
+    };
+    const allRedemptions = [...loadRedemptions(), newRedemption];
+    localStorage.setItem(REDEMPTIONS_KEY, JSON.stringify(allRedemptions));
+
+    toast.success(`Prêmio "${prize.name}" resgatado! -${prize.pointsCost} pts`);
+  };
+
+  const handleEditSave = () => {
+    if (!editPrize || !editForm.name.trim()) return;
+    const updated = prizes.map(p => p.id === editPrize.id ? {
+      ...p,
+      name: editForm.name,
+      pointsCost: parseInt(editForm.pointsCost) || 0,
+      stock: parseInt(editForm.stock) || 0,
+    } : p);
+    localStorage.setItem(PRIZES_KEY, JSON.stringify(updated));
+    setEditPrize(null);
+    toast.success("Prêmio atualizado!");
+  };
+
+  const handleDeletePrize = (prize: Prize) => {
+    const updated = prizes.filter(p => p.id !== prize.id);
+    localStorage.setItem(PRIZES_KEY, JSON.stringify(updated));
+    setShowDeleteConfirm(null);
+    setEditPrize(null);
+    toast.success("Prêmio excluído!");
   };
 
   const getRankBadge = (index: number, member: any) => {
@@ -47,8 +136,22 @@ const MembersView = () => {
     ? Math.min(100, ((currentPoints - level.min) / (nextLevel.min - level.min)) * 100)
     : 100;
 
+  // Sort members: leaders first, then by points
+  const sortedMembers = [...members].sort((a, b) => {
+    const aIsLeader = isLeader(a);
+    const bIsLeader = isLeader(b);
+    if (aIsLeader && !bIsLeader) return -1;
+    if (!aIsLeader && bIsLeader) return 1;
+    return b.points - a.points;
+  });
+
   const leaderCount = members.filter(m => isLeader(m)).length;
   const memberCount = members.length - leaderCount;
+
+  const formatDate = (d: string) => {
+    const date = new Date(d);
+    return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  };
 
   return (
     <div className="px-4 pb-24 space-y-4">
@@ -94,6 +197,84 @@ const MembersView = () => {
           </div>
         )}
       </div>
+
+      {/* Prizes Section */}
+      {prizes.length > 0 && (
+        <div className="card-zelo fade-in-up stagger-1">
+          <button onClick={() => setShowPrizes(!showPrizes)} className="w-full flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-500/15">
+                <Award size={18} className="text-yellow-500" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-bold">Loja de Prêmios</p>
+                <p className="text-[10px] text-muted-foreground">{prizes.length} prêmio(s) disponível(is)</p>
+              </div>
+            </div>
+            {showPrizes ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
+          </button>
+
+          {showPrizes && (
+            <div className="mt-4 space-y-3">
+              {prizes.map(prize => (
+                <div key={prize.id} className="rounded-xl border border-border p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-yellow-500/15 flex items-center justify-center shrink-0">
+                      <Award size={16} className="text-yellow-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold">{prize.name}</p>
+                        {isOwner && (
+                          <button
+                            onClick={() => { setEditPrize(prize); setEditForm({ name: prize.name, pointsCost: String(prize.pointsCost), stock: String(prize.stock) }); }}
+                            className="p-1 rounded text-muted-foreground/50 hover:text-muted-foreground active:scale-90"
+                          >
+                            <Pencil size={11} />
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/15 px-2 py-0.5 text-[10px] font-bold text-yellow-500">
+                          <Star size={8} /> {prize.pointsCost} pts
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">{prize.stock} restantes</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleRedeem(prize)}
+                      disabled={currentPoints < prize.pointsCost || prize.stock <= 0}
+                      className="rounded-lg bg-primary/15 border border-primary/20 px-3 py-1.5 text-[10px] font-semibold text-primary active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      Resgatar
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {/* Redemption History */}
+              {redemptions.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-[10px] font-semibold text-muted-foreground mb-2">HISTÓRICO DE RESGATES</p>
+                  <div className="space-y-1.5">
+                    {redemptions.slice(-10).reverse().map(r => (
+                      <div key={r.id} className="flex items-center justify-between rounded-lg bg-muted/30 px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <Clock size={10} className="text-muted-foreground" />
+                          <div>
+                            <p className="text-[10px] font-medium">{r.userName} resgatou {r.prizeName}</p>
+                            <p className="text-[8px] text-muted-foreground">{formatDate(r.date)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Points System Explainer */}
       <div className="card-zelo fade-in-up stagger-1">
@@ -155,9 +336,9 @@ const MembersView = () => {
               <p className="text-xs font-bold text-primary mb-1">🎁 Para que servem os pontos?</p>
               <ul className="text-[11px] text-muted-foreground space-y-1">
                 <li>• <strong>Ranking familiar</strong> — compita com membros do grupo</li>
+                <li>• <strong>Loja de prêmios</strong> — resgate recompensas exclusivas</li>
                 <li>• <strong>Níveis de conquista</strong> — evolua seu perfil financeiro</li>
                 <li>• <strong>Reconhecimento</strong> — mostre sua disciplina financeira</li>
-                <li>• <strong>Em breve:</strong> troque pontos por recompensas exclusivas</li>
               </ul>
             </div>
           </div>
@@ -202,11 +383,11 @@ const MembersView = () => {
         </div>
       </div>
 
-      {/* Members Ranking */}
+      {/* Members Ranking — leaders first */}
       <div className="fade-in-up stagger-4">
         <p className="text-label mb-2 px-1">CLASSIFICAÇÃO GERAL</p>
         <div className="card-zelo !p-0 divide-y divide-border">
-          {members.length === 0 && profile && (
+          {sortedMembers.length === 0 && profile && (
             <div className="flex items-center gap-3 px-4 py-3.5">
               <div className="relative">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-warning/40 to-warning/10 text-sm font-bold">
@@ -225,7 +406,7 @@ const MembersView = () => {
               </div>
             </div>
           )}
-          {members.map((member, index) => {
+          {sortedMembers.map((member, index) => {
             const memberIsLeader = isLeader(member);
             const badge = getRankBadge(index, member);
             const BadgeIcon = badge.icon;
@@ -236,7 +417,7 @@ const MembersView = () => {
               "from-destructive/40 to-destructive/10",
             ];
             return (
-              <div key={member.id} className="flex items-center gap-3 px-4 py-3.5">
+              <div key={member.id} className={cn("flex items-center gap-3 px-4 py-3.5", memberIsLeader && "bg-warning/5")}>
                 <div className="relative">
                   {member.avatar_url ? (
                     <img src={member.avatar_url} alt={member.name} className="h-10 w-10 rounded-full object-cover" />
@@ -290,6 +471,54 @@ const MembersView = () => {
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Edit Prize Modal — only for owners */}
+      {editPrize && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-sm card-zelo space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold">Editar Prêmio</h3>
+              <button onClick={() => setEditPrize(null)} className="text-muted-foreground"><X size={16} /></button>
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Nome</label>
+              <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                className="w-full rounded-xl border border-border bg-muted/30 px-3 py-2.5 text-sm outline-none focus:border-primary" />
+            </div>
+            <div>
+              <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Custo em Pontos</label>
+              <input type="text" inputMode="numeric" value={editForm.pointsCost}
+                onChange={(e) => setEditForm({ ...editForm, pointsCost: e.target.value.replace(/\D/g, "") })}
+                className="w-full rounded-xl border border-border bg-muted/30 px-3 py-2.5 text-sm outline-none focus:border-primary" />
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setEditPrize(null)} className="flex-1 rounded-xl border border-border py-2.5 text-sm font-medium text-muted-foreground active:scale-[0.98]">Cancelar</button>
+              <button onClick={handleEditSave} className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground active:scale-[0.98]">Salvar</button>
+            </div>
+            <button onClick={() => setShowDeleteConfirm(editPrize)}
+              className="w-full rounded-xl border border-destructive/30 bg-destructive/5 py-2.5 text-sm font-semibold text-destructive flex items-center justify-center gap-2 active:scale-[0.98]">
+              Excluir Prêmio
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Prize Confirm */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-sm card-zelo space-y-4 text-center">
+            <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-full bg-destructive/15">
+              <Award size={24} className="text-destructive" />
+            </div>
+            <h3 className="text-base font-bold">Excluir prêmio?</h3>
+            <p className="text-xs text-muted-foreground">Tem certeza que deseja excluir "{showDeleteConfirm.name}"?</p>
+            <div className="flex gap-2">
+              <button onClick={() => setShowDeleteConfirm(null)} className="flex-1 rounded-xl border border-border py-3 text-sm font-medium text-muted-foreground active:scale-[0.98]">Cancelar</button>
+              <button onClick={() => handleDeletePrize(showDeleteConfirm)} className="flex-1 rounded-xl bg-destructive py-3 text-sm font-semibold text-destructive-foreground active:scale-[0.98]">Excluir</button>
+            </div>
           </div>
         </div>
       )}
