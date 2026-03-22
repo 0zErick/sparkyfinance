@@ -38,7 +38,7 @@ const ExtratoTab = () => {
   const [editAmount, setEditAmount] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  const { data, updateData } = useFinancialData();
+  const { data, deleteTransaction, updateTransaction } = useFinancialData();
 
   const filtered = data.transactions.filter((t) => {
     const d = new Date(t.date);
