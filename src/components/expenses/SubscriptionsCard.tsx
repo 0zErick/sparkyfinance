@@ -231,10 +231,10 @@ const SubscriptionsCard = () => {
                             <>
                               <div className="fixed inset-0 z-10" onClick={() => setMenuId(null)} />
                               <div className="absolute right-0 top-8 bg-card border border-border rounded-xl shadow-xl z-20 py-1 min-w-[130px]">
-                                <button onClick={() => startEdit(sub)} className="w-full px-3 py-2.5 text-xs flex items-center gap-2 hover:bg-muted transition-colors">
+                                <button onMouseDown={(e) => { e.stopPropagation(); startEdit(sub); }} className="w-full px-3 py-2.5 text-xs flex items-center gap-2 hover:bg-muted transition-colors">
                                   <Pencil size={12} /> Editar
                                 </button>
-                                <button onClick={() => handleDelete(sub.id)} className="w-full px-3 py-2.5 text-xs flex items-center gap-2 hover:bg-muted text-destructive transition-colors">
+                                <button onMouseDown={(e) => { e.stopPropagation(); handleDelete(sub.id); }} className="w-full px-3 py-2.5 text-xs flex items-center gap-2 hover:bg-muted text-destructive transition-colors">
                                   <Trash2 size={12} /> Excluir
                                 </button>
                               </div>

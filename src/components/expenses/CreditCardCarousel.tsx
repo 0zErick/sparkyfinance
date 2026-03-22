@@ -4,6 +4,7 @@ import { ChevronDown, Receipt, Calendar, DollarSign, ArrowLeft, Trash2, Pencil, 
 import { cn } from "@/lib/utils";
 import { useFinancialData } from "@/hooks/useFinancialData";
 import { toast } from "sonner";
+import { useDockVisibility } from "@/hooks/useDockVisibility";
 
 interface CardTransaction {
   id: string;
@@ -74,6 +75,8 @@ const CreditCardCarousel = () => {
   const [editValue, setEditValue] = useState("");
 
   const { data, updateData } = useFinancialData();
+
+  useDockVisibility(expandedId !== null || showPayment);
 
   const saveCards = useCallback((updated: CreditCardData[]) => {
     setCards(updated);
