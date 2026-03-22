@@ -41,7 +41,7 @@ const inspirationalQuotes = [
   "🔥 Disciplina hoje, colheita amanhã.",
 ];
 
-type SubView = null | "profile" | "prizes" | "members" | "ranking" | "admin";
+type SubView = null | "profile" | "prizes" | "members" | "ranking" | "admin" | "support";
 
 const ProfileSwitcher = () => {
   const navigate = useNavigate();
