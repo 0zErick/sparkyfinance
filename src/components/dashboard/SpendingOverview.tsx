@@ -119,7 +119,7 @@ const SpendingOverview = ({ hideValues = false }: SpendingOverviewProps) => {
       <div className="flex items-center gap-1.5 mb-3">
         <p className="text-[11px] text-muted-foreground">
           {hasData && !hideValues
-            ? <>{spendPercent}% do saldo disponível (<span className="text-foreground font-medium">{fmt(spendablePool)}</span>)</>
+            ? <>Reserva de {spendPercent}% · {daysLeft} dia{daysLeft !== 1 ? "s" : ""} restantes</>
             : hideValues ? "Valores ocultos" : "Adicione sua renda e despesas"
           }
         </p>
