@@ -24,18 +24,20 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Você é um parser de extratos bancários. Analise o texto e extraia transações.
+            content: `Você é um parser de extratos bancários brasileiro de alta precisão. Analise o texto e extraia transações.
 
-REGRAS:
-- Retorne SOMENTE o JSON, sem markdown, sem explicações
+REGRAS RIGOROSAS:
+- Retorne SOMENTE via tool call, sem texto adicional
 - Identifique data, descrição, valor e se é crédito(C) ou débito(D)
 - Sugira uma categoria para cada: Alimentação, Transporte, Moradia, Saúde, Lazer, Educação, Receita, Transferência, Cartão, Outros
-- Datas devem estar no formato DD/MM/AAAA
-- Valores devem ser números positivos
-- type: "in" para crédito/receita, "out" para débito/despesa
+- Datas DEVEM estar no formato DD/MM/AAAA. Se o ano não estiver presente, use ${new Date().getFullYear()}
+- Valores DEVEM ser números positivos (float). Remova pontos de milhar e use ponto decimal (ex: 1.234,56 → 1234.56)
+- type: "in" para crédito/receita/PIX recebido/depósito, "out" para débito/despesa/pagamento/saque
+- Se houver ambiguidade no tipo (crédito vs débito), analise o contexto: "recebido", "depósito", "salário" = "in"; "pagamento", "compra", "débito" = "out"
+- Ignore linhas de saldo, cabeçalhos, rodapés e informações não-transacionais
+- Cada transação DEVE ter todos os campos preenchidos
+- confidence: número de 0 a 1 indicando confiança na extração geral`
 
-Formato de resposta:
-{"transactions":[{"date":"DD/MM/AAAA","description":"...","category":"...","value":0.00,"type":"in|out"}]}`
           },
           { role: "user", content: `Extraia as transações deste extrato:\n\n${text}` }
         ],
@@ -56,10 +58,11 @@ Formato de resposta:
                         date: { type: "string", description: "DD/MM/AAAA" },
                         description: { type: "string" },
                         category: { type: "string", enum: ["Alimentação", "Transporte", "Moradia", "Saúde", "Lazer", "Educação", "Receita", "Transferência", "Cartão", "Outros"] },
-                        value: { type: "number" },
-                        type: { type: "string", enum: ["in", "out"] }
+                        value: { type: "number", description: "Valor positivo como float (ex: 1234.56)" },
+                        type: { type: "string", enum: ["in", "out"] },
+                        confidence: { type: "number", description: "Confiança na leitura desta transação (0-1)" }
                       },
-                      required: ["date", "description", "category", "value", "type"],
+                      required: ["date", "description", "category", "value", "type", "confidence"],
                       additionalProperties: false
                     }
                   }

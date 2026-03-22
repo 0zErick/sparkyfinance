@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Wallet, TrendingDown, TrendingUp, ScanLine, Download, Target } from "lucide-react";
 import AddExpenseModal from "@/components/expenses/AddExpenseModal";
 import ImportModal from "./ImportModal";
+import ScanReceiptModal from "./ScanReceiptModal";
 
 interface SyncBannerProps {
   onNavigateToMetas?: () => void;
@@ -13,6 +14,7 @@ const SyncBanner = ({ onNavigateToMetas, hideSyncBanner }: SyncBannerProps) => {
   const [expenseModalType, setExpenseModalType] = useState<"expense" | "income">("expense");
   const [syncPopup, setSyncPopup] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDespesa = () => {
@@ -25,14 +27,8 @@ const SyncBanner = ({ onNavigateToMetas, hideSyncBanner }: SyncBannerProps) => {
     setExpenseModalOpen(true);
   };
 
-  const handleScan = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-      stream.getTracks().forEach(t => t.stop());
-      alert("Funcionalidade de escaneamento de NFC-e será implementada com OCR/IA.");
-    } catch {
-      alert("Não foi possível acessar a câmera. Verifique as permissões.");
-    }
+  const handleScan = () => {
+    setScanOpen(true);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,6 +120,7 @@ const SyncBanner = ({ onNavigateToMetas, hideSyncBanner }: SyncBannerProps) => {
 
       <AddExpenseModal open={expenseModalOpen} onClose={() => setExpenseModalOpen(false)} type={expenseModalType} />
       <ImportModal open={importOpen} onClose={() => setImportOpen(false)} />
+      <ScanReceiptModal open={scanOpen} onClose={() => setScanOpen(false)} />
     </div>
   );
 };
