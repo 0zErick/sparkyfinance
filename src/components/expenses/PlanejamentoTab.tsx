@@ -88,6 +88,9 @@ const PlanejamentoTab = () => {
   const [depositGoalId, setDepositGoalId] = useState<string | null>(null);
   const [depositAmount, setDepositAmount] = useState("");
 
+  // Hide dock when any modal is open
+  useDockVisibility(goalModalOpen || editBudgetOpen || newGoalOpen);
+
   // Compute savings goal from real data
   const totalSaved = investmentGoals.reduce((s, g) => s + g.savedAmount, 0);
   const totalTarget = investmentGoals.reduce((s, g) => s + g.targetAmount, 0);
