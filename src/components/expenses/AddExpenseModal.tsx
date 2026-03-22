@@ -75,7 +75,7 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
   const [selectedCardId, setSelectedCardId] = useState<string>("");
   const [showCardPicker, setShowCardPicker] = useState(false);
   const [name, setName] = useState("");
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState("R$ 0,00");
   const [expDay, setExpDay] = useState(String(now.getDate()));
   const [expMonth, setExpMonth] = useState(String(now.getMonth()));
   const [expYear, setExpYear] = useState(String(now.getFullYear()));
