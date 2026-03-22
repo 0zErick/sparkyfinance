@@ -51,7 +51,10 @@ const Index = () => {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
+    // Always scroll to top on tab change
     window.scrollTo(0, 0);
+    const scrollContainer = document.querySelector('[data-main-scroll]');
+    if (scrollContainer) scrollContainer.scrollTop = 0;
   };
 
   if (!ready) return null;
