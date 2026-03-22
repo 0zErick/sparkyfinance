@@ -510,6 +510,17 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
     setSelectedUser(null);
   };
 
+  // Poll for new support messages while chat is open
+  useEffect(() => {
+    if (!showSupportChat || !supportChatTarget) return;
+    const interval = setInterval(() => {
+      const key = `sparky-support-chat-${supportChatTarget.id}`;
+      const msgs = JSON.parse(localStorage.getItem(key) || "[]");
+      setSupportMessages(msgs);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [showSupportChat, supportChatTarget]);
+
   const recentUsers = [...users].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5);
   const activeToday = users.filter(u => u.last_sign_in && new Date(u.last_sign_in).toDateString() === new Date().toDateString());
   const googleUsers = users.filter(u => u.provider === "google");
