@@ -23,6 +23,8 @@ interface AdminUser {
   provider: string;
   created_at: string;
   last_sign_in: string | null;
+  banned?: boolean;
+  user_metadata?: Record<string, any>;
 }
 
 interface AuditLog {
