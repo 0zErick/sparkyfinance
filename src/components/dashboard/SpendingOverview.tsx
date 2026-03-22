@@ -94,20 +94,12 @@ const SpendingOverview = ({ hideValues = false }: SpendingOverviewProps) => {
       <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-success/5" />
       <div className="absolute -right-2 -top-2 h-12 w-12 rounded-full bg-success/8" />
 
-      {/* Header row: title + info */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-success/15">
-            <Wallet size={14} className="text-success" />
-          </div>
-          <p className="text-label">Pode Gastar Hoje</p>
+      {/* Header row: title */}
+      <div className="flex items-center gap-2 mb-2">
+        <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-success/15">
+          <Wallet size={14} className="text-success" />
         </div>
-        <button
-          onClick={() => setInfoPopup("podeGastar")}
-          className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground hover:text-foreground active:scale-90 transition-all"
-        >
-          <Info size={12} />
-        </button>
+        <p className="text-label">Pode Gastar Hoje</p>
       </div>
 
       {/* Main value */}

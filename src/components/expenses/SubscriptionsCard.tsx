@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { handleBRLChange, parseBRLInput } from "@/lib/brlInput";
 import { MoreVertical, Plus, X, CheckCircle2, Clock, Pencil, Trash2, CalendarDays, Undo2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFinancialData, fmt } from "@/hooks/useFinancialData";
@@ -43,7 +44,7 @@ const SubscriptionsCard = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [menuId, setMenuId] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
-  const [newAmount, setNewAmount] = useState("");
+  const [newAmount, setNewAmount] = useState("R$ 0,00");
   const [newDueDay, setNewDueDay] = useState("10");
   const [newLogo, setNewLogo] = useState("");
   const [newColor, setNewColor] = useState("bg-primary");
@@ -63,7 +64,7 @@ const SubscriptionsCard = () => {
 
   const handleAdd = () => {
     if (!newName.trim()) return;
-    const amount = parseFloat(newAmount.replace(/\D/g, "")) / 100 || 0;
+    const amount = parseBRLInput(newAmount);
     const preset = PRESET_SUBS.find(p => p.name.toLowerCase() === newName.toLowerCase());
     const sub: Subscription = {
       id: editingId || crypto.randomUUID(),
@@ -142,7 +143,7 @@ const SubscriptionsCard = () => {
     setShowAdd(false);
     setEditingId(null);
     setNewName("");
-    setNewAmount("");
+    setNewAmount("R$ 0,00");
     setNewDueDay("10");
     setNewLogo("");
     setNewColor("bg-primary");
@@ -310,7 +311,7 @@ const SubscriptionsCard = () => {
               <div>
                 <label className="text-[10px] text-muted-foreground font-medium mb-1 block">Valor mensal</label>
                 <input type="text" inputMode="numeric" value={newAmount} placeholder="R$ 0,00"
-                  onChange={e => { const nums = e.target.value.replace(/\D/g, ""); const val = (parseInt(nums) || 0) / 100; setNewAmount(val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })); }}
+                  onChange={e => setNewAmount(handleBRLChange(e.target.value))}
                   className="w-full rounded-xl border border-border bg-muted/30 px-3 py-2.5 text-sm outline-none focus:border-primary" />
               </div>
               <div>

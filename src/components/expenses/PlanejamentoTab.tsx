@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { handleBRLChange, parseBRLInput } from "@/lib/brlInput";
 import { Target, PiggyBank, TrendingUp, Calendar, Lightbulb, Plus, X, Wallet, Shield, Sparkles, DollarSign } from "lucide-react";
 import { BarChart, Bar, XAxis, ResponsiveContainer, RadialBarChart, RadialBar } from "recharts";
 import { cn } from "@/lib/utils";
@@ -108,7 +109,7 @@ const PlanejamentoTab = () => {
 
   const saveGoal = () => {
     if (!newGoal.name.trim()) { toast.error("Preencha o nome"); return; }
-    const target = parseBRL(newGoal.targetAmount);
+    const target = parseBRLInput(newGoal.targetAmount);
     if (target <= 0) { toast.error("Informe um valor"); return; }
     const goal: InvestmentGoal = {
       id: crypto.randomUUID(),
@@ -132,7 +133,7 @@ const PlanejamentoTab = () => {
   };
 
   const handleDeposit = () => {
-    const amount = parseBRL(depositAmount);
+    const amount = parseBRLInput(depositAmount);
     if (amount <= 0) { toast.error("Informe um valor válido"); return; }
     const updated = investmentGoals.map(g =>
       g.id === depositGoalId ? { ...g, savedAmount: g.savedAmount + amount } : g
@@ -279,7 +280,7 @@ const PlanejamentoTab = () => {
                         type="text"
                         inputMode="numeric"
                         value={depositAmount}
-                        onChange={(e) => setDepositAmount(e.target.value)}
+                        onChange={(e) => setDepositAmount(handleBRLChange(e.target.value))}
                         placeholder="R$ 0,00"
                         className="flex-1 rounded-lg border border-border bg-muted/50 px-3 py-2 text-xs outline-none tabular-nums focus:border-primary"
                       />
@@ -446,7 +447,7 @@ const PlanejamentoTab = () => {
               <div>
                 <label className="text-[11px] text-muted-foreground mb-1.5 block">Valor da Meta (R$)</label>
                 <input type="text" inputMode="numeric" placeholder="R$ 0,00" value={newGoal.targetAmount}
-                  onChange={(e) => setNewGoal(prev => ({ ...prev, targetAmount: e.target.value }))}
+                  onChange={(e) => setNewGoal(prev => ({ ...prev, targetAmount: handleBRLChange(e.target.value) }))}
                   className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm outline-none tabular-nums focus:border-primary focus:ring-1 focus:ring-primary transition-all" />
               </div>
             </div>

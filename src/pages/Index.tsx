@@ -51,7 +51,10 @@ const Index = () => {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
+    // Always scroll to top on tab change
     window.scrollTo(0, 0);
+    const scrollContainer = document.querySelector('[data-main-scroll]');
+    if (scrollContainer) scrollContainer.scrollTop = 0;
   };
 
   if (!ready) return null;
@@ -80,7 +83,7 @@ const Index = () => {
         overscrollBehavior: 'none',
       }}
     >
-      <div className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden" style={{ overscrollBehavior: 'none', paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
+      <div data-main-scroll className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden" style={{ overscrollBehavior: 'none', paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
         {renderView()}
         {/* Bottom fade gradient */}
         <div className="pointer-events-none sticky bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent" />

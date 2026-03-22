@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { handleBRLChange } from "@/lib/brlInput";
 import { X, Link2, Trash2, AlertTriangle, Info, Bell, BellOff, CreditCard, CalendarClock, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -133,8 +134,8 @@ const FinancialSettingsModal = ({ open, onClose }: FinancialSettingsModalProps) 
                   className="w-full accent-primary h-1.5" />
               </div>
             ) : (
-              <input type="text" placeholder="R$ 0,00" value={settings.reserveFixed}
-                onChange={(e) => updateSetting("reserveFixed", e.target.value)}
+              <input type="text" inputMode="numeric" placeholder="R$ 0,00" value={settings.reserveFixed}
+                onChange={(e) => updateSetting("reserveFixed", handleBRLChange(e.target.value))}
                 className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary transition-all tabular-nums" />
             )}
           </div>
@@ -178,8 +179,8 @@ const FinancialSettingsModal = ({ open, onClose }: FinancialSettingsModalProps) 
               <div className="space-y-3">
                 <div>
                   <label className="text-[11px] text-muted-foreground mb-1.5 block">Alerta de saldo baixo (R$)</label>
-                  <input type="text" value={settings.lowBalanceAlert}
-                    onChange={(e) => updateSetting("lowBalanceAlert", e.target.value)}
+                  <input type="text" inputMode="numeric" value={settings.lowBalanceAlert}
+                    onChange={(e) => updateSetting("lowBalanceAlert", handleBRLChange(e.target.value))}
                     className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary transition-all tabular-nums" />
                 </div>
                 <label className="flex items-center justify-between">

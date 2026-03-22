@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { handleBRLChange, parseBRLInput } from "@/lib/brlInput";
 import { X, Receipt, Wifi, ShoppingCart, UtensilsCrossed, CreditCard, ChevronUp, ChevronDown, ArrowLeftRight, Sparkles, Heart, MoreHorizontal, CalendarDays, Repeat, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -74,7 +75,7 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
   const [selectedCardId, setSelectedCardId] = useState<string>("");
   const [showCardPicker, setShowCardPicker] = useState(false);
   const [name, setName] = useState("");
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState("R$ 0,00");
   const [expDay, setExpDay] = useState(String(now.getDate()));
   const [expMonth, setExpMonth] = useState(String(now.getMonth()));
   const [expYear, setExpYear] = useState(String(now.getFullYear()));
@@ -97,13 +98,7 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
 
   const handleSave = () => {
     if (!name.trim()) { toast.error("Preencha o nome"); return; }
-    const cleanedValue = value.replace(/[^\d.,]/g, "");
-    let numValue: number;
-    if (cleanedValue.includes(",")) {
-      numValue = parseFloat(cleanedValue.replace(/\./g, "").replace(",", ".")) || 0;
-    } else {
-      numValue = parseFloat(cleanedValue) || 0;
-    }
+    const numValue = parseBRLInput(value);
     if (numValue <= 0) { toast.error("Informe um valor válido"); return; }
 
     // If split, divide by number of people
@@ -159,7 +154,7 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
     }
 
     toast.success(isIncome ? "Receita salva com sucesso!" : isCardCategory ? "Lançado na fatura!" : "Despesa salva com sucesso!");
-    setName(""); setValue(""); setSelectedCategory(null); setCustomCategory(""); setInstallments(1); setSelectedCardId(""); setRecurring(false); setSplit(false); setSplitPeople(2);
+    setName(""); setValue("R$ 0,00"); setSelectedCategory(null); setCustomCategory(""); setInstallments(1); setSelectedCardId(""); setRecurring(false); setSplit(false); setSplitPeople(2);
     setExpDay(String(now.getDate())); setExpMonth(String(now.getMonth())); setExpYear(String(now.getFullYear()));
     onClose();
   };
@@ -206,8 +201,8 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
           <input type="text" placeholder={isIncome ? "Fonte da receita" : "Descrição da despesa"} value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary transition-all" />
-          <input type="text" inputMode="decimal" placeholder="Digite o valor (R$)" value={value}
-            onChange={(e) => setValue(e.target.value.replace(/[^\d.,]/g, ""))}
+          <input type="text" inputMode="numeric" placeholder="R$ 0,00" value={value}
+            onChange={(e) => setValue(handleBRLChange(e.target.value))}
             className="w-full rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary transition-all tabular-nums" />
         </div>
 
@@ -394,9 +389,9 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
                 <ChevronUp size={16} />
               </button>
             </div>
-            {value && (
+            {value && parseBRLInput(value) > 0 && (
               <p className="text-[10px] text-muted-foreground mt-2 text-center">
-                Cada pessoa paga: {(parseFloat(value.replace(/\./g, "").replace(",", ".")) / splitPeople || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                Cada pessoa paga: {(parseBRLInput(value) / splitPeople).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
               </p>
             )}
           </div>

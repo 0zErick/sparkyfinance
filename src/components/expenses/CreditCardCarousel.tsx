@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { handleBRLChange } from "@/lib/brlInput";
 import { ChevronDown, Receipt, Calendar, DollarSign, ArrowLeft, Trash2, Pencil, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFinancialData } from "@/hooks/useFinancialData";
@@ -228,11 +229,7 @@ const CreditCardCarousel = () => {
                 </div>
                 {!payFull && (
                   <input type="text" inputMode="numeric" placeholder="R$ 0,00" value={payAmount}
-                    onChange={(e) => {
-                      const nums = e.target.value.replace(/\D/g, "");
-                      const val = (parseInt(nums) || 0) / 100;
-                      setPayAmount(val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }));
-                    }}
+                    onChange={(e) => setPayAmount(handleBRLChange(e.target.value))}
                     className="w-full rounded-xl border border-border bg-muted/30 px-3 py-2.5 text-sm outline-none focus:border-primary"
                   />
                 )}

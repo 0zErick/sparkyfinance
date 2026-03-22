@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { handleBRLChange } from "@/lib/brlInput";
 import { X, ArrowLeft, Plus, CreditCard, ChevronRight, Receipt, Calendar, DollarSign, Wallet, Building2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -254,7 +255,7 @@ const CreditCardManager = ({ open, onClose }: Props) => {
                 </div>
                 {!payFull && (
                   <input type="text" inputMode="numeric" placeholder="R$ 0,00" value={payAmount}
-                    onChange={(e) => { const nums = e.target.value.replace(/\D/g, ""); const val = (parseInt(nums) || 0) / 100; setPayAmount(val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })); }}
+                    onChange={(e) => setPayAmount(handleBRLChange(e.target.value))}
                     className="w-full rounded-xl border border-border bg-muted/30 px-3 py-2.5 text-sm outline-none focus:border-primary" />
                 )}
                 <div className="flex gap-2">
@@ -412,7 +413,7 @@ const CreditCardManager = ({ open, onClose }: Props) => {
               <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/30 px-3 py-2.5">
                 <Wallet size={14} className="text-muted-foreground" />
                 <input type="text" inputMode="numeric" value={newLimit}
-                  onChange={(e) => { const nums = e.target.value.replace(/\D/g, ""); const val = (parseInt(nums) || 0) / 100; setNewLimit(val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })); }}
+                  onChange={(e) => setNewLimit(handleBRLChange(e.target.value))}
                   placeholder="R$ 0,00" className="bg-transparent text-sm flex-1 outline-none" />
               </div>
             </div>
