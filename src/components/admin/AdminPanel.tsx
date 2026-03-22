@@ -381,15 +381,24 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
       "⚠️ Suspender Conta",
       `Suspender a conta de "${user.name}"? O acesso será bloqueado indefinidamente, mas pode ser revertido. Todos os dados serão preservados.`,
       async () => {
-        // Mark user as suspended (preserving data)
-        const suspended = JSON.parse(localStorage.getItem("sparky-suspended-users") || "[]");
-        if (!suspended.includes(user.id)) suspended.push(user.id);
-        localStorage.setItem("sparky-suspended-users", JSON.stringify(suspended));
-        addAuditLog("SUSPEND_USER", user.name, "Conta suspensa — acesso bloqueado, dados preservados");
-        setDangerModal(null);
-        setDangerConfirmText("");
-        setResultPopup({ show: true, success: true, message: `Conta de ${user.name} suspensa com sucesso! O usuário verá um aviso ao tentar acessar.` });
-        fetchUsers();
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) throw new Error("Sessão expirada");
+          const res = await fetch(
+            `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/admin-users`,
+            { method: "POST", headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" }, body: JSON.stringify({ action: "suspend_user", userId: user.id }) }
+          );
+          if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Erro"); }
+          addAuditLog("SUSPEND_USER", user.name, "Conta suspensa — acesso bloqueado, dados preservados");
+          setDangerModal(null);
+          setDangerConfirmText("");
+          setResultPopup({ show: true, success: true, message: `Conta de ${user.name} suspensa com sucesso!` });
+          fetchUsers();
+        } catch (e: any) {
+          toast.error(e.message || "Erro ao suspender");
+          setDangerModal(null);
+          setDangerConfirmText("");
+        }
       }
     );
   };
@@ -399,26 +408,47 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
       "🚫 Banir Conta",
       `Banir a conta de "${user.name}"? O acesso será totalmente bloqueado. Esta ação é reversível e todos os dados serão preservados no banco de dados.`,
       async () => {
-        const banned = JSON.parse(localStorage.getItem("sparky-banned-users") || "[]");
-        if (!banned.includes(user.id)) banned.push(user.id);
-        localStorage.setItem("sparky-banned-users", JSON.stringify(banned));
-        addAuditLog("BAN_USER", user.name, "Conta banida — acesso bloqueado, dados preservados para reversão");
-        setDangerModal(null);
-        setDangerConfirmText("");
-        setResultPopup({ show: true, success: true, message: `Conta de ${user.name} banida com sucesso! O usuário verá um aviso ao tentar acessar.` });
-        fetchUsers();
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) throw new Error("Sessão expirada");
+          const res = await fetch(
+            `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/admin-users`,
+            { method: "POST", headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" }, body: JSON.stringify({ action: "ban_user", userId: user.id }) }
+          );
+          if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Erro"); }
+          addAuditLog("BAN_USER", user.name, "Conta banida — acesso bloqueado, dados preservados");
+          setDangerModal(null);
+          setDangerConfirmText("");
+          setResultPopup({ show: true, success: true, message: `Conta de ${user.name} banida com sucesso!` });
+          fetchUsers();
+        } catch (e: any) {
+          toast.error(e.message || "Erro ao banir");
+          setDangerModal(null);
+          setDangerConfirmText("");
+        }
       }
     );
   };
 
-  const handleUnsuspendUser = (user: AdminUser) => {
-    const suspended = JSON.parse(localStorage.getItem("sparky-suspended-users") || "[]");
-    localStorage.setItem("sparky-suspended-users", JSON.stringify(suspended.filter((id: string) => id !== user.id)));
-    const banned = JSON.parse(localStorage.getItem("sparky-banned-users") || "[]");
-    localStorage.setItem("sparky-banned-users", JSON.stringify(banned.filter((id: string) => id !== user.id)));
-    addAuditLog("UNSUSPEND_USER", user.name, "Conta reativada");
-    toast.success(`Conta de ${user.name} reativada!`);
-    fetchUsers();
+  const handleUnsuspendUser = async (user: AdminUser) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessão expirada");
+      // Unsuspend and unban via edge function
+      await fetch(
+        `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/admin-users`,
+        { method: "POST", headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" }, body: JSON.stringify({ action: "unsuspend_user", userId: user.id }) }
+      );
+      await fetch(
+        `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/admin-users`,
+        { method: "POST", headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" }, body: JSON.stringify({ action: "unban_user", userId: user.id }) }
+      );
+      addAuditLog("UNSUSPEND_USER", user.name, "Conta reativada");
+      toast.success(`Conta de ${user.name} reativada!`);
+      fetchUsers();
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao reativar");
+    }
   };
 
   const isUserSuspended = (userId: string) => {
