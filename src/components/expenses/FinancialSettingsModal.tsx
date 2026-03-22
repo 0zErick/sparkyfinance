@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { handleBRLChange } from "@/lib/brlInput";
 import { X, Link2, Trash2, AlertTriangle, Info, Bell, BellOff, CreditCard, CalendarClock, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
