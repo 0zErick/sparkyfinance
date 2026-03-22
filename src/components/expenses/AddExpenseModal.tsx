@@ -150,6 +150,9 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
     setName(""); setValue("R$ 0,00"); setSelectedCategory(null); setCustomCategory(""); setInstallments(1); setSelectedCardId(""); setRecurring(false); setSplit(false); setSplitPeople(2);
     setExpDay(String(now.getDate())); setExpMonth(String(now.getMonth())); setExpYear(String(now.getFullYear()));
     onClose();
+    } catch {
+      toast.error("Erro ao salvar. Tente novamente.");
+    }
   };
 
   if (!open) return null;
