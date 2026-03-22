@@ -69,20 +69,10 @@ const Onboarding = () => {
     return () => subscription.unsubscribe();
   }, [navigate, step]);
 
-  const selectedCountry = COUNTRIES.find(c => c.code === countryCode) || COUNTRIES[0];
-
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !password) {
+    if (!name.trim() || !email || !password) {
       toast.error("Preencha todos os campos");
-      return;
-    }
-    if (registerMethod === "email" && !email) {
-      toast.error("Preencha o e-mail");
-      return;
-    }
-    if (registerMethod === "phone" && !phone) {
-      toast.error("Preencha o telefone");
       return;
     }
     if (password.length < 6) {
@@ -91,22 +81,14 @@ const Onboarding = () => {
     }
     setLoading(true);
     try {
-      const credentials = registerMethod === "email"
-        ? {
-            email,
-            password,
-            options: {
-              data: { full_name: name.trim() },
-              emailRedirectTo: window.location.origin,
-            },
-          }
-        : {
-            phone: `${countryCode}${phone.replace(/\D/g, "")}`,
-            password,
-            options: {
-              data: { full_name: name.trim() },
-            },
-          };
+      const credentials = {
+        email,
+        password,
+        options: {
+          data: { full_name: name.trim() },
+          emailRedirectTo: window.location.origin,
+        },
+      };
 
       const { data, error } = await supabase.auth.signUp(credentials);
       if (error) {
