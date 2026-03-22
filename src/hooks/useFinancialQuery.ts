@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useMemo } from "react";
 
 export interface Transaction {
   id: string;
@@ -88,16 +88,18 @@ export const useFinancialQuery = () => {
   const queryClient = useQueryClient();
   const userIdRef = useRef<string | null>(null);
 
-  const { data: financialData, isLoading: loading } = useQuery({
+  const queryResult = useQuery({
     queryKey: QUERY_KEY,
     queryFn: fetchFinancialData,
-    staleTime: 10_000,        // 10s before considered stale
-    gcTime: 5 * 60_000,       // 5min cache
+    staleTime: 10_000,
+    gcTime: 5 * 60_000,
     refetchOnWindowFocus: true,
-    refetchInterval: 30_000,  // background poll every 30s
+    refetchInterval: 30_000,
+    placeholderData: defaultData,
   });
 
-  const data = financialData ?? { ...defaultData };
+  const data = queryResult.data ?? defaultData;
+  const loading = queryResult.isLoading;
 
   // Realtime subscription for instant updates
   useEffect(() => {
@@ -126,10 +128,10 @@ export const useFinancialQuery = () => {
 
   // Demo mode: persist to localStorage
   useEffect(() => {
-    if (isDemo() && financialData) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(financialData));
+    if (isDemo() && queryResult.data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(queryResult.data));
     }
-  }, [financialData]);
+  }, [queryResult.data]);
 
   // Demo events
   useEffect(() => {
@@ -144,18 +146,21 @@ export const useFinancialQuery = () => {
   }, [queryClient]);
 
   // Computed values
-  const available = data.balance - data.scheduled;
-  const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
-  const today = new Date().getDate();
-  const daysLeft = Math.max(1, daysInMonth - today);
-  const BUDGET_PERCENT = 0.20;
-  const spendablePool = Math.max(0, available * BUDGET_PERCENT);
-  const pastDays = Math.max(1, today);
-  const idealDailySpend = (available * BUDGET_PERCENT) / daysInMonth;
-  const actualDailySpend = data.expenses > 0 ? data.expenses / pastDays : 0;
-  const savedSoFar = Math.max(0, (idealDailySpend - actualDailySpend) * pastDays);
-  const adjustedPool = Math.max(0, spendablePool - savedSoFar);
-  const dailyBudget = daysLeft > 0 ? adjustedPool / daysLeft : 0;
+  const computed = useMemo(() => {
+    const available = data.balance - data.scheduled;
+    const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+    const today = new Date().getDate();
+    const daysLeft = Math.max(1, daysInMonth - today);
+    const BUDGET_PERCENT = 0.20;
+    const spendablePool = Math.max(0, available * BUDGET_PERCENT);
+    const pastDays = Math.max(1, today);
+    const idealDailySpend = (available * BUDGET_PERCENT) / daysInMonth;
+    const actualDailySpend = data.expenses > 0 ? data.expenses / pastDays : 0;
+    const savedSoFar = Math.max(0, (idealDailySpend - actualDailySpend) * pastDays);
+    const adjustedPool = Math.max(0, spendablePool - savedSoFar);
+    const dailyBudget = daysLeft > 0 ? adjustedPool / daysLeft : 0;
+    return { available, daysLeft, dailyBudget };
+  }, [data]);
 
   // Mutations with optimistic updates
   const addMutation = useMutation({
@@ -260,15 +265,15 @@ export const useFinancialQuery = () => {
 
   const addTransaction = useCallback(async (tx: Omit<Transaction, "id">) => {
     return addMutation.mutateAsync(tx);
-  }, [addMutation]);
+  }, [addMutation.mutateAsync]);
 
   const updateTransaction = useCallback(async (id: string, updates: Partial<Transaction>) => {
     return updateMutation.mutateAsync({ id, updates });
-  }, [updateMutation]);
+  }, [updateMutation.mutateAsync]);
 
   const deleteTransaction = useCallback(async (id: string) => {
     return deleteMutation.mutateAsync(id);
-  }, [deleteMutation]);
+  }, [deleteMutation.mutateAsync]);
 
   const updateData = useCallback(async (partial: Partial<FinancialData>) => {
     if (isDemo()) {
@@ -329,9 +334,9 @@ export const useFinancialQuery = () => {
 
   return {
     data,
-    available,
-    daysLeft,
-    dailyBudget,
+    available: computed.available,
+    daysLeft: computed.daysLeft,
+    dailyBudget: computed.dailyBudget,
     loading,
     updateData,
     clearAll,

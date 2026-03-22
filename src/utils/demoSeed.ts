@@ -1,10 +1,5 @@
 import { clearUserLocalData, markDemoLocalDataOwner } from "@/lib/userLocalData";
 
-/**
- * Generates random realistic financial data for demo mode.
- * Each session produces different values.
- */
-
 const rand = (min: number, max: number) => Math.round(min + Math.random() * (max - min));
 const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 const uuid = () => crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -154,6 +149,36 @@ function generateGoals(): any[] {
   });
 }
 
+function generateSubscriptions(): any[] {
+  const SUBS_POOL = [
+    { name: "Netflix", logo: "N", color: "bg-red-600", amount: [32.90, 39.90, 55.90] },
+    { name: "Spotify", logo: "S", color: "bg-green-500", amount: [21.90, 34.90] },
+    { name: "Disney+", logo: "D+", color: "bg-blue-700", amount: [27.90, 33.90, 43.90] },
+    { name: "Amazon Prime", logo: "AP", color: "bg-sky-500", amount: [14.90, 19.90] },
+    { name: "YouTube Premium", logo: "YT", color: "bg-red-500", amount: [24.90, 34.90] },
+    { name: "iCloud", logo: "iC", color: "bg-gray-500", amount: [3.50, 9.90, 34.90] },
+    { name: "HBO Max", logo: "HB", color: "bg-purple-700", amount: [29.90, 34.90, 49.90] },
+    { name: "Crunchyroll", logo: "CR", color: "bg-orange-500", amount: [14.99, 24.99] },
+    { name: "Xbox Game Pass", logo: "XB", color: "bg-green-600", amount: [29.90, 44.90] },
+    { name: "PlayStation Plus", logo: "PS", color: "bg-blue-600", amount: [34.90, 49.90] },
+    { name: "Adobe", logo: "Ad", color: "bg-red-700", amount: [43.00, 109.00] },
+    { name: "ChatGPT Plus", logo: "AI", color: "bg-emerald-600", amount: [100.00] },
+  ];
+
+  const numSubs = rand(2, 5);
+  const selected = [...SUBS_POOL].sort(() => Math.random() - 0.5).slice(0, numSubs);
+
+  return selected.map((s) => ({
+    id: uuid(),
+    name: s.name,
+    logo: s.logo,
+    amount: pick(s.amount),
+    dueDay: pick([1, 5, 10, 15, 20, 25, 28]),
+    paid: Math.random() > 0.5,
+    color: s.color,
+  }));
+}
+
 export function seedDemoData() {
   clearUserLocalData();
   markDemoLocalDataOwner();
@@ -176,6 +201,7 @@ export function seedDemoData() {
   localStorage.setItem("sparky-credit-cards", JSON.stringify(generateCreditCards()));
   localStorage.setItem("sparky-budgets", JSON.stringify(generateBudgets(expenses)));
   localStorage.setItem("sparky-investment-goals", JSON.stringify(generateGoals()));
+  localStorage.setItem("sparky-subscriptions", JSON.stringify(generateSubscriptions()));
   localStorage.removeItem("sparky-chat-history");
   window.dispatchEvent(new Event("sparky-data-cleared"));
 }

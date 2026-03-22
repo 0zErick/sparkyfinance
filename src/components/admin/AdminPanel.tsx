@@ -699,6 +699,32 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
               </div>
             </div>
 
+            {/* Smart Admin Cards */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="card-zelo space-y-1">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-orange-500/15">
+                    <TrendingDown size={14} className="text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold">{users.length > 0 ? `R$ ${Math.round(totalPoints / Math.max(1, activeToday.length))}` : "—"}</p>
+                    <p className="text-[9px] text-muted-foreground">Média gasto/dia</p>
+                  </div>
+                </div>
+              </div>
+              <div className="card-zelo space-y-1">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg flex items-center justify-center bg-destructive/15">
+                    <AlertTriangle size={14} className="text-destructive" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold">{inactiveUsers.length}</p>
+                    <p className="text-[9px] text-muted-foreground">Pgtos atrasados</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Heatmap */}
             <p className="text-label px-1">MAPA DE CALOR DE ACESSOS</p>
             <div className="card-zelo overflow-x-auto">
