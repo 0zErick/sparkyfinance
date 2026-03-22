@@ -62,7 +62,7 @@ REGRAS RIGOROSAS:
                         type: { type: "string", enum: ["in", "out"] },
                         confidence: { type: "number", description: "Confiança na leitura desta transação (0-1)" }
                       },
-                      required: ["date", "description", "category", "value", "type"],
+                      required: ["date", "description", "category", "value", "type", "confidence"],
                       additionalProperties: false
                     }
                   }
