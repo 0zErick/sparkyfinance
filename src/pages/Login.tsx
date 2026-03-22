@@ -27,18 +27,20 @@ const Login = () => {
   const [tapTimer, setTapTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated (skip if demo mode active)
   useEffect(() => {
+    if (localStorage.getItem("sparky-demo-mode") === "true") return;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (localStorage.getItem("sparky-demo-mode") === "true") return;
       if (session?.user) {
-        localStorage.removeItem("sparky-demo-mode");
         syncLocalDataOwner(session.user.id);
         navigate("/");
       }
     });
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (localStorage.getItem("sparky-demo-mode") === "true") return;
       if (session?.user) {
-        localStorage.removeItem("sparky-demo-mode");
         syncLocalDataOwner(session.user.id);
         navigate("/");
       }
