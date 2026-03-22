@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, Bot, User, Loader2, Plus, Trash2, ChevronLeft, MoreVertical, Paperclip, Image, FileText, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useFinancialQuery, fmt } from "@/hooks/useFinancialQuery";
 
 type Attachment = {
   type: "image" | "document";
@@ -93,6 +94,7 @@ const DOC_TYPES = ["application/pdf", "text/plain", "text/csv", "text/xml", "app
   "application/json"];
 
 const ChatView = () => {
+  const { data: financialData, available, daysLeft, dailyBudget } = useFinancialQuery();
   const [conversations, setConversations] = useState<Conversation[]>(loadConversations);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -267,18 +269,50 @@ const ChatView = () => {
 
   const getUserContext = () => {
     try {
-      const fin = JSON.parse(localStorage.getItem("sparky-financial-data") || "{}");
       const cards = JSON.parse(localStorage.getItem("sparky-credit-cards") || "[]");
       const goals = JSON.parse(localStorage.getItem("sparky-investment-goals") || "[]");
+      const subs = JSON.parse(localStorage.getItem("sparky-subscriptions") || "[]");
+      const paidBills = JSON.parse(localStorage.getItem("sparky-paid-bills") || "[]");
       const chatStyle = localStorage.getItem("sparky-chat-style") || "";
+
+      // Recent transactions (last 10)
+      const recentTx = financialData.transactions.slice(0, 10).map(t => {
+        const d = new Date(t.date);
+        const dateStr = d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+        return `${dateStr} | ${t.type === "income" ? "+" : "-"}${fmt(t.amount)} | ${t.description} (${t.category})`;
+      });
+
+      // Upcoming bills (subscriptions not yet paid)
+      const unpaidSubs = subs.filter((s: any) => !paidBills.includes(s.id));
+      const upcomingBills = unpaidSubs.map((s: any) => `${s.name}: ${fmt(s.amount)} (dia ${s.dueDay || "?"})`);
+
+      // Category breakdown this month
+      const categoryMap: Record<string, number> = {};
+      const now = new Date();
+      financialData.transactions.forEach(t => {
+        const d = new Date(t.date);
+        if (t.type === "expense" && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+          categoryMap[t.category] = (categoryMap[t.category] || 0) + t.amount;
+        }
+      });
+      const topCategories = Object.entries(categoryMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([cat, val]) => `${cat}: ${fmt(val)}`);
+
       return {
-        available: fin.balance ? fin.balance - (fin.scheduled || 0) : 0,
-        real: fin.balance || 0,
-        toPay: fin.scheduled || 0,
-        income: fin.income || 0,
-        expenses: fin.expenses || 0,
+        available,
+        real: financialData.balance,
+        toPay: financialData.scheduled,
+        income: financialData.income,
+        expenses: financialData.expenses,
+        dailyBudget,
+        daysLeft,
         cards: cards.length > 0 ? cards.map((c: any) => `${c.cardName} (${c.bankName}): limite R$${c.limit}, usado R$${c.usedAmount || 0}`).join("; ") : "Nenhum cadastrado",
         goals: goals.length > 0 ? goals.map((g: any) => `${g.name}: R$${g.savedAmount}/${g.targetAmount}`).join("; ") : "Nenhuma definida",
+        recentTransactions: recentTx.length > 0 ? recentTx.join("\n") : "Nenhuma transação recente",
+        upcomingBills: upcomingBills.length > 0 ? upcomingBills.join("; ") : "Nenhuma conta pendente",
+        topCategories: topCategories.length > 0 ? topCategories.join("; ") : "Sem gastos este mês",
         chatStyle,
       };
     } catch { return null; }
