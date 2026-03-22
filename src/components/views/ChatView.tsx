@@ -94,6 +94,7 @@ const DOC_TYPES = ["application/pdf", "text/plain", "text/csv", "text/xml", "app
   "application/json"];
 
 const ChatView = () => {
+  const { data: financialData, available, daysLeft, dailyBudget } = useFinancialQuery();
   const [conversations, setConversations] = useState<Conversation[]>(loadConversations);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
