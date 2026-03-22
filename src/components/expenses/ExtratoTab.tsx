@@ -71,33 +71,16 @@ const ExtratoTab = () => {
     }
   };
 
-  const handleEdit = (id: string) => {
-    const tx = data.transactions.find(t => t.id === id);
-    if (!tx) return;
+  const handleEdit = async (id: string) => {
     const newAmount = parseBRL(editAmount);
     if (newAmount <= 0) { toast.error("Valor inválido"); return; }
-    const diff = newAmount - tx.amount;
-    const newTransactions = data.transactions.map(t =>
-      t.id === id ? { ...t, description: editDesc || t.description, amount: newAmount } : t
-    );
-    let newBalance = data.balance;
-    let newIncome = data.income;
-    let newExpenses = data.expenses;
-    if (tx.type === "income") {
-      newBalance += diff;
-      newIncome += diff;
-    } else {
-      newBalance -= diff;
-      newExpenses += diff;
+    try {
+      await updateTransaction(id, { description: editDesc, amount: newAmount });
+      setEditingId(null);
+      toast.success("Transação atualizada");
+    } catch {
+      toast.error("Erro ao atualizar transação");
     }
-    updateData({
-      transactions: newTransactions,
-      balance: newBalance,
-      income: Math.max(0, newIncome),
-      expenses: Math.max(0, newExpenses),
-    });
-    setEditingId(null);
-    toast.success("Transação atualizada");
   };
 
   return (
