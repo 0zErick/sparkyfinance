@@ -397,7 +397,7 @@ const ChatView = () => {
 
   if (showHistory) {
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full overflow-hidden">
         <div className="px-4 pt-3 pb-2 flex items-center justify-between border-b border-border">
           <div className="flex items-center gap-2">
             <button onClick={() => setShowHistory(false)} className="p-1.5 rounded-full hover:bg-muted active:scale-95">
