@@ -889,6 +889,94 @@ const ProfileSwitcher = () => {
     );
   }
 
+  // Sub-view: Support Chat (user side)
+  if (subView === "support") {
+    const formatTime = (t: string) => {
+      try {
+        const d = new Date(t);
+        return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      } catch { return ""; }
+    };
+    return renderLayer(
+      <div className="fixed inset-0 z-[80] bg-background/95 backdrop-blur-sm flex flex-col" style={{ paddingTop: "env(safe-area-inset-top, 20px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+        <div className="max-w-lg mx-auto w-full flex flex-col flex-1 min-h-0 px-4 py-4">
+          <div className="flex items-center gap-3 mb-4 shrink-0">
+            <button onClick={() => setSubView(null)} className="text-muted-foreground hover:text-foreground"><ChevronDown size={20} className="rotate-90" /></button>
+            <div className="flex items-center gap-2 flex-1">
+              <div className="h-8 w-8 rounded-full bg-primary/15 flex items-center justify-center">
+                <MessageSquare size={14} className="text-primary" />
+              </div>
+              <div>
+                <h1 className="text-base font-bold">Suporte</h1>
+                <p className="text-[10px] text-muted-foreground">{supportClosed ? "Chamado encerrado" : "Chat direto com o administrador"}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Closed notice */}
+          {supportClosed && (
+            <div className="mb-3 rounded-xl border border-yellow-500/30 bg-yellow-500/5 p-3 text-center shrink-0">
+              <p className="text-xs text-yellow-500 font-semibold">O suporte encerrou este chamado.</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Caso precise de ajuda novamente, abra um novo chamado.</p>
+              <button
+                onClick={() => {
+                  if (!dbProfile?.user_id) return;
+                  localStorage.removeItem(`sparky-support-status-${dbProfile.user_id}`);
+                  localStorage.removeItem(`sparky-support-chat-${dbProfile.user_id}`);
+                  setSupportMessages([]);
+                  setSupportClosed(false);
+                  setSubView(null);
+                  toast.success("Chamado anterior removido.");
+                }}
+                className="mt-2 rounded-lg bg-muted px-4 py-2 text-[10px] font-medium text-muted-foreground active:scale-95"
+              >
+                Fechar
+              </button>
+            </div>
+          )}
+
+          {/* Messages */}
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-2 rounded-xl border border-border bg-muted/20 p-3 mb-3">
+            {supportMessages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <MessageSquare size={32} className="text-muted-foreground mb-3" />
+                <p className="text-sm font-medium text-muted-foreground">Nenhuma mensagem ainda</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Envie uma mensagem para iniciar o suporte</p>
+              </div>
+            ) : (
+              supportMessages.map((msg, i) => (
+                <div key={i} className={cn("max-w-[80%] rounded-xl px-3 py-2", msg.from === "user" ? "ml-auto bg-primary/20 text-right" : "bg-muted")}>
+                  <p className="text-[11px]">{msg.text}</p>
+                  <p className="text-[8px] text-muted-foreground mt-0.5">
+                    {msg.from === "admin" ? "Admin" : "Você"} • {formatTime(msg.time)}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Input (disabled if closed) */}
+          {!supportClosed && (
+            <div className="flex gap-2 shrink-0">
+              <input
+                type="text"
+                value={supportInput}
+                onChange={(e) => setSupportInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSendSupportMessage()}
+                placeholder="Digite sua mensagem..."
+                className="flex-1 rounded-xl border border-border bg-muted/30 px-3 py-2.5 text-sm outline-none focus:border-primary"
+              />
+              <button onClick={handleSendSupportMessage} disabled={!supportInput.trim()}
+                className="rounded-xl bg-primary px-3 py-2.5 text-primary-foreground active:scale-95 disabled:opacity-50">
+                <Send size={14} />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>,
+    );
+  }
+
   // Sub-view: Admin Panel
   if (subView === "admin") {
     return renderLayer(<AdminPanel onClose={() => setSubView(null)} />);
