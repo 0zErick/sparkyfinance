@@ -44,7 +44,7 @@ const SubscriptionsCard = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [menuId, setMenuId] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
-  const [newAmount, setNewAmount] = useState("");
+  const [newAmount, setNewAmount] = useState("R$ 0,00");
   const [newDueDay, setNewDueDay] = useState("10");
   const [newLogo, setNewLogo] = useState("");
   const [newColor, setNewColor] = useState("bg-primary");
