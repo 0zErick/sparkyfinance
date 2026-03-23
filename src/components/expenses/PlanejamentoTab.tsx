@@ -105,8 +105,9 @@ const PlanejamentoTab = () => {
     : [];
 
   const saveBudgets = () => {
-    setBudgetCategories(editingBudgets);
-    localStorage.setItem(BUDGET_KEY, JSON.stringify(editingBudgets));
+    const cleaned = editingBudgets.map((c: any) => ({ name: c.name, budget: c.budget, spent: c.spent, color: c.color }));
+    setBudgetCategories(cleaned);
+    localStorage.setItem(BUDGET_KEY, JSON.stringify(cleaned));
     setEditBudgetOpen(false);
     toast.success("Orçamento atualizado!");
   };
