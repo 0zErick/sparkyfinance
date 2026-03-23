@@ -93,6 +93,27 @@ const DOC_TYPES = ["application/pdf", "text/plain", "text/csv", "text/xml", "app
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   "application/json"];
 
+const SUGGESTION_CHIPS = [
+  "Top gastos do mês",
+  "Oportunidade de economia",
+  "Gastos recorrentes",
+  "Cartão e faturas",
+  "Quanto posso gastar hoje?",
+  "Resumo financeiro",
+  "Contas a vencer",
+  "Dicas de investimento",
+  "Como economizar mais?",
+  "Análise de categorias",
+];
+
+const STATUS_PHRASES = [
+  "Analisando seus dados...",
+  "Consultando orçamentos...",
+  "Formulando resposta...",
+  "Processando informações...",
+  "Verificando transações...",
+];
+
 const ChatView = () => {
   const { data: financialData, available, daysLeft, dailyBudget } = useFinancialQuery();
   const [conversations, setConversations] = useState<Conversation[]>(loadConversations);
@@ -105,9 +126,16 @@ const ChatView = () => {
   const [showNewChatConfirm, setShowNewChatConfirm] = useState(false);
   const [pendingAttachments, setPendingAttachments] = useState<Attachment[]>([]);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [statusIndex, setStatusIndex] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  // Randomized suggestion chips per chat session
+  const shuffledChips = useMemo(() => {
+    const shuffled = [...SUGGESTION_CHIPS].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 4);
+  }, [activeId]);
 
   // Set current user ID for scoped chat storage
   useEffect(() => {
