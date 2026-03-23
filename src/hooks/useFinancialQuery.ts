@@ -110,10 +110,13 @@ export const useFinancialQuery = () => {
     placeholderData: defaultData,
   });
 
+  // Stable date that only recalculates when billing revision changes
+  const stableNow = useMemo(() => new Date(), [billingRevision]);
+
   const data = useMemo(() => {
     const baseData = queryResult.data ?? defaultData;
     const { income, expenses, balance } = getNormalizedMonthlyTotals(baseData.transactions, {
-      now: new Date(),
+      now: stableNow,
       paidBillIds: readPaidBillIds(),
     });
 
@@ -123,7 +126,7 @@ export const useFinancialQuery = () => {
       expenses,
       balance,
     };
-  }, [queryResult.data, billingRevision]);
+  }, [queryResult.data, billingRevision, stableNow]);
   const loading = queryResult.isLoading;
 
   // Realtime subscription for instant updates
