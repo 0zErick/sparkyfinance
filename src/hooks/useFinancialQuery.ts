@@ -161,10 +161,12 @@ export const useFinancialQuery = () => {
     const handler = () => setBillingRevision((current) => current + 1);
     window.addEventListener("storage", handler);
     window.addEventListener("sparky-paid-bills-updated", handler);
+    window.addEventListener("sparky-cards-updated", handler);
 
     return () => {
       window.removeEventListener("storage", handler);
       window.removeEventListener("sparky-paid-bills-updated", handler);
+      window.removeEventListener("sparky-cards-updated", handler);
     };
   }, []);
 
