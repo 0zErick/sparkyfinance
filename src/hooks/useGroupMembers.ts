@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 
@@ -15,51 +16,100 @@ export interface GroupMember {
   created_at: string;
 }
 
+const GROUP_MEMBERS_QUERY_KEY = ["group-members"] as const;
+
 export const useGroupMembers = () => {
   const { profile, isDemo } = useProfile();
-  const [members, setMembers] = useState<GroupMember[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+
+  const membersQuery = useQuery({
+    queryKey: [...GROUP_MEMBERS_QUERY_KEY, isDemo ? "demo" : profile?.group_code ?? profile?.user_id ?? "solo"],
+    enabled: !!profile,
+    queryFn: async (): Promise<GroupMember[]> => {
+      if (!profile) return [];
+
+      if (isDemo) {
+        return [profile as GroupMember];
+      }
+
+      let query = supabase.from("profiles").select("*");
+
+      if (profile.group_code) {
+        query = query.eq("group_code", profile.group_code);
+      } else {
+        query = query.eq("user_id", profile.user_id);
+      }
+
+      const { data, error } = await query.order("points", { ascending: false });
+
+      if (error) {
+        console.error("Group members fetch error:", error.message);
+        return [profile as GroupMember];
+      }
+
+      const fetchedMembers = (data as GroupMember[] | null) ?? [];
+      if (fetchedMembers.length === 0) {
+        return [profile as GroupMember];
+      }
+
+      return fetchedMembers.some((member) => member.user_id === profile.user_id)
+        ? fetchedMembers
+        : [profile as GroupMember, ...fetchedMembers];
+    },
+    staleTime: 10_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: true,
+  });
 
   useEffect(() => {
-    if (isDemo) {
-      // In demo mode, show current profile as the sole member
-      if (profile) {
-        setMembers([profile as GroupMember]);
-      }
-      setLoading(false);
-      return;
-    }
+    if (!profile) return;
 
-    if (!profile?.group_code) {
-      setLoading(false);
-      return;
-    }
-
-    const fetchMembers = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("group_code", profile.group_code!)
-        .order("points", { ascending: false });
-
-      if (data) setMembers(data as GroupMember[]);
-      setLoading(false);
+    const invalidateMembers = () => {
+      queryClient.invalidateQueries({ queryKey: GROUP_MEMBERS_QUERY_KEY });
     };
 
-    fetchMembers();
+    window.addEventListener("sparky-points-updated", invalidateMembers);
+    window.addEventListener("sparky-profile-updated", invalidateMembers);
+    window.addEventListener("sparky-data-cleared", invalidateMembers);
 
-    // Refresh every 15s for faster sync
-    const interval = setInterval(fetchMembers, 15000);
+    if (isDemo) {
+      return () => {
+        window.removeEventListener("sparky-points-updated", invalidateMembers);
+        window.removeEventListener("sparky-profile-updated", invalidateMembers);
+        window.removeEventListener("sparky-data-cleared", invalidateMembers);
+      };
+    }
 
-    // Listen for points updates
-    const handlePointsUpdate = () => fetchMembers();
-    window.addEventListener("sparky-points-updated", handlePointsUpdate);
+    const filter = profile.group_code
+      ? `group_code=eq.${profile.group_code}`
+      : `user_id=eq.${profile.user_id}`;
+
+    const channel = supabase
+      .channel(`group-members-${profile.group_code ?? profile.user_id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "profiles",
+          filter,
+        },
+        invalidateMembers
+      )
+      .subscribe();
 
     return () => {
-      clearInterval(interval);
-      window.removeEventListener("sparky-points-updated", handlePointsUpdate);
+      window.removeEventListener("sparky-points-updated", invalidateMembers);
+      window.removeEventListener("sparky-profile-updated", invalidateMembers);
+      window.removeEventListener("sparky-data-cleared", invalidateMembers);
+      supabase.removeChannel(channel);
     };
-  }, [profile?.group_code, profile?.points, isDemo]);
+  }, [isDemo, profile, queryClient]);
+
+  const members = useMemo(() => {
+    const list = membersQuery.data ?? [];
+    return [...list].sort((a, b) => b.points - a.points);
+  }, [membersQuery.data]);
 
   // The group creator is the one whose invite_code === group_code
   const leader = members.find(m => m.invite_code === m.group_code);
@@ -67,5 +117,5 @@ export const useGroupMembers = () => {
 
   const isLeader = (member: GroupMember) => member.invite_code === member.group_code;
 
-  return { members, loading, leader, currentUserRank, isLeader };
+  return { members, loading: membersQuery.isLoading, leader, currentUserRank, isLeader };
 };

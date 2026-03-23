@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Profile {
@@ -15,77 +16,161 @@ interface Profile {
   created_at: string;
 }
 
-export const useProfile = () => {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+const PROFILE_QUERY_KEY = ["profile"] as const;
+const DEMO_PROFILE_KEY = "sparky-demo-profile";
 
+const createDemoProfile = (): Profile => ({
+  id: "demo",
+  user_id: "demo",
+  name: "Usuário Demo",
+  email: "demo@sparky.app",
+  phone: null,
+  avatar_url: null,
+  invite_code: "DEMO2026",
+  group_code: "DEMO2026",
+  points: 60,
+  role: "admin",
+  created_at: new Date().toISOString(),
+});
+
+const getProfileQueryKey = (isDemo: boolean) => [...PROFILE_QUERY_KEY, isDemo ? "demo" : "auth"] as const;
+
+const loadDemoProfile = (): Profile => {
+  try {
+    const stored = localStorage.getItem(DEMO_PROFILE_KEY);
+    if (stored) {
+      return { ...createDemoProfile(), ...JSON.parse(stored) } as Profile;
+    }
+  } catch (err) {
+    console.error("Demo profile load error:", err);
+  }
+
+  const fallback = createDemoProfile();
+  localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(fallback));
+  return fallback;
+};
+
+const persistDemoProfile = (profile: Profile) => {
+  localStorage.setItem(DEMO_PROFILE_KEY, JSON.stringify(profile));
+};
+
+export const useProfile = () => {
+  const queryClient = useQueryClient();
   const isDemo = localStorage.getItem("sparky-demo-mode") === "true";
+  const profileQueryKey = getProfileQueryKey(isDemo);
+
+  const profileQuery = useQuery({
+    queryKey: profileQueryKey,
+    queryFn: async (): Promise<Profile | null> => {
+      if (isDemo) {
+        return loadDemoProfile();
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (error) {
+        console.error("Profile fetch error:", error.message);
+        return null;
+      }
+
+      return data as Profile;
+    },
+    staleTime: 10_000,
+    gcTime: 5 * 60_000,
+    refetchOnWindowFocus: true,
+  });
 
   useEffect(() => {
-    if (isDemo) {
-      setProfile({
-        id: "demo",
-        user_id: "demo",
-        name: "Usuário Demo",
-        email: "demo@sparky.app",
-        phone: null,
-        avatar_url: null,
-        invite_code: "DEMO2026",
-        group_code: "DEMO2026",
-        points: 60,
-        role: "admin",
-        created_at: new Date().toISOString(),
-      });
-      setLoading(false);
-      return;
-    }
-
-    const fetchProfile = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { setLoading(false); return; }
-
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("user_id", user.id)
-          .single();
-
-        if (error) {
-          console.error("Profile fetch error:", error.message);
-        }
-        if (data) setProfile(data as Profile);
-      } catch (err) {
-        console.error("Profile fetch exception:", err);
-      } finally {
-        setLoading(false);
-      }
+    const invalidateProfile = () => {
+      queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
     };
 
-    fetchProfile();
+    window.addEventListener("sparky-points-updated", invalidateProfile);
+    window.addEventListener("sparky-data-cleared", invalidateProfile);
+    window.addEventListener("sparky-profile-refresh", invalidateProfile);
+    window.addEventListener("storage", invalidateProfile);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      fetchProfile();
+      invalidateProfile();
     });
 
-    return () => subscription.unsubscribe();
-  }, [isDemo]);
+    return () => {
+      window.removeEventListener("sparky-points-updated", invalidateProfile);
+      window.removeEventListener("sparky-data-cleared", invalidateProfile);
+      window.removeEventListener("sparky-profile-refresh", invalidateProfile);
+      window.removeEventListener("storage", invalidateProfile);
+      subscription.unsubscribe();
+    };
+  }, [queryClient]);
 
-  const updateProfile = async (updates: Partial<Profile>) => {
-    if (!profile) return;
+  useEffect(() => {
+    if (isDemo || !profileQuery.data?.user_id) return;
+
+    const channel = supabase
+      .channel(`profile-${profileQuery.data.user_id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "profiles",
+          filter: `user_id=eq.${profileQuery.data.user_id}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isDemo, profileQuery.data?.user_id, queryClient]);
+
+  const updateProfile = useCallback(async (updates: Partial<Profile>) => {
+    const currentProfile = queryClient.getQueryData<Profile | null>(profileQueryKey) ?? profileQuery.data ?? null;
+    if (!currentProfile) return;
+
     if (isDemo) {
-      // Update locally for demo mode
-      setProfile(prev => prev ? { ...prev, ...updates } : prev);
+      const updatedProfile = { ...currentProfile, ...updates };
+      persistDemoProfile(updatedProfile);
+      queryClient.setQueryData(profileQueryKey, updatedProfile);
+      window.dispatchEvent(new Event("sparky-profile-updated"));
+      if (updates.points !== undefined) {
+        window.dispatchEvent(new Event("sparky-points-updated"));
+      }
       return;
     }
-    const { data } = await supabase
+
+    const { data, error } = await supabase
       .from("profiles")
       .update(updates)
-      .eq("user_id", profile.user_id)
+      .eq("user_id", currentProfile.user_id)
       .select()
       .single();
-    if (data) setProfile(data as Profile);
-  };
 
-  return { profile, loading, updateProfile, isDemo };
+    if (error) throw error;
+
+    const updatedProfile = data as Profile;
+    queryClient.setQueryData(profileQueryKey, updatedProfile);
+    queryClient.invalidateQueries({ queryKey: ["group-members"] });
+    window.dispatchEvent(new Event("sparky-profile-updated"));
+    if (updates.points !== undefined) {
+      window.dispatchEvent(new Event("sparky-points-updated"));
+    }
+  }, [isDemo, profileQuery.data, profileQueryKey, queryClient]);
+
+  return {
+    profile: profileQuery.data ?? null,
+    loading: profileQuery.isLoading,
+    updateProfile,
+    isDemo,
+  };
 };
