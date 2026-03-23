@@ -2,6 +2,7 @@ import { useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "./useProfile";
 import { useFinancialData } from "./useFinancialData";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Points are scarce — only real financial discipline earns them
 export const POINTS_RULES = [
