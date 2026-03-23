@@ -109,7 +109,7 @@ const StatusCards = () => {
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2" style={{ alignItems: "stretch" }}>
         {statuses.map((s, i) => {
           const Icon = s.icon;
           const content = (
@@ -141,7 +141,7 @@ const StatusCards = () => {
               <button
                 key={s.label}
                 onClick={() => setAPagarOpen(true)}
-                className={`card-zelo fade-in-up stagger-${i + 1} !py-3 !px-2.5 text-left cursor-pointer hover:border-warning/40 active:scale-[0.97] transition-all`}
+                className={`card-zelo fade-in-up stagger-${i + 1} !py-3 !px-2.5 text-left cursor-pointer hover:border-warning/40 active:scale-[0.97] transition-all h-full flex flex-col`}
               >
                 {content}
               </button>
@@ -149,7 +149,7 @@ const StatusCards = () => {
           }
 
           return (
-            <div key={s.label} className={`card-zelo fade-in-up stagger-${i + 1} !py-3 !px-2.5`}>
+            <div key={s.label} className={`card-zelo fade-in-up stagger-${i + 1} !py-3 !px-2.5 h-full flex flex-col`}>
               {content}
             </div>
           );
