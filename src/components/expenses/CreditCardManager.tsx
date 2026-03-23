@@ -111,7 +111,7 @@ const CreditCardManager = ({ open, onClose }: Props) => {
   const [newType, setNewType] = useState("Crédito");
   const [newFlag, setNewFlag] = useState("");
 
-  const update = (updated: CreditCardData[]) => { setCards(updated); saveCards(updated); };
+  const update = (updated: CreditCardData[]) => { setCards(updated); saveCards(updated); window.dispatchEvent(new Event("sparky-cards-updated")); };
 
   const handleAddCard = () => {
     const rawBankName = showCustomBank ? customBankName.trim() : newBank.trim();
