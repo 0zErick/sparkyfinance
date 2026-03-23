@@ -50,6 +50,7 @@ const ProfileSwitcher = () => {
   const { profile: dbProfile, isDemo } = useProfile();
   const { members: groupMembers, isLeader: isGroupLeader } = useGroupMembers();
   const [open, setOpen] = useState(false);
+  useDockVisibility(open);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [active, setActive] = useState("");
   const [subView, setSubView] = useState<SubView>(null);
