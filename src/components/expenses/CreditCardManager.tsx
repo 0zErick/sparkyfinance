@@ -93,6 +93,7 @@ interface Props { open: boolean; onClose: () => void; }
 
 const CreditCardManager = ({ open, onClose }: Props) => {
   const [cards, setCards] = useState<CreditCardData[]>(loadCards);
+  const { awardPoints } = usePoints();
   useDockVisibility(open);
   const [showAdd, setShowAdd] = useState(false);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
