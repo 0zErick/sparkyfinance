@@ -3,6 +3,7 @@ import { handleBRLChange } from "@/lib/brlInput";
 import { ChevronDown, Receipt, Calendar, DollarSign, ArrowLeft, Trash2, Pencil, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFinancialData } from "@/hooks/useFinancialData";
+import { usePoints } from "@/hooks/usePoints";
 import { toast } from "sonner";
 import { useDockVisibility } from "@/hooks/useDockVisibility";
 
@@ -84,6 +85,7 @@ const CreditCardCarousel = () => {
   }, []);
 
   const { data, updateData } = useFinancialData();
+  const { awardPoints } = usePoints();
 
   useDockVisibility(expandedId !== null || showPayment);
 
@@ -282,11 +284,22 @@ const CreditCardCarousel = () => {
                       transactions: remaining === 0 ? [] : c.transactions,
                     } : c);
                     saveCards(updated);
-                    // Update global financial data
+                    // Update global financial data — use "Fatura" category so it's excluded from daily budget
+                    const newTx = {
+                      id: crypto.randomUUID(),
+                      date: now.toISOString(),
+                      description: `Fatura: ${expandedCard.cardName}`,
+                      amount: payAmt,
+                      type: "expense" as const,
+                      category: "Fatura",
+                    };
                     updateData({
                       expenses: Math.max(0, data.expenses + payAmt),
                       balance: data.balance - payAmt,
+                      transactions: [newTx, ...data.transactions],
                     });
+                    // Award points for invoice payment
+                    awardPoints("bill_paid", `Fatura: ${expandedCard.cardName}`);
                     setShowPayment(false);
                     setPayAmount("");
                     // Show success popup
@@ -295,7 +308,7 @@ const CreditCardCarousel = () => {
                         <div className="h-12 w-12 rounded-full bg-success/15 flex items-center justify-center mx-auto">
                           <DollarSign size={20} className="text-success" />
                         </div>
-                        <p className="text-sm font-bold">Parabéns pelo pagamento da sua fatura! 🎉</p>
+                        <p className="text-sm font-bold">Fatura paga com sucesso! +3 pts</p>
                         <p className="text-[10px] text-muted-foreground">
                           {payFull ? "Fatura paga integralmente!" : `Pago: ${fmt(payAmt)} — Restante: ${fmt(remaining)}`}
                         </p>

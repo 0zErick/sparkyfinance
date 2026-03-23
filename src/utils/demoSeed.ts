@@ -241,6 +241,10 @@ export function seedDemoData() {
   localStorage.removeItem("sparky-chat-history");
   localStorage.removeItem("sparky-chat-history-demo");
 
-  // Dispatch event to notify all listeners
+  // Dispatch events to notify all listeners — use a microtask to ensure
+  // components that mount after navigation can also pick up the data
   window.dispatchEvent(new Event("sparky-data-cleared"));
+  setTimeout(() => {
+    window.dispatchEvent(new Event("sparky-data-cleared"));
+  }, 100);
 }
