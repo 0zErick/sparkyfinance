@@ -115,7 +115,7 @@ const StatusCards = () => {
     },
     disponivel: {
       title: "Saldo Disponível",
-      message: "O Saldo Disponível é o valor que sobra após descontar todas as contas pendentes do seu saldo real. Se estiver vermelho, significa que seu saldo é insuficiente para cobrir todas as contas.",
+      message: "O Saldo Disponível é o valor que sobra após descontar contas pendentes e reservas de metas do seu saldo real. Se estiver vermelho, significa que seu saldo é insuficiente para cobrir todas as obrigações.",
     },
   };
 
