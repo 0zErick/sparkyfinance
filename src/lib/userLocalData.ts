@@ -20,7 +20,6 @@ const USER_LOCAL_DATA_KEYS = [
   "sparky-sync-data",
   "sparky-sync-status",
   "sparky-daily-snapshot",
-  "sparky-daily-budget-state",
   "sparky-open-finance-cache",
   "sparky-points-log",
   "sparky-paid-bills",

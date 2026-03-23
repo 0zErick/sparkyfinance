@@ -1,14 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useCallback, useMemo, useState } from "react";
+import { useEffect, useRef, useCallback, useMemo, useState } from "react";
 import {
   getDailyBudget,
   getGoalReservedTotal,
   getNormalizedMonthlyTotals,
+  getPendingExpenseSummary,
+  getUnpaidCardInvoiceTotal,
+  getUnpaidSubscriptionTotal,
   isDiscretionaryExpenseTransaction,
   readPaidBillIds,
 } from "@/lib/financialCalculations";
-import { BILLING_SYNC_EVENT, getBillingSummary } from "@/lib/billing";
 
 export interface Transaction {
   id: string;
@@ -28,11 +30,11 @@ export interface FinancialData {
   transactions: Transaction[];
 }
 
-export const FINANCIAL_QUERY_KEY = ["financial-data"] as const;
+const QUERY_KEY = ["financial-data"];
 
 const isDemo = () => localStorage.getItem("sparky-demo-mode") === "true";
+
 const STORAGE_KEY = "sparky-financial-data";
-const DAILY_BUDGET_STATE_KEY = "sparky-daily-budget-state";
 
 const defaultData: FinancialData = {
   balance: 0,
@@ -40,74 +42,6 @@ const defaultData: FinancialData = {
   expenses: 0,
   scheduled: 0,
   transactions: [],
-};
-
-interface DailyBudgetSnapshot {
-  date: string;
-  reservePct: number;
-  dailyBudget: number;
-  baseDailyBudget: number;
-  rolloverBonus: number;
-  daysLeft: number;
-  reserve: number;
-}
-
-const getDayKey = (date: Date) => date.toISOString().slice(0, 10);
-
-const readDailyBudgetSnapshot = () => {
-  try {
-    const stored = localStorage.getItem(DAILY_BUDGET_STATE_KEY);
-    return stored ? (JSON.parse(stored) as DailyBudgetSnapshot) : null;
-  } catch {
-    return null;
-  }
-};
-
-const getPreviousDayDiscretionarySpend = (transactions: Transaction[], now: Date) => {
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0, 0);
-  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-
-  return transactions
-    .filter((transaction) => {
-      if (!isDiscretionaryExpenseTransaction(transaction)) return false;
-      const transactionDate = new Date(transaction.date);
-      return transactionDate >= start && transactionDate < end;
-    })
-    .reduce((sum, transaction) => sum + transaction.amount, 0);
-};
-
-const resolveStaticDailyBudget = (
-  transactions: Transaction[],
-  available: number,
-  reservePct: number,
-  now: Date,
-) => {
-  const todayKey = getDayKey(now);
-  const snapshot = readDailyBudgetSnapshot();
-
-  if (snapshot?.date === todayKey && snapshot.reservePct === reservePct) {
-    return snapshot;
-  }
-
-  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, now.getHours(), now.getMinutes());
-  const yesterdayKey = getDayKey(yesterday);
-  const yesterdaySpend = getPreviousDayDiscretionarySpend(transactions, now);
-  const yesterdayUnspent =
-    snapshot?.date === yesterdayKey ? Math.max(0, snapshot.dailyBudget - yesterdaySpend) : 0;
-
-  const computed = getDailyBudget(Math.max(0, available), 0, reservePct, now, yesterdayUnspent);
-  const nextSnapshot: DailyBudgetSnapshot = {
-    date: todayKey,
-    reservePct,
-    dailyBudget: computed.dailyBudget,
-    baseDailyBudget: computed.baseDailyBudget,
-    rolloverBonus: computed.rolloverBonus,
-    daysLeft: computed.daysLeft,
-    reserve: computed.reserve,
-  };
-
-  localStorage.setItem(DAILY_BUDGET_STATE_KEY, JSON.stringify(nextSnapshot));
-  return nextSnapshot;
 };
 
 async function fetchFinancialData(): Promise<FinancialData> {
@@ -149,11 +83,12 @@ async function fetchFinancialData(): Promise<FinancialData> {
 
   let income = 0;
   let expenses = 0;
-  transactions.forEach((transaction) => {
-    const transactionDate = new Date(transaction.date);
-    if (transactionDate.getMonth() === month && transactionDate.getFullYear() === year) {
-      if (transaction.type === "income") income += transaction.amount;
-      else if (transaction.type === "expense") expenses += transaction.amount;
+  transactions.forEach(t => {
+    const d = new Date(t.date);
+    if (d.getMonth() === month && d.getFullYear() === year) {
+      if (t.type === "income") income += t.amount;
+      else if (t.type === "expense") expenses += t.amount;
+      // goal_deposit is NOT counted as expense
     }
   });
 
@@ -162,10 +97,11 @@ async function fetchFinancialData(): Promise<FinancialData> {
 
 export const useFinancialQuery = () => {
   const queryClient = useQueryClient();
+  const userIdRef = useRef<string | null>(null);
   const [billingRevision, setBillingRevision] = useState(0);
 
   const queryResult = useQuery({
-    queryKey: FINANCIAL_QUERY_KEY,
+    queryKey: QUERY_KEY,
     queryFn: fetchFinancialData,
     staleTime: 10_000,
     gcTime: 5 * 60_000,
@@ -188,21 +124,25 @@ export const useFinancialQuery = () => {
       balance,
     };
   }, [queryResult.data, billingRevision]);
-
   const loading = queryResult.isLoading;
 
+  // Realtime subscription for instant updates
   useEffect(() => {
     if (isDemo()) return;
 
     const channel = supabase
       .channel("transactions-realtime-query")
       .on("postgres_changes", { event: "*", schema: "public", table: "transactions" }, () => {
-        queryClient.invalidateQueries({ queryKey: FINANCIAL_QUERY_KEY });
+        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       })
       .subscribe();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      queryClient.invalidateQueries({ queryKey: FINANCIAL_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    });
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) userIdRef.current = user.id;
     });
 
     return () => {
@@ -211,6 +151,7 @@ export const useFinancialQuery = () => {
     };
   }, [queryClient]);
 
+  // Demo mode: persist to localStorage
   useEffect(() => {
     if (isDemo() && queryResult.data) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(queryResult.data));
@@ -218,27 +159,22 @@ export const useFinancialQuery = () => {
   }, [queryResult.data]);
 
   useEffect(() => {
-    const handler = () => {
-      setBillingRevision((current) => current + 1);
-      queryClient.invalidateQueries({ queryKey: FINANCIAL_QUERY_KEY });
-    };
-
+    const handler = () => setBillingRevision((current) => current + 1);
     window.addEventListener("storage", handler);
-    window.addEventListener(BILLING_SYNC_EVENT, handler);
     window.addEventListener("sparky-paid-bills-updated", handler);
     window.addEventListener("sparky-cards-updated", handler);
 
     return () => {
       window.removeEventListener("storage", handler);
-      window.removeEventListener(BILLING_SYNC_EVENT, handler);
       window.removeEventListener("sparky-paid-bills-updated", handler);
       window.removeEventListener("sparky-cards-updated", handler);
     };
-  }, [queryClient]);
+  }, []);
 
+  // Demo events
   useEffect(() => {
     if (!isDemo()) return;
-    const handler = () => queryClient.invalidateQueries({ queryKey: FINANCIAL_QUERY_KEY });
+    const handler = () => queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     window.addEventListener("storage", handler);
     window.addEventListener("sparky-data-cleared", handler);
     return () => {
@@ -247,62 +183,49 @@ export const useFinancialQuery = () => {
     };
   }, [queryClient]);
 
+  // Computed values
   const computed = useMemo(() => {
     const now = new Date();
     const paidBillIds = readPaidBillIds();
-    const billingSummary = getBillingSummary(data.transactions, { now, paidBillIds });
+    const txPending = getPendingExpenseSummary(data.transactions, { now, paidBillIds });
+
+    // Include credit card invoices + unpaid subscriptions not already in transactions
+    const cardInvoice = getUnpaidCardInvoiceTotal();
+    const subsPending = getUnpaidSubscriptionTotal();
+
+    const pendingTotal = txPending.pendingTotal + cardInvoice.total + subsPending.total;
+    const pendingCount = txPending.pendingCount + cardInvoice.count + subsPending.count;
+    const allPaid = pendingTotal === 0;
+
     const totalGoalReserved = getGoalReservedTotal(data.transactions);
-    const available = data.balance - billingSummary.pendingTotal - totalGoalReserved;
+    const available = data.balance - pendingTotal - totalGoalReserved;
 
     let reservePct = 0.20;
     try { reservePct = parseInt(localStorage.getItem("sparky-reserve-pct") || "20") / 100; } catch {}
 
-    const dailyBudgetState = resolveStaticDailyBudget(data.transactions, available, reservePct, now);
+    // Calculate yesterday's unspent amount for progressive savings rollover
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().slice(0, 10);
+    const yesterdayDiscretionary = data.transactions
+      .filter(t => isDiscretionaryExpenseTransaction(t) && t.date.startsWith(yesterdayStr))
+      .reduce((sum, t) => sum + t.amount, 0);
 
-    return {
-      available,
-      daysLeft: dailyBudgetState.daysLeft,
-      dailyBudget: dailyBudgetState.dailyBudget,
-      baseDailyBudget: dailyBudgetState.baseDailyBudget,
-      rolloverBonus: dailyBudgetState.rolloverBonus,
-      pendingTotal: billingSummary.pendingTotal,
-      pendingCount: billingSummary.pendingCount,
-      paidTotal: billingSummary.paidTotal,
-      totalBills: billingSummary.totalBills,
-      pendingItems: billingSummary.pendingItems,
-      allPaid: billingSummary.allPaid,
-      totalGoalReserved,
-    };
+    // Base daily budget WITHOUT rollover (to know what yesterday's limit was)
+    const { dailyBudget: yesterdayBaseBudget } = getDailyBudget(data.balance, pendingTotal, reservePct, yesterday);
+    const yesterdayUnspent = Math.max(0, yesterdayBaseBudget - yesterdayDiscretionary);
+
+    const { daysLeft, dailyBudget, baseDailyBudget, rolloverBonus } = getDailyBudget(data.balance, pendingTotal, reservePct, now, yesterdayUnspent);
+
+    return { available, daysLeft, dailyBudget, baseDailyBudget, rolloverBonus, pendingTotal, pendingCount, allPaid, totalGoalReserved };
   }, [data, billingRevision]);
 
+  // Mutations with optimistic updates
   const addMutation = useMutation({
-    onMutate: async (tx: Omit<Transaction, "id">) => {
-      if (isDemo()) return {};
-
-      await queryClient.cancelQueries({ queryKey: FINANCIAL_QUERY_KEY });
-      const previousData = queryClient.getQueryData<FinancialData>(FINANCIAL_QUERY_KEY);
-      const optimisticTransaction: Transaction = { ...tx, id: crypto.randomUUID() };
-
-      queryClient.setQueryData<FinancialData>(FINANCIAL_QUERY_KEY, (old) => {
-        const current = old ?? defaultData;
-        const income = tx.type === "income" ? current.income + tx.amount : current.income;
-        const expenses = tx.type === "expense" ? current.expenses + tx.amount : current.expenses;
-
-        return {
-          ...current,
-          transactions: [optimisticTransaction, ...current.transactions],
-          income,
-          expenses,
-          balance: income - expenses,
-        };
-      });
-
-      return { previousData };
-    },
     mutationFn: async (tx: Omit<Transaction, "id">) => {
       if (isDemo()) {
         const newTx = { ...tx, id: crypto.randomUUID() };
-        queryClient.setQueryData<FinancialData>(FINANCIAL_QUERY_KEY, (old) => {
+        queryClient.setQueryData<FinancialData>(QUERY_KEY, (old) => {
           if (!old) return { ...defaultData, transactions: [newTx] };
           const newIncome = tx.type === "income" ? old.income + tx.amount : old.income;
           const newExpenses = tx.type === "expense" ? old.expenses + tx.amount : old.expenses;
@@ -337,37 +260,26 @@ export const useFinancialQuery = () => {
       if (error) throw error;
       return inserted?.id;
     },
-    onError: (_error, _variables, context) => {
-      if (context?.previousData) {
-        queryClient.setQueryData(FINANCIAL_QUERY_KEY, context.previousData);
-      }
-    },
     onSuccess: () => {
-      if (!isDemo()) queryClient.invalidateQueries({ queryKey: FINANCIAL_QUERY_KEY });
+      if (!isDemo()) queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Transaction> }) => {
       if (isDemo()) {
-        queryClient.setQueryData<FinancialData>(FINANCIAL_QUERY_KEY, (old) => {
+        queryClient.setQueryData<FinancialData>(QUERY_KEY, (old) => {
           if (!old) return old!;
-          const oldTx = old.transactions.find((transaction) => transaction.id === id);
+          const oldTx = old.transactions.find(t => t.id === id);
           if (!oldTx) return old;
           const newAmount = updates.amount ?? oldTx.amount;
           const diff = newAmount - oldTx.amount;
-          const newTransactions = old.transactions.map((transaction) => transaction.id === id ? { ...transaction, ...updates } : transaction);
+          const newTransactions = old.transactions.map(t => t.id === id ? { ...t, ...updates } : t);
           let newIncome = old.income;
           let newExpenses = old.expenses;
           if (oldTx.type === "income") newIncome += diff;
           else newExpenses += diff;
-          return {
-            ...old,
-            transactions: newTransactions,
-            income: Math.max(0, newIncome),
-            expenses: Math.max(0, newExpenses),
-            balance: Math.max(0, newIncome) - Math.max(0, newExpenses),
-          };
+          return { ...old, transactions: newTransactions, income: Math.max(0, newIncome), expenses: Math.max(0, newExpenses), balance: Math.max(0, newIncome) - Math.max(0, newExpenses) };
         });
         return;
       }
@@ -382,27 +294,21 @@ export const useFinancialQuery = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      if (!isDemo()) queryClient.invalidateQueries({ queryKey: FINANCIAL_QUERY_KEY });
+      if (!isDemo()) queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       if (isDemo()) {
-        queryClient.setQueryData<FinancialData>(FINANCIAL_QUERY_KEY, (old) => {
+        queryClient.setQueryData<FinancialData>(QUERY_KEY, (old) => {
           if (!old) return old!;
-          const tx = old.transactions.find((transaction) => transaction.id === id);
+          const tx = old.transactions.find(t => t.id === id);
           if (!tx) return old;
-          const newTransactions = old.transactions.filter((transaction) => transaction.id !== id);
+          const newTransactions = old.transactions.filter(t => t.id !== id);
           const newIncome = tx.type === "income" ? old.income - tx.amount : old.income;
           const newExpenses = tx.type === "expense" ? old.expenses - tx.amount : old.expenses;
-          return {
-            ...old,
-            transactions: newTransactions,
-            income: Math.max(0, newIncome),
-            expenses: Math.max(0, newExpenses),
-            balance: Math.max(0, newIncome) - Math.max(0, newExpenses),
-          };
+          return { ...old, transactions: newTransactions, income: Math.max(0, newIncome), expenses: Math.max(0, newExpenses), balance: Math.max(0, newIncome) - Math.max(0, newExpenses) };
         });
         return;
       }
@@ -411,68 +317,63 @@ export const useFinancialQuery = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      if (!isDemo()) queryClient.invalidateQueries({ queryKey: FINANCIAL_QUERY_KEY });
+      if (!isDemo()) queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
   });
 
   const addTransaction = useCallback(async (tx: Omit<Transaction, "id">) => {
     return addMutation.mutateAsync(tx);
-  }, [addMutation]);
+  }, [addMutation.mutateAsync]);
 
   const updateTransaction = useCallback(async (id: string, updates: Partial<Transaction>) => {
     return updateMutation.mutateAsync({ id, updates });
-  }, [updateMutation]);
+  }, [updateMutation.mutateAsync]);
 
   const deleteTransaction = useCallback(async (id: string) => {
     return deleteMutation.mutateAsync(id);
-  }, [deleteMutation]);
+  }, [deleteMutation.mutateAsync]);
 
   const updateData = useCallback(async (partial: Partial<FinancialData>) => {
     if (isDemo()) {
-      queryClient.setQueryData<FinancialData>(FINANCIAL_QUERY_KEY, (old) => ({ ...(old ?? defaultData), ...partial }));
+      queryClient.setQueryData<FinancialData>(QUERY_KEY, (old) => ({ ...(old ?? defaultData), ...partial }));
       return;
     }
 
     if (partial.transactions) {
-      const currentIds = new Set(data.transactions.map((transaction) => transaction.id));
-      const newIds = new Set(partial.transactions.map((transaction) => transaction.id));
-      const toInsert = partial.transactions.filter((transaction) => !currentIds.has(transaction.id));
-      const toDelete = data.transactions.filter((transaction) => !newIds.has(transaction.id));
+      const currentIds = new Set(data.transactions.map(t => t.id));
+      const newIds = new Set(partial.transactions.map(t => t.id));
+      const toInsert = partial.transactions.filter(t => !currentIds.has(t.id));
+      const toDelete = data.transactions.filter(t => !newIds.has(t.id));
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       for (const tx of toInsert) {
         await supabase.from("transactions").insert({
-          user_id: user.id,
-          date: tx.date,
-          description: tx.description,
-          amount: tx.amount,
-          type: tx.type,
-          category: tx.category,
-          card_id: tx.cardId || null,
+          user_id: user.id, date: tx.date, description: tx.description,
+          amount: tx.amount, type: tx.type, category: tx.category, card_id: tx.cardId || null,
         });
       }
       for (const tx of toDelete) {
         await supabase.from("transactions").delete().eq("id", tx.id);
       }
-      queryClient.invalidateQueries({ queryKey: FINANCIAL_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     }
   }, [data.transactions, queryClient]);
 
   const clearAll = useCallback(async () => {
     if (isDemo()) {
-      queryClient.setQueryData<FinancialData>(FINANCIAL_QUERY_KEY, { ...defaultData });
+      queryClient.setQueryData<FinancialData>(QUERY_KEY, { ...defaultData });
       const keys = [
         "sparky-balance", "sparky-transactions", "sparky-cards",
         "sparky-credit-cards", "sparky-budget", "sparky-goals",
         "sparky-chat-history", "sparky-investments", "sparky-planning",
         "sparky-income", "sparky-expenses", "sparky-sync-data",
         "sparky-open-finance-cache", "sparky-chat-style",
-        "sparky-investment-goals", "sparky-points-log", DAILY_BUDGET_STATE_KEY,
+        "sparky-investment-goals", "sparky-points-log",
         "sparky-paid-bills", STORAGE_KEY,
       ];
-      keys.forEach((key) => localStorage.removeItem(key));
+      keys.forEach(k => localStorage.removeItem(k));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
       window.dispatchEvent(new Event("sparky-data-cleared"));
       return;
@@ -481,12 +382,12 @@ export const useFinancialQuery = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       await supabase.from("transactions").delete().eq("user_id", user.id);
-      queryClient.invalidateQueries({ queryKey: FINANCIAL_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     }
   }, [queryClient]);
 
   const refetch = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: FINANCIAL_QUERY_KEY });
+    queryClient.invalidateQueries({ queryKey: QUERY_KEY });
   }, [queryClient]);
 
   return {
@@ -498,9 +399,6 @@ export const useFinancialQuery = () => {
     rolloverBonus: computed.rolloverBonus,
     pendingTotal: computed.pendingTotal,
     pendingCount: computed.pendingCount,
-    paidTotal: computed.paidTotal,
-    totalBills: computed.totalBills,
-    pendingItems: computed.pendingItems,
     allPaid: computed.allPaid,
     totalGoalReserved: computed.totalGoalReserved,
     loading,
