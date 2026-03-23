@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { X, CheckCircle2, Clock, Trash2, CalendarDays, Tag, DollarSign, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFinancialData, fmt, Transaction } from "@/hooks/useFinancialData";
@@ -46,7 +46,8 @@ const APagarModal = ({ open, onClose }: APagarModalProps) => {
     };
   }, []);
 
-  const now = new Date();
+  // Stable month reference — only changes when revision bumps
+  const now = useMemo(() => new Date(), [revision]);
 
   const { allBills, paidTotal, pendingTotal } = useMemo(() => {
     const summary = getPendingExpenseSummary(data.transactions, {

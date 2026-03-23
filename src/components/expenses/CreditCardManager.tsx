@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useDockVisibility } from "@/hooks/useDockVisibility";
 import { usePoints } from "@/hooks/usePoints";
+import { useFinancialData } from "@/hooks/useFinancialData";
 
 const BANK_DATA: Record<string, { color: string; abbr: string }> = {
   "nubank": { color: "bg-purple-600", abbr: "NU" },
@@ -94,6 +95,7 @@ interface Props { open: boolean; onClose: () => void; }
 const CreditCardManager = ({ open, onClose }: Props) => {
   const [cards, setCards] = useState<CreditCardData[]>(loadCards);
   const { awardPoints } = usePoints();
+  const { data, updateData } = useFinancialData();
   useDockVisibility(open);
   const [showAdd, setShowAdd] = useState(false);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
@@ -166,6 +168,34 @@ const CreditCardManager = ({ open, onClose }: Props) => {
       paidInvoices: [...c.paidInvoices, { month: new Date().toLocaleDateString("pt-BR", { month: "short", year: "numeric" }), amount, paidAt: new Date().toLocaleDateString("pt-BR") }],
     } : c));
     setShowPayment(false); setPayAmount("");
+
+    // Mark invoice as paid in paid-bills so APagarModal picks it up
+    try {
+      const paidBills: string[] = JSON.parse(localStorage.getItem("sparky-paid-bills") || "[]");
+      const invoiceId = `card-invoice-${cardId}`;
+      if (!paidBills.includes(invoiceId)) {
+        paidBills.push(invoiceId);
+        localStorage.setItem("sparky-paid-bills", JSON.stringify(paidBills));
+      }
+    } catch {}
+
+    // Update financial data — deduct payment from balance
+    const newTx = {
+      id: crypto.randomUUID(),
+      date: new Date().toISOString(),
+      description: `Fatura: ${card.cardName}`,
+      amount,
+      type: "expense" as const,
+      category: "Fatura",
+    };
+    updateData({
+      expenses: data.expenses + amount,
+      balance: data.balance - amount,
+      transactions: [newTx, ...data.transactions],
+    });
+
+    // Dispatch sync events
+    window.dispatchEvent(new Event("sparky-paid-bills-updated"));
 
     // Award points for invoice payment
     await awardPoints("bill_paid", `Fatura: ${card.cardName}`);
