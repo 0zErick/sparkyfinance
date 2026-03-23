@@ -8,6 +8,7 @@ import {
   getPendingExpenseSummary,
   getUnpaidCardInvoiceTotal,
   getUnpaidSubscriptionTotal,
+  isDiscretionaryExpenseTransaction,
   readPaidBillIds,
 } from "@/lib/financialCalculations";
 
