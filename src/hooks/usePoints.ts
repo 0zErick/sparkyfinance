@@ -66,11 +66,22 @@ export const usePoints = () => {
 
     const freshPoints = profileRef.current?.points || 0;
     const newTotal = freshPoints + rule.points;
-    await updateProfile({ points: newTotal });
+
+    if (isDemo) {
+      await updateProfile({ points: newTotal });
+    } else {
+      // Use SECURITY DEFINER function to bypass RLS restriction on points
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.rpc("update_user_points", { _user_id: user.id, _points: newTotal });
+        await updateProfile({ points: newTotal }); // sync local state
+      }
+    }
+    queryClient.invalidateQueries({ queryKey: ["profile"] });
     window.dispatchEvent(new Event("sparky-points-updated"));
 
     return rule.points;
-  }, [updateProfile]);
+  }, [updateProfile, isDemo, queryClient]);
 
   const removePoints = useCallback(async (ruleId: string, description?: string) => {
     const rule = POINTS_RULES.find(r => r.id === ruleId);
