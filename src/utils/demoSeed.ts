@@ -185,7 +185,7 @@ export function seedDemoData() {
 
   const income = rand(2800, 6500);
   const expenses = rand(Math.floor(income * 0.3), Math.floor(income * 0.7));
-  const balance = rand(Math.floor(income * 0.6), Math.floor(income * 1.4));
+  const balance = Math.min(rand(Math.floor(income * 0.6), Math.floor(income * 1.4)), 15000);
   const scheduled = rand(Math.floor(expenses * 0.2), Math.floor(expenses * 0.6));
   const transactions = generateTransactions(income, expenses);
 
