@@ -238,7 +238,8 @@ export function seedDemoData() {
   };
 
   localStorage.setItem("sparky-financial-data", JSON.stringify(financialData));
-  localStorage.setItem("sparky-credit-cards", JSON.stringify(generateCreditCards()));
+  const maxCardInvoices = Math.max(200, Math.floor((balance - scheduled) * 0.4));
+  localStorage.setItem("sparky-credit-cards", JSON.stringify(generateCreditCards(maxCardInvoices)));
   localStorage.setItem("sparky-budgets", JSON.stringify(generateBudgets(expenses)));
   localStorage.setItem("sparky-investment-goals", JSON.stringify(generateGoals()));
   localStorage.setItem("sparky-subscriptions", JSON.stringify(subs));
