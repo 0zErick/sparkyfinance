@@ -62,7 +62,7 @@ async function fetchFinancialData(): Promise<FinancialData> {
     date: t.date,
     description: t.description,
     amount: Number(t.amount),
-    type: t.type as "income" | "expense",
+    type: t.type as "income" | "expense" | "goal_deposit",
     category: t.category,
     cardId: t.card_id || undefined,
   }));
