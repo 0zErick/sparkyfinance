@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useDockVisibility } from "@/hooks/useDockVisibility";
 import { usePoints } from "@/hooks/usePoints";
+import { useFinancialData } from "@/hooks/useFinancialData";
 
 const BANK_DATA: Record<string, { color: string; abbr: string }> = {
   "nubank": { color: "bg-purple-600", abbr: "NU" },
