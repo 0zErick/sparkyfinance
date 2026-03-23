@@ -57,6 +57,8 @@ const ProfileSwitcher = () => {
   const [newEmail, setNewEmail] = useState("");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
 
   const [allPrizes, setAllPrizes] = useState<Record<string, Prize[]>>({});
   const [showNewPrize, setShowNewPrize] = useState(false);
@@ -230,7 +232,6 @@ const ProfileSwitcher = () => {
     const image = cropImgRef.current;
     if (!image || !completedCrop) return;
 
-    const canvas = document.createElement("canvas");
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
     const pixelCrop = {
@@ -239,16 +240,25 @@ const ProfileSwitcher = () => {
       width: (completedCrop.width / 100) * image.width * scaleX,
       height: (completedCrop.height / 100) * image.height * scaleY,
     };
-    canvas.width = pixelCrop.width;
-    canvas.height = pixelCrop.height;
+
+    // Resize to max 500x500 for optimized avatar
+    const maxSize = 500;
+    const outW = Math.min(pixelCrop.width, maxSize);
+    const outH = Math.min(pixelCrop.height, maxSize);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = outW;
+    canvas.height = outH;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    ctx.imageSmoothingQuality = "high";
     ctx.drawImage(
       image,
       pixelCrop.x, pixelCrop.y, pixelCrop.width, pixelCrop.height,
-      0, 0, pixelCrop.width, pixelCrop.height
+      0, 0, outW, outH
     );
-    const croppedBase64 = canvas.toDataURL("image/jpeg", 0.9);
+    // Compress to JPEG ~80% quality for small file size
+    const croppedBase64 = canvas.toDataURL("image/jpeg", 0.8);
     setProfiles(profiles.map(p => p.id === active ? { ...p, avatar: croppedBase64 } : p));
     setCropModalOpen(false);
     setCropImgSrc("");
@@ -553,13 +563,45 @@ const ProfileSwitcher = () => {
           <div className="card-zelo flex flex-col items-center py-6">
             <div className="relative">
               {renderAvatar(current, "h-20 w-20", "text-2xl")}
-              <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoSelect} />
-              <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 h-7 w-7 rounded-full bg-primary flex items-center justify-center text-white">
+              {/* Hidden inputs: one for gallery, one for camera */}
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoSelect} />
+              <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoSelect} />
+              <button onClick={() => setShowMediaPicker(true)} className="absolute bottom-0 right-0 h-7 w-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
                 <Camera size={12} />
               </button>
             </div>
+
+            {/* Media source picker */}
+            {showMediaPicker && (
+              <div className="mt-3 w-full max-w-[220px] rounded-xl border border-border bg-card shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <button
+                  onClick={() => { setShowMediaPicker(false); cameraInputRef.current?.click(); }}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-muted/50 transition-colors active:scale-[0.98]"
+                >
+                  <Camera size={16} className="text-primary" />
+                  Tirar Foto
+                </button>
+                <div className="h-px bg-border" />
+                <button
+                  onClick={() => { setShowMediaPicker(false); fileInputRef.current?.click(); }}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-muted/50 transition-colors active:scale-[0.98]"
+                >
+                  <Image size={16} className="text-primary" />
+                  Escolher da Galeria
+                </button>
+                <div className="h-px bg-border" />
+                <button
+                  onClick={() => setShowMediaPicker(false)}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors active:scale-[0.98]"
+                >
+                  <X size={16} />
+                  Cancelar
+                </button>
+              </div>
+            )}
+
             {/* Delete photo button */}
-            {current.avatar && (
+            {current.avatar && !showMediaPicker && (
               <button
                 onClick={handleDeletePhoto}
                 className="mt-2 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-medium text-muted-foreground bg-muted/50 hover:bg-destructive/10 hover:text-destructive transition-colors active:scale-[0.97]"

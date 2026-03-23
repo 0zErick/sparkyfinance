@@ -50,16 +50,18 @@ const Header = () => {
       // Clear stale cache entries
       CACHE_KEYS_TO_CLEAR.forEach((k) => localStorage.removeItem(k));
 
-      // Invalidate all React Query caches and refetch active queries
-      await queryClient.invalidateQueries();
-      await queryClient.refetchQueries({ type: "active" });
+      // Invalidate and immediately refetch all active queries in parallel
+      await Promise.all([
+        queryClient.invalidateQueries(),
+        queryClient.refetchQueries({ type: "active" }),
+      ]);
 
       // Dispatch event so any non-RQ listeners also refresh
       window.dispatchEvent(new Event("sparky-data-cleared"));
 
-      toast.success("Dados sincronizados!", { duration: 2000 });
+      toast.success("Sincronizado!", { duration: 1500 });
     } catch {
-      toast.error("Erro ao sincronizar", { duration: 2500 });
+      toast.error("Erro ao sincronizar", { duration: 2000 });
     } finally {
       setSyncing(false);
     }
