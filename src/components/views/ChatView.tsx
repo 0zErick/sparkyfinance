@@ -444,7 +444,9 @@ const ChatView = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [input, pendingAttachments, isLoading, messages, getUserContext]);
+
+  const send = () => sendDirect();
 
   const NewChatConfirmPopup = () => (
     <div className="fixed inset-0 z-[70] flex items-center justify-center">
