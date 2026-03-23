@@ -109,7 +109,7 @@ const StatusCards = () => {
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2" style={{ alignItems: "stretch" }}>
         {statuses.map((s, i) => {
           const Icon = s.icon;
           const content = (
