@@ -69,7 +69,7 @@ function generateTransactions(income: number, expenses: number): any[] {
   return txs;
 }
 
-function generateCreditCards(): any[] {
+function generateCreditCards(maxInvoiceTotal: number): any[] {
   const banks = [
     { bankName: "Nubank", cardName: "Nubank Platinum", cardFlag: "Mastercard" },
     { bankName: "Inter", cardName: "Inter Gold", cardFlag: "Visa" },
@@ -80,17 +80,22 @@ function generateCreditCards(): any[] {
 
   const numCards = rand(1, 3);
   const selected = [...banks].sort(() => Math.random() - 0.5).slice(0, numCards);
+  let invoiceBudget = Math.max(0, maxInvoiceTotal);
 
-  return selected.map((bank) => {
+  return selected.map((bank, idx) => {
     const limit = Math.min(rand(2000, 10000), 15000);
-    const used = rand(Math.floor(limit * 0.15), Math.floor(limit * 0.55));
+    const isLast = idx === selected.length - 1;
+    const maxForCard = isLast ? invoiceBudget : rand(Math.floor(invoiceBudget * 0.3), Math.floor(invoiceBudget * 0.6));
+    const used = Math.min(rand(Math.floor(limit * 0.1), Math.floor(limit * 0.35)), Math.max(50, maxForCard));
+    invoiceBudget = Math.max(0, invoiceBudget - used);
+
     const numTxs = rand(3, 6);
     const txs: any[] = [];
     let remaining = used;
     for (let i = 0; i < numTxs; i++) {
-      const isLast = i === numTxs - 1;
+      const isLastTx = i === numTxs - 1;
       const cat = pick(CATEGORIES);
-      const amount = isLast ? remaining : rand(10, Math.floor(remaining * 0.5));
+      const amount = isLastTx ? remaining : rand(10, Math.floor(remaining * 0.5));
       remaining = Math.max(0, remaining - amount);
       txs.push({
         id: uuid(),
@@ -99,7 +104,7 @@ function generateCreditCards(): any[] {
         date: new Date().toISOString(),
         category: cat,
       });
-      if (remaining <= 0 && !isLast) break;
+      if (remaining <= 0 && !isLastTx) break;
     }
 
     const now = new Date();
@@ -215,8 +220,8 @@ export function seedDemoData() {
   localStorage.setItem("sparky-demo-seed-version", Date.now().toString());
 
   const income = rand(3500, 7500);
-  const expenses = rand(Math.floor(income * 0.35), Math.floor(income * 0.65));
-  const balance = Math.min(rand(Math.floor(income * 0.7), Math.floor(income * 1.3)), 15000);
+  const expenses = rand(Math.floor(income * 0.35), Math.floor(income * 0.55));
+  const balance = income - expenses; // Saldo Real = Receitas - Despesas
   const { subs, paidBillIds } = generateSubscriptions();
   const unpaidSubsTotal = subs
     .filter(s => !paidBillIds.includes(s.id))
@@ -233,7 +238,8 @@ export function seedDemoData() {
   };
 
   localStorage.setItem("sparky-financial-data", JSON.stringify(financialData));
-  localStorage.setItem("sparky-credit-cards", JSON.stringify(generateCreditCards()));
+  const maxCardInvoices = Math.max(200, Math.floor((balance - scheduled) * 0.4));
+  localStorage.setItem("sparky-credit-cards", JSON.stringify(generateCreditCards(maxCardInvoices)));
   localStorage.setItem("sparky-budgets", JSON.stringify(generateBudgets(expenses)));
   localStorage.setItem("sparky-investment-goals", JSON.stringify(generateGoals()));
   localStorage.setItem("sparky-subscriptions", JSON.stringify(subs));
