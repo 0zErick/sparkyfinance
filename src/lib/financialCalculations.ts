@@ -156,15 +156,22 @@ export const getDailyBudget = (
   pendingTotal: number,
   reservePct: number,
   now: Date = new Date(),
+  yesterdayUnspent: number = 0,
 ) => {
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const daysLeft = Math.max(1, daysInMonth - now.getDate());
   const reserve = Math.max(0, balance * reservePct);
   const spendablePool = Math.max(0, balance - pendingTotal - reserve);
+  const baseDailyBudget = daysLeft > 0 ? spendablePool / daysLeft : 0;
+
+  // Progressive savings: only 15% of yesterday's unspent amount rolls over
+  const rolloverBonus = Math.max(0, yesterdayUnspent) * 0.15;
 
   return {
     reserve,
     daysLeft,
-    dailyBudget: daysLeft > 0 ? spendablePool / daysLeft : 0,
+    dailyBudget: baseDailyBudget + rolloverBonus,
+    baseDailyBudget,
+    rolloverBonus,
   };
 };

@@ -202,9 +202,21 @@ export const useFinancialQuery = () => {
     let reservePct = 0.20;
     try { reservePct = parseInt(localStorage.getItem("sparky-reserve-pct") || "20") / 100; } catch {}
 
-    const { daysLeft, dailyBudget } = getDailyBudget(data.balance, pendingTotal, reservePct, now);
+    // Calculate yesterday's unspent amount for progressive savings rollover
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().slice(0, 10);
+    const yesterdayDiscretionary = data.transactions
+      .filter(t => isDiscretionaryExpenseTransaction(t) && t.date.startsWith(yesterdayStr))
+      .reduce((sum, t) => sum + t.amount, 0);
 
-    return { available, daysLeft, dailyBudget, pendingTotal, pendingCount, allPaid, totalGoalReserved };
+    // Base daily budget WITHOUT rollover (to know what yesterday's limit was)
+    const { dailyBudget: yesterdayBaseBudget } = getDailyBudget(data.balance, pendingTotal, reservePct, yesterday);
+    const yesterdayUnspent = Math.max(0, yesterdayBaseBudget - yesterdayDiscretionary);
+
+    const { daysLeft, dailyBudget, baseDailyBudget, rolloverBonus } = getDailyBudget(data.balance, pendingTotal, reservePct, now, yesterdayUnspent);
+
+    return { available, daysLeft, dailyBudget, baseDailyBudget, rolloverBonus, pendingTotal, pendingCount, allPaid, totalGoalReserved };
   }, [data, billingRevision]);
 
   // Mutations with optimistic updates
