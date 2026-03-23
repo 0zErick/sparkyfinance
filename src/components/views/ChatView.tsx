@@ -114,6 +114,12 @@ const STATUS_PHRASES = [
   "Verificando transações...",
 ];
 
+const sanitizeAssistantText = (text: string) => text
+  .replace(/<[^>\n]*(>|$)/g, "")
+  .replace(/\*\*/g, "")
+  .replace(/\*/g, "")
+  .replace(/&nbsp;/g, " ");
+
 const ChatView = () => {
   const { data: financialData, available, daysLeft, dailyBudget } = useFinancialQuery();
   const [conversations, setConversations] = useState<Conversation[]>(loadConversations);
@@ -421,10 +427,10 @@ const ChatView = () => {
           if (jsonStr === "[DONE]") break;
           try {
             const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+              const content = parsed.choices?.[0]?.delta?.content as string | undefined;
             if (content) {
               assistantSoFar += content;
-              const snap = assistantSoFar;
+                const snap = sanitizeAssistantText(assistantSoFar);
               setMessages(prev => {
                 const last = prev[prev.length - 1];
                 if (last?.role === "assistant") {
@@ -628,7 +634,7 @@ const ChatView = () => {
                   ))}
                 </div>
               )}
-              <span className="whitespace-pre-wrap">{msg.content}</span>
+              <span className="whitespace-pre-wrap">{msg.role === "assistant" ? sanitizeAssistantText(msg.content) : msg.content}</span>
             </div>
             {msg.role === "user" && (
               <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center shrink-0 mt-1">

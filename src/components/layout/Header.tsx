@@ -3,7 +3,6 @@ import { Sun, Moon, RefreshCcw } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import ProfileSwitcher from "@/components/layout/ProfileSwitcher";
 import { useTheme } from "@/hooks/useTheme";
-import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 
 const CatIcon = () => (
@@ -35,7 +34,6 @@ const CACHE_KEYS_TO_CLEAR = [
 
 const Header = () => {
   const { theme, toggleTheme } = useTheme();
-  const { profile } = useProfile();
   const queryClient = useQueryClient();
   const [syncing, setSyncing] = useState(false);
   const catClickCount = useRef(0);
@@ -50,16 +48,19 @@ const Header = () => {
       // Clear stale cache entries
       CACHE_KEYS_TO_CLEAR.forEach((k) => localStorage.removeItem(k));
 
-      // Invalidate and immediately refetch all active queries in parallel
+      window.dispatchEvent(new Event("sparky-profile-refresh"));
+
       await Promise.all([
-        queryClient.invalidateQueries(),
+        queryClient.invalidateQueries({ queryKey: ["financial-data"] }),
+        queryClient.invalidateQueries({ queryKey: ["profile"] }),
+        queryClient.invalidateQueries({ queryKey: ["group-members"] }),
         queryClient.refetchQueries({ type: "active" }),
       ]);
 
-      // Dispatch event so any non-RQ listeners also refresh
       window.dispatchEvent(new Event("sparky-data-cleared"));
+      window.dispatchEvent(new Event("sparky-points-updated"));
 
-      toast.success("Sincronizado!", { duration: 1500 });
+      toast.success("Dados sincronizados com sucesso!", { duration: 1800 });
     } catch {
       toast.error("Erro ao sincronizar", { duration: 2000 });
     } finally {

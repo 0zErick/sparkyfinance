@@ -1,7 +1,6 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "./useProfile";
-import { useFinancialData } from "./useFinancialData";
 import { useQueryClient } from "@tanstack/react-query";
 
 // Points are scarce — only real financial discipline earns them
@@ -34,13 +33,51 @@ const saveLog = (log: PointsEntry[]) => {
 
 export const usePoints = () => {
   const { profile, updateProfile, isDemo } = useProfile();
-  const { data } = useFinancialData();
   const queryClient = useQueryClient();
+  const [log, setLog] = useState<PointsEntry[]>(() => getLog());
   const profileRef = useRef(profile);
   profileRef.current = profile;
 
   const currentPoints = profile?.points || 0;
-  const log = getLog();
+
+  useEffect(() => {
+    setLog(getLog());
+  }, [profile?.user_id, isDemo]);
+
+  useEffect(() => {
+    const syncLog = () => setLog(getLog());
+    window.addEventListener("sparky-points-updated", syncLog);
+    window.addEventListener("sparky-data-cleared", syncLog);
+    return () => {
+      window.removeEventListener("sparky-points-updated", syncLog);
+      window.removeEventListener("sparky-data-cleared", syncLog);
+    };
+  }, []);
+
+  const syncPointsInCache = useCallback((nextPoints: number) => {
+    const currentUserId = profileRef.current?.user_id;
+
+    queryClient.setQueriesData({ queryKey: ["profile"] }, (current: any) => {
+      if (!current || (currentUserId && current.user_id !== currentUserId)) return current;
+      return { ...current, points: nextPoints };
+    });
+
+    queryClient.setQueriesData({ queryKey: ["group-members"] }, (current: any) => {
+      if (!Array.isArray(current)) return current;
+      return [...current]
+        .map((member) => member.user_id === currentUserId ? { ...member, points: nextPoints } : member)
+        .sort((a, b) => b.points - a.points);
+    });
+  }, [queryClient]);
+
+  const syncAfterPointsChange = useCallback(async () => {
+    window.dispatchEvent(new Event("sparky-profile-updated"));
+    window.dispatchEvent(new Event("sparky-points-updated"));
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["profile"] }),
+      queryClient.invalidateQueries({ queryKey: ["group-members"] }),
+    ]);
+  }, [queryClient]);
 
   const awardPoints = useCallback(async (ruleId: string, description?: string) => {
     const rule = POINTS_RULES.find(r => r.id === ruleId);
@@ -60,28 +97,33 @@ export const usePoints = () => {
       if (dailyRules.includes(ruleId) && freshLog.some(e => e.ruleId === ruleId && e.date === today)) return 0;
     }
 
-    const entry: PointsEntry = { ruleId, points: rule.points, date: today, description: description || rule.label };
-    const newLog = [...freshLog, entry];
-    saveLog(newLog);
-
     const freshPoints = profileRef.current?.points || 0;
     const newTotal = freshPoints + rule.points;
+    const entry: PointsEntry = { ruleId, points: rule.points, date: today, description: description || rule.label };
+    const newLog = [...freshLog, entry];
 
-    if (isDemo) {
-      await updateProfile({ points: newTotal });
-    } else {
-      // Use SECURITY DEFINER function to bypass RLS restriction on points
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.rpc("update_user_points", { _user_id: user.id, _points: newTotal });
-        await updateProfile({ points: newTotal }); // sync local state
+    try {
+      if (isDemo) {
+        await updateProfile({ points: newTotal });
+      } else {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return 0;
+
+        const { error } = await (supabase as any).rpc("update_user_points", { _user_id: user.id, _points: newTotal });
+        if (error) throw error;
+
+        syncPointsInCache(newTotal);
       }
-    }
-    queryClient.invalidateQueries({ queryKey: ["profile"] });
-    window.dispatchEvent(new Event("sparky-points-updated"));
 
-    return rule.points;
-  }, [updateProfile, isDemo, queryClient]);
+      saveLog(newLog);
+      setLog(newLog);
+      await syncAfterPointsChange();
+      return rule.points;
+    } catch (error) {
+      console.error("Points award error:", error);
+      return 0;
+    }
+  }, [isDemo, syncAfterPointsChange, syncPointsInCache, updateProfile]);
 
   const removePoints = useCallback(async (ruleId: string, description?: string) => {
     const rule = POINTS_RULES.find(r => r.id === ruleId);
@@ -98,35 +140,41 @@ export const usePoints = () => {
     }
     if (idx === -1) return 0;
 
-    freshLog.splice(idx, 1);
-    saveLog(freshLog);
-
     const freshPoints = profileRef.current?.points || 0;
     const newTotal = Math.max(0, freshPoints - rule.points);
+    const nextLog = freshLog.filter((_, index) => index !== idx);
 
-    if (isDemo) {
-      await updateProfile({ points: newTotal });
-    } else {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.rpc("update_user_points", { _user_id: user.id, _points: newTotal });
+    try {
+      if (isDemo) {
         await updateProfile({ points: newTotal });
-      }
-    }
-    queryClient.invalidateQueries({ queryKey: ["profile"] });
-    window.dispatchEvent(new Event("sparky-points-updated"));
+      } else {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return 0;
 
-    return rule.points;
-  }, [updateProfile, isDemo, queryClient]);
+        const { error } = await (supabase as any).rpc("update_user_points", { _user_id: user.id, _points: newTotal });
+        if (error) throw error;
+
+        syncPointsInCache(newTotal);
+      }
+
+      saveLog(nextLog);
+      setLog(nextLog);
+      await syncAfterPointsChange();
+      return rule.points;
+    } catch (error) {
+      console.error("Points remove error:", error);
+      return 0;
+    }
+  }, [isDemo, syncAfterPointsChange, syncPointsInCache, updateProfile]);
 
   // Calculate monthly earnings
   const monthKey = new Date().toISOString().slice(0, 7);
-  const monthlyEarnings = log
+  const monthlyEarnings = useMemo(() => log
     .filter(e => e.date.startsWith(monthKey))
-    .reduce((sum, e) => sum + e.points, 0);
+    .reduce((sum, e) => sum + Math.max(0, e.points), 0), [log, monthKey]);
 
   // Get recent activity
-  const recentActivity = log.slice(-10).reverse();
+  const recentActivity = useMemo(() => log.slice(-10).reverse(), [log]);
 
   return {
     currentPoints,
