@@ -563,13 +563,45 @@ const ProfileSwitcher = () => {
           <div className="card-zelo flex flex-col items-center py-6">
             <div className="relative">
               {renderAvatar(current, "h-20 w-20", "text-2xl")}
-              <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoSelect} />
-              <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 h-7 w-7 rounded-full bg-primary flex items-center justify-center text-white">
+              {/* Hidden inputs: one for gallery, one for camera */}
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoSelect} />
+              <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoSelect} />
+              <button onClick={() => setShowMediaPicker(true)} className="absolute bottom-0 right-0 h-7 w-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
                 <Camera size={12} />
               </button>
             </div>
+
+            {/* Media source picker */}
+            {showMediaPicker && (
+              <div className="mt-3 w-full max-w-[220px] rounded-xl border border-border bg-card shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <button
+                  onClick={() => { setShowMediaPicker(false); cameraInputRef.current?.click(); }}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-muted/50 transition-colors active:scale-[0.98]"
+                >
+                  <Camera size={16} className="text-primary" />
+                  Tirar Foto
+                </button>
+                <div className="h-px bg-border" />
+                <button
+                  onClick={() => { setShowMediaPicker(false); fileInputRef.current?.click(); }}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-muted/50 transition-colors active:scale-[0.98]"
+                >
+                  <Image size={16} className="text-primary" />
+                  Escolher da Galeria
+                </button>
+                <div className="h-px bg-border" />
+                <button
+                  onClick={() => setShowMediaPicker(false)}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-muted/50 transition-colors active:scale-[0.98]"
+                >
+                  <X size={16} />
+                  Cancelar
+                </button>
+              </div>
+            )}
+
             {/* Delete photo button */}
-            {current.avatar && (
+            {current.avatar && !showMediaPicker && (
               <button
                 onClick={handleDeletePhoto}
                 className="mt-2 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-medium text-muted-foreground bg-muted/50 hover:bg-destructive/10 hover:text-destructive transition-colors active:scale-[0.97]"
