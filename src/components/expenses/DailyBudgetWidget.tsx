@@ -112,10 +112,10 @@ const DailyBudgetWidget = () => {
               </div>
 
               <div className="rounded-xl bg-warning/5 border border-warning/20 p-3">
-                <p className="text-xs font-semibold mb-1 text-warning">💡 Fórmula do limite diário</p>
+                <p className="text-xs font-semibold mb-1 text-warning">💡 Economia Progressiva (15%)</p>
                 <p className="text-[10px] text-muted-foreground leading-relaxed">
-                  O valor de hoje considera apenas seu saldo real, as contas pendentes do mês e a sua reserva de segurança.
-                  Depósitos em metas são reservas internas e não entram no cálculo do limite diário.
+                  Se você gastar menos que o limite diário, apenas 15% do valor não gasto volta como bônus no dia seguinte.
+                  Os outros 85% vão automaticamente para a sua reserva de segurança. Isso incentiva o hábito de economizar.
                 </p>
               </div>
 
