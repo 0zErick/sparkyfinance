@@ -46,7 +46,8 @@ const APagarModal = ({ open, onClose }: APagarModalProps) => {
     };
   }, []);
 
-  const now = new Date();
+  // Stable month reference — only changes when revision bumps
+  const now = useMemo(() => new Date(), [revision]);
 
   const { allBills, paidTotal, pendingTotal } = useMemo(() => {
     const summary = getPendingExpenseSummary(data.transactions, {
