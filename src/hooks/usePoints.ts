@@ -35,6 +35,7 @@ const saveLog = (log: PointsEntry[]) => {
 export const usePoints = () => {
   const { profile, updateProfile, isDemo } = useProfile();
   const { data } = useFinancialData();
+  const queryClient = useQueryClient();
   const profileRef = useRef(profile);
   profileRef.current = profile;
 
