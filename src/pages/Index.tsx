@@ -86,10 +86,15 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    const isDemo = localStorage.getItem("sparky-demo-mode") === "true";
-    if (isDemo) {
+    const markReady = () => {
+      readyRef.current = true;
       setReady(true);
       setAuthChecked(true);
+    };
+
+    const isDemo = localStorage.getItem("sparky-demo-mode") === "true";
+    if (isDemo) {
+      markReady();
       return;
     }
 
@@ -119,8 +124,7 @@ const Index = () => {
         const blocked = await checkBanStatus(session);
         if (blocked) return;
         syncLocalDataOwner(session.user.id);
-        setReady(true);
-        setAuthChecked(true);
+        markReady();
         setIsAdmin(session.user.email === "admin@sparky.app");
       }
     });
@@ -133,19 +137,19 @@ const Index = () => {
         const blocked = await checkBanStatus(session);
         if (blocked) return;
         syncLocalDataOwner(session.user.id);
-        setReady(true);
-        setAuthChecked(true);
+        markReady();
         setIsAdmin(session.user.email === "admin@sparky.app");
       } else {
-        // Fallback: no session and no demo mode detected after check
         setAuthChecked(true);
       }
     });
 
-    // Safety timeout: if auth check takes too long, redirect to login
+    // Safety timeout — only redirect if auth truly hasn't resolved
     const safetyTimer = setTimeout(() => {
-      setAuthChecked(true);
-      if (!ready) navigate("/login");
+      if (!readyRef.current) {
+        setAuthChecked(true);
+        navigate("/login");
+      }
     }, 5000);
 
     return () => {
