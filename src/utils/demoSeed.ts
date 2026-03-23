@@ -215,8 +215,8 @@ export function seedDemoData() {
   localStorage.setItem("sparky-demo-seed-version", Date.now().toString());
 
   const income = rand(3500, 7500);
-  const expenses = rand(Math.floor(income * 0.35), Math.floor(income * 0.65));
-  const balance = Math.min(rand(Math.floor(income * 0.7), Math.floor(income * 1.3)), 15000);
+  const expenses = rand(Math.floor(income * 0.35), Math.floor(income * 0.55));
+  const balance = income - expenses; // Saldo Real = Receitas - Despesas
   const { subs, paidBillIds } = generateSubscriptions();
   const unpaidSubsTotal = subs
     .filter(s => !paidBillIds.includes(s.id))

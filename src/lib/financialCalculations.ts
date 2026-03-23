@@ -27,9 +27,12 @@ export const readPaidBillIds = (): string[] => {
 export const getUnpaidCardInvoiceTotal = (): { total: number; count: number } => {
   try {
     const cards = JSON.parse(localStorage.getItem("sparky-credit-cards") || "[]");
+    const paidBills = new Set(readPaidBillIds());
     let total = 0;
     let count = 0;
     for (const card of cards) {
+      const invoiceId = `card-invoice-${card.id}`;
+      if (paidBills.has(invoiceId)) continue; // already paid
       const invoice = Number(card.invoiceAmount) || 0;
       if (invoice > 0) {
         total += invoice;
