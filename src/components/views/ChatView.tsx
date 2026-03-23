@@ -358,10 +358,10 @@ const ChatView = () => {
     } catch { return null; }
   };
 
-  const send = async () => {
-    const text = input.trim();
+  const sendDirect = useCallback(async (directText?: string) => {
+    const text = (directText ?? input).trim();
     if ((!text && pendingAttachments.length === 0) || isLoading) return;
-    setInput("");
+    if (!directText) setInput("");
     const userMsg: Msg = {
       role: "user",
       content: text || (pendingAttachments.length > 0 ? `[${pendingAttachments.map(a => a.name).join(", ")}]` : ""),
