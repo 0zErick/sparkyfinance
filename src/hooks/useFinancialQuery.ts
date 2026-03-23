@@ -7,7 +7,7 @@ export interface Transaction {
   date: string;
   description: string;
   amount: number;
-  type: "income" | "expense";
+  type: "income" | "expense" | "goal_deposit";
   category: string;
   cardId?: string;
 }
