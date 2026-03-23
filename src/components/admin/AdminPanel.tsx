@@ -586,7 +586,7 @@ const AdminPanel = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <div className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-sm overflow-y-auto">
-      <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
+      <div className="max-w-lg mx-auto px-4 pb-4 space-y-4" style={{ paddingTop: "max(1rem, env(safe-area-inset-top, 1rem))" }}>
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

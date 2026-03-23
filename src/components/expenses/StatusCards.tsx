@@ -149,7 +149,7 @@ const StatusCards = () => {
           }
 
           return (
-            <div key={s.label} className={`card-zelo fade-in-up stagger-${i + 1} !py-3 !px-2.5`}>
+            <div key={s.label} className={`card-zelo fade-in-up stagger-${i + 1} !py-3 !px-2.5 h-full flex flex-col`}>
               {content}
             </div>
           );
