@@ -51,6 +51,7 @@ const DashboardView = () => {
       </div>
       <BalanceCard onVisibilityChange={handleVisibilityChange} />
       <SpendingOverview hideValues={hideValues} />
+      <PayoffGoalCard hideValues={hideValues} />
       <BiggestExpenseCard hideValues={hideValues} />
       <SuggestionsCard />
     </div>
