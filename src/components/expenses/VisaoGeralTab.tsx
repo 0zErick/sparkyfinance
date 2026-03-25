@@ -9,6 +9,7 @@ import SyncBanner from "@/components/expenses/SyncBanner";
 import FinancialStatusCard from "@/components/expenses/FinancialStatusCard";
 import SubscriptionsCard from "@/components/expenses/SubscriptionsCard";
 import DailyBudgetWidget from "@/components/expenses/DailyBudgetWidget";
+import BillsAccordion from "@/components/expenses/BillsAccordion";
 import { useFinancialData } from "@/hooks/useFinancialData";
 
 interface VisaoGeralTabProps {
