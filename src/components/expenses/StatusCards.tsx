@@ -62,9 +62,12 @@ const StatusCards = () => {
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-2" style={{ alignItems: "stretch" }}>
+      <div className="grid grid-cols-3 gap-2" style={{ alignItems: "start" }}>
         {statuses.map((s, i) => {
           const Icon = s.icon;
+          const isExpanded = expandedInfo === s.infoKey;
+          const infoData = s.infoKey ? infoTexts[s.infoKey] : null;
+
           const content = (
             <>
               <div className="flex items-center justify-between mb-1">
@@ -74,8 +77,14 @@ const StatusCards = () => {
                 </div>
                 {s.infoKey && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); setInfoPopup(s.infoKey!); }}
-                    className="p-0.5 rounded text-muted-foreground/50 hover:text-muted-foreground active:scale-90 transition-all"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedInfo(isExpanded ? null : s.infoKey!);
+                    }}
+                    className={cn(
+                      "p-0.5 rounded active:scale-90 transition-all",
+                      isExpanded ? "text-primary" : "text-muted-foreground/50 hover:text-muted-foreground"
+                    )}
                   >
                     <Info size={11} />
                   </button>
@@ -86,6 +95,20 @@ const StatusCards = () => {
                 {(s as any).allPaid && s.infoKey === "apagar" && <CheckCircle size={9} className="text-success shrink-0" />}
                 {s.sub}
               </p>
+              {/* Inline collapsible info */}
+              <div
+                className="overflow-hidden transition-all duration-300 ease-in-out"
+                style={{
+                  maxHeight: isExpanded ? "120px" : "0px",
+                  opacity: isExpanded ? 1 : 0,
+                }}
+              >
+                {infoData && (
+                  <p className="text-[8px] text-muted-foreground leading-relaxed mt-1.5 pt-1.5 border-t border-border/50">
+                    {infoData.message}
+                  </p>
+                )}
+              </div>
             </>
           );
 
@@ -94,7 +117,7 @@ const StatusCards = () => {
               <button
                 key={s.label}
                 onClick={() => setAPagarOpen(true)}
-                className={`card-zelo fade-in-up stagger-${i + 1} !py-3 !px-2.5 text-left cursor-pointer hover:border-warning/40 active:scale-[0.97] transition-all h-full flex flex-col`}
+                className={`card-zelo fade-in-up stagger-${i + 1} !py-3 !px-2.5 text-left cursor-pointer hover:border-warning/40 active:scale-[0.97] transition-all flex flex-col`}
               >
                 {content}
               </button>
@@ -102,20 +125,13 @@ const StatusCards = () => {
           }
 
           return (
-            <div key={s.label} className={`card-zelo fade-in-up stagger-${i + 1} !py-3 !px-2.5 h-full flex flex-col`}>
+            <div key={s.label} className={`card-zelo fade-in-up stagger-${i + 1} !py-3 !px-2.5 flex flex-col`}>
               {content}
             </div>
           );
         })}
       </div>
       <APagarModal open={aPagarOpen} onClose={() => setAPagarOpen(false)} />
-      {infoPopup && infoTexts[infoPopup] && (
-        <InfoPopup
-          title={infoTexts[infoPopup].title}
-          message={infoTexts[infoPopup].message}
-          onClose={() => setInfoPopup(null)}
-        />
-      )}
     </>
   );
 };
