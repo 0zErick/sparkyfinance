@@ -91,7 +91,14 @@ const Login = () => {
         syncLocalDataOwner(data.user.id);
         navigate("/");
       }
-    } catch { toast.error("Erro ao fazer login"); }
+    } catch (err: any) {
+      const msg = err?.message || "";
+      if (msg.toLowerCase().includes("load failed") || msg.toLowerCase().includes("failed to fetch")) {
+        toast.error("Falha de conexão. Verifique sua internet e tente novamente.");
+      } else {
+        toast.error("Erro ao fazer login");
+      }
+    }
     finally { setLoading(false); }
   };
 
