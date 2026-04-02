@@ -1,10 +1,22 @@
 import { useState, useCallback, useEffect } from "react";
 import { seedDemoData } from "@/utils/demoSeed";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { syncLocalDataOwner } from "@/lib/userLocalData";
+
+const keepAliveCheck = async (manual = false) => {
+  try {
+    const { error } = await supabase.from("profiles").select("id").limit(1);
+    if (error) throw error;
+    toast.success("Conexão com o banco de dados validada com sucesso.");
+  } catch {
+    toast.error(manual
+      ? "Erro de conexão: O banco de dados pode estar em modo de espera. Tente recarregar."
+      : "Erro de conexão: O banco de dados pode estar em modo de espera. Tente recarregar.");
+  }
+};
 
 const CatLogo = () => (
   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
