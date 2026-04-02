@@ -139,6 +139,15 @@ const Login = () => {
         Não tem conta?{" "}
         <button onClick={() => navigate("/onboarding")} className="text-primary font-semibold">Criar conta</button>
       </p>
+
+      <button
+        type="button"
+        onClick={() => keepAliveCheck(true)}
+        className="mt-4 flex items-center gap-2 text-[11px] text-muted-foreground/60 hover:text-muted-foreground border border-border/40 rounded-xl px-4 py-2 transition-all duration-300 active:scale-95 fade-in-up stagger-2 relative z-10"
+      >
+        <RefreshCw size={12} />
+        Acordar Banco Manualmente
+      </button>
     </div>
   );
 };
