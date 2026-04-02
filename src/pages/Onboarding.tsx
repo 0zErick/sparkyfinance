@@ -113,8 +113,13 @@ const Onboarding = () => {
         toast.success("Conta criada! Verifique seu e-mail para confirmar.");
         navigate("/login");
       }
-    } catch {
-      toast.error("Erro ao criar conta");
+    } catch (err: any) {
+      const msg = err?.message || "";
+      if (msg.toLowerCase().includes("load failed") || msg.toLowerCase().includes("failed to fetch") || msg.toLowerCase().includes("networkerror")) {
+        toast.error("Falha de conexão. Verifique sua internet e tente novamente.");
+      } else {
+        toast.error("Erro ao criar conta. Tente novamente.");
+      }
     } finally {
       setLoading(false);
     }
