@@ -433,11 +433,11 @@ export const useFinancialQuery = () => {
     }
 
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.user) return;
 
-    await supabase.from("transactions").delete().eq("user_id", user.id);
+    await supabase.from("transactions").delete().eq("user_id", session.user.id);
     queryClient.invalidateQueries({ queryKey: QUERY_KEY });
   }, [queryClient]);
 
