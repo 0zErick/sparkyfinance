@@ -237,10 +237,10 @@ export const useFinancialQuery = () => {
         return newTx.id;
       }
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session?.user) throw new Error("Not authenticated");
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.user) throw new Error("Not authenticated");
 
       const { data: inserted, error } = await supabase
         .from("transactions")
@@ -253,13 +253,37 @@ export const useFinancialQuery = () => {
           category: tx.category,
           card_id: tx.cardId || null,
         })
-        .select()
+        .select("id")
         .single();
 
       if (error) throw error;
       return inserted?.id;
     },
-    onSuccess: () => {
+    onMutate: async (tx) => {
+      if (isDemo()) return;
+      await queryClient.cancelQueries({ queryKey: QUERY_KEY });
+      const previous = queryClient.getQueryData<FinancialData>(QUERY_KEY);
+      const optimisticTx = { ...tx, id: `optimistic-${Date.now()}` };
+      queryClient.setQueryData<FinancialData>(QUERY_KEY, (old) => {
+        if (!old) return { ...defaultData, transactions: [optimisticTx] };
+        const newIncome = tx.type === "income" ? old.income + tx.amount : old.income;
+        const newExpenses = tx.type === "expense" ? old.expenses + tx.amount : old.expenses;
+        return {
+          ...old,
+          transactions: [optimisticTx, ...old.transactions],
+          income: newIncome,
+          expenses: newExpenses,
+          balance: newIncome - newExpenses,
+        };
+      });
+      return { previous };
+    },
+    onError: (_err, _tx, context) => {
+      if (!isDemo() && context?.previous) {
+        queryClient.setQueryData(QUERY_KEY, context.previous);
+      }
+    },
+    onSettled: () => {
       if (!isDemo()) {
         queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       }
