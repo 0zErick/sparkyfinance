@@ -369,11 +369,9 @@ export const useFinancialQuery = () => {
           if (!old) return old!;
           const tx = old.transactions.find((transaction) => transaction.id === id);
           if (!tx) return old;
-
           const newTransactions = old.transactions.filter((transaction) => transaction.id !== id);
           const newIncome = tx.type === "income" ? old.income - tx.amount : old.income;
           const newExpenses = tx.type === "expense" ? old.expenses - tx.amount : old.expenses;
-
           return {
             ...old,
             transactions: newTransactions,
@@ -388,7 +386,27 @@ export const useFinancialQuery = () => {
       const { error } = await supabase.from("transactions").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onMutate: async (id) => {
+      if (isDemo()) return;
+      await queryClient.cancelQueries({ queryKey: QUERY_KEY });
+      const previous = queryClient.getQueryData<FinancialData>(QUERY_KEY);
+      queryClient.setQueryData<FinancialData>(QUERY_KEY, (old) => {
+        if (!old) return old!;
+        const tx = old.transactions.find((t) => t.id === id);
+        if (!tx) return old;
+        const newTransactions = old.transactions.filter((t) => t.id !== id);
+        const newIncome = tx.type === "income" ? old.income - tx.amount : old.income;
+        const newExpenses = tx.type === "expense" ? old.expenses - tx.amount : old.expenses;
+        return { ...old, transactions: newTransactions, income: Math.max(0, newIncome), expenses: Math.max(0, newExpenses), balance: Math.max(0, newIncome) - Math.max(0, newExpenses) };
+      });
+      return { previous };
+    },
+    onError: (_err, _id, context) => {
+      if (!isDemo() && context?.previous) {
+        queryClient.setQueryData(QUERY_KEY, context.previous);
+      }
+    },
+    onSettled: () => {
       if (!isDemo()) {
         queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       }
