@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { Home, CheckSquare, Wallet, FileText, MessageCircle, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 const DOCK_OFFSET_KEY = "sparky-dock-offset";
 
@@ -23,11 +24,19 @@ const tabs = [
   { id: "docs", label: "Docs", icon: FileText },
 ];
 
-const TabBar = ({ activeTab, onTabChange }: TabBarProps) => {
+const TabBar = memo(({ activeTab, onTabChange }: TabBarProps) => {
   const [adjusting, setAdjusting] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [offset, setOffset] = useState(getStoredOffset);
   const [tempOffset, setTempOffset] = useState(offset);
+  const queryClient = useQueryClient();
+
+  // Prefetch financial data on hover/focus of Expenses tab
+  const handlePointerEnter = useCallback((tabId: string) => {
+    if (tabId === "expenses" && activeTab !== "expenses") {
+      queryClient.prefetchQuery({ queryKey: ["financial-data"] });
+    }
+  }, [activeTab, queryClient]);
 
   useEffect(() => {
     const handler = () => { setTempOffset(offset); setAdjusting(true); };
@@ -91,8 +100,9 @@ const TabBar = ({ activeTab, onTabChange }: TabBarProps) => {
                 <button
                   key={tab.id}
                   onClick={() => onTabChange(tab.id)}
+                  onPointerEnter={() => handlePointerEnter(tab.id)}
                   className={cn(
-                    "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-2 py-2 transition-all duration-300",
+                    "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-2 py-2 transition-transform duration-300 will-change-transform",
                     isActive
                       ? "bg-primary/15 text-primary shadow-sm shadow-primary/10"
                       : "text-muted-foreground active:scale-95 hover:text-foreground"
@@ -115,6 +125,8 @@ const TabBar = ({ activeTab, onTabChange }: TabBarProps) => {
       />
     </>
   );
-};
+});
+
+TabBar.displayName = "TabBar";
 
 export default TabBar;
