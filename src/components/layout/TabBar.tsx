@@ -100,8 +100,9 @@ const TabBar = memo(({ activeTab, onTabChange }: TabBarProps) => {
                 <button
                   key={tab.id}
                   onClick={() => onTabChange(tab.id)}
+                  onPointerEnter={() => handlePointerEnter(tab.id)}
                   className={cn(
-                    "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-2 py-2 transition-all duration-300",
+                    "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-2 py-2 transition-transform duration-300 will-change-transform",
                     isActive
                       ? "bg-primary/15 text-primary shadow-sm shadow-primary/10"
                       : "text-muted-foreground active:scale-95 hover:text-foreground"
