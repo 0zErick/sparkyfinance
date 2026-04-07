@@ -24,11 +24,19 @@ const tabs = [
   { id: "docs", label: "Docs", icon: FileText },
 ];
 
-const TabBar = ({ activeTab, onTabChange }: TabBarProps) => {
+const TabBar = memo(({ activeTab, onTabChange }: TabBarProps) => {
   const [adjusting, setAdjusting] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [offset, setOffset] = useState(getStoredOffset);
   const [tempOffset, setTempOffset] = useState(offset);
+  const queryClient = useQueryClient();
+
+  // Prefetch financial data on hover/focus of Expenses tab
+  const handlePointerEnter = useCallback((tabId: string) => {
+    if (tabId === "expenses" && activeTab !== "expenses") {
+      queryClient.prefetchQuery({ queryKey: ["financial-data"] });
+    }
+  }, [activeTab, queryClient]);
 
   useEffect(() => {
     const handler = () => { setTempOffset(offset); setAdjusting(true); };
