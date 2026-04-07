@@ -182,7 +182,7 @@ const Index = () => {
 
   if (!ready) {
     return (
-      <div className="bg-background flex items-center justify-center" style={{ height: '100dvh' }}>
+      <div className="bg-background flex items-center justify-center" style={{ height: '100svh' }}>
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           {authChecked && (
@@ -196,7 +196,7 @@ const Index = () => {
   // Maintenance blocking screen — only for non-admins
   if (maintenanceActive && !isAdmin) {
     return (
-      <div className="bg-background flex flex-col items-center justify-center text-center px-8" style={{ height: '100dvh' }}>
+      <div className="bg-background flex flex-col items-center justify-center text-center px-8" style={{ height: '100svh' }}>
         <div className="rounded-2xl border border-yellow-500/30 bg-yellow-500/5 p-8 max-w-sm w-full space-y-4">
           <div className="h-16 w-16 rounded-2xl bg-yellow-500/20 flex items-center justify-center mx-auto">
             <Settings size={32} className="text-yellow-500 animate-spin" style={{ animationDuration: "3s" }} />
@@ -237,10 +237,11 @@ const Index = () => {
     <div
       className="bg-background relative mx-auto flex w-full max-w-lg flex-col lg:max-w-4xl xl:max-w-6xl"
       style={{
-        height: '100dvh',
-        minHeight: '100dvh',
-        maxHeight: '100dvh',
+        height: '100svh',
+        minHeight: '100svh',
+        maxHeight: '100svh',
         paddingTop: activeTab === 'chat' ? '0' : 'env(safe-area-inset-top, 20px)',
+        paddingBottom: '0',
         overflow: 'hidden',
         overscrollBehavior: 'none',
       }}
