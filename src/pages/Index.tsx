@@ -281,9 +281,9 @@ const Index = () => {
         <Suspense fallback={
           <div className="space-y-3 px-4 pt-4">
             <div className="h-10 w-40 bg-muted rounded-xl animate-pulse" />
-            <div className="h-28 w-full bg-muted rounded-2xl animate-pulse" />
-            <div className="h-20 w-full bg-muted rounded-2xl animate-pulse" />
-            <div className="h-20 w-full bg-muted rounded-2xl animate-pulse" />
+            <div className="bg-muted rounded-2xl animate-pulse" style={{ height: 120 }} />
+            <div className="bg-muted rounded-2xl animate-pulse" style={{ height: 100 }} />
+            <div className="bg-muted rounded-2xl animate-pulse" style={{ height: 100 }} />
           </div>
         }>
           <div className="animate-in fade-in duration-200">
