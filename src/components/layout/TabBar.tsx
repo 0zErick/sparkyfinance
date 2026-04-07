@@ -124,6 +124,6 @@ const TabBar = memo(({ activeTab, onTabChange }: TabBarProps) => {
       />
     </>
   );
-};
+});
 
 export default TabBar;
