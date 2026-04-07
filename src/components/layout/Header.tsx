@@ -89,7 +89,7 @@ const Header = ({ hidden = false }: HeaderProps) => {
   };
 
   return (
-    <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-background/70 backdrop-blur-2xl">
+    <header className={`sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-background/70 backdrop-blur-2xl transition-transform duration-300 ${hidden ? '-translate-y-full' : 'translate-y-0'}`}>
       <div className="flex items-center gap-3">
         <button
           onClick={handleCatClick}

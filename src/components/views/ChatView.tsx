@@ -681,8 +681,8 @@ const ChatView = () => {
         </div>
       )}
 
-      {/* Input */}
-      <div className="px-4 pb-3 pt-2 border-t border-border">
+      {/* Input - always pinned to bottom */}
+      <div className="flex-shrink-0 px-4 pt-2 border-t border-border bg-background" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
         <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2">
           {/* Attach button */}
           <div className="relative">
