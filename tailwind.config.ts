@@ -21,15 +21,15 @@ export default {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        background: "hsl(240, 15%, 14%)",
+        foreground: "hsl(0, 0%, 89%)",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "hsl(348, 99%, 45%)",
+          foreground: "hsl(0, 0%, 100%)",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: "hsl(240, 11%, 16%)",
+          foreground: "hsl(0, 0%, 89%)",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -48,8 +48,8 @@ export default {
           foreground: "hsl(var(--popover-foreground))",
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: "hsl(240, 11%, 16%)",
+          foreground: "hsl(0, 0%, 89%)",
         },
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
