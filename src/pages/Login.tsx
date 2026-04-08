@@ -1,0 +1,161 @@
+import { useState, useCallback, useEffect } from "react";
+import { seedDemoData } from "@/utils/demoSeed";
+import { Mail, Lock, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { syncLocalDataOwner } from "@/lib/userLocalData";
+
+const keepAliveCheck = async (manual = false) => {
+  try {
+    const { error } = await supabase.from("profiles").select("id").limit(1);
+    if (error) throw error;
+    if (manual) toast.success("Conexão validada com sucesso.");
+  } catch {
+    if (manual) toast.error("Erro de conexão. O banco pode estar em espera.");
+  }
+};
+
+const CatLogo = () => (
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 6l2 6" />
+    <path d="M20 6l-2 6" />
+    <circle cx="12" cy="14" r="7" />
+    <circle cx="9.5" cy="13" r="0.8" fill="hsl(var(--primary))" />
+    <circle cx="14.5" cy="13" r="0.8" fill="hsl(var(--primary))" />
+    <path d="M12 15.5l-0.8 0.5h1.6L12 15.5z" fill="hsl(var(--primary))" />
+    <path d="M6 14h2.5M15.5 14H18M6 16h2.5M15.5 16H18" strokeWidth="1" />
+  </svg>
+);
+
+const Login = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [tapCount, setTapCount] = useState(0);
+  const [tapTimer, setTapTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (localStorage.getItem("sparky-demo-mode") === "true") return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (localStorage.getItem("sparky-demo-mode") === "true") return;
+      if (session?.user) { syncLocalDataOwner(session.user.id); navigate("/"); }
+    });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (localStorage.getItem("sparky-demo-mode") === "true") return;
+      if (session?.user) { syncLocalDataOwner(session.user.id); navigate("/"); }
+    });
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  // Keep-alive automático
+  useEffect(() => {
+    keepAliveCheck();
+  }, []);
+
+  const handleLogoTap = useCallback(async () => {
+    const newCount = tapCount + 1;
+    if (tapTimer) clearTimeout(tapTimer);
+    if (newCount >= 7) {
+      localStorage.setItem("sparky-demo-mode", "true");
+      await supabase.auth.signOut().catch(() => {});
+      seedDemoData();
+      toast.success("Modo Demo ativado!");
+      setTapCount(0);
+      navigate("/");
+      return;
+    }
+    setTapCount(newCount);
+    const timer = setTimeout(() => setTapCount(0), 2000);
+    setTapTimer(timer);
+  }, [tapCount, tapTimer, navigate]);
+
+  const isValidDomain = (e: string) => /^[a-zA-Z0-9._%+-]+@sparky\.app$/i.test(e);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) { toast.error("Preencha todos os campos"); return; }
+    if (!isValidDomain(email)) { toast.error("Utilize um e-mail com domínio @sparky.app"); return; }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        if (error.message === "Invalid login credentials") toast.error("E-mail ou senha incorretos");
+        else toast.error(error.message);
+      } else if (data.user) {
+        localStorage.removeItem("sparky-demo-mode");
+        syncLocalDataOwner(data.user.id);
+        navigate("/");
+      }
+    } catch (err: any) {
+      const msg = err?.message || "";
+      if (msg.toLowerCase().includes("load failed") || msg.toLowerCase().includes("failed to fetch")) {
+        toast.error("Falha de conexão. Verifique sua internet e tente novamente.");
+      } else {
+        toast.error("Erro ao fazer login");
+      }
+    }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <div className="bg-background flex flex-col items-center justify-center px-6 relative overflow-hidden min-h-screen">
+      {/* Gradient orbs — navy blue aesthetic */}
+      <div className="absolute top-[-20%] right-[-15%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-br from-primary/10 to-primary/3 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-gradient-to-tr from-primary/6 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute top-[30%] left-[50%] w-[30vw] h-[30vw] rounded-full bg-primary/4 blur-[80px] pointer-events-none" />
+
+      <div className="flex flex-col items-center gap-5 mb-10 fade-in-up relative z-10">
+        <button
+          type="button"
+          onClick={handleLogoTap}
+          className="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 border border-primary/20 glow-ring active:scale-95 transition-all duration-300 select-none"
+        >
+          <CatLogo />
+        </button>
+        <span className="text-3xl font-display font-extrabold tracking-tight">SPARKY</span>
+        <p className="text-sm text-muted-foreground">Seu controle financeiro inteligente</p>
+        {tapCount >= 3 && tapCount < 7 && (
+          <p className="text-[10px] text-muted-foreground/50 animate-pulse">{7 - tapCount} toques para modo demo</p>
+        )}
+      </div>
+
+      <form onSubmit={handleLogin} className="w-full max-w-sm space-y-4 fade-in-up stagger-1 relative z-10">
+        <div className="relative">
+          <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)}
+            className="w-full rounded-2xl border border-border bg-card/60 backdrop-blur-xl pl-11 pr-4 py-4 text-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300" />
+        </div>
+        <div className="relative">
+          <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input type={showPw ? "text" : "password"} placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-2xl border border-border bg-card/60 backdrop-blur-xl pl-11 pr-12 py-4 text-sm outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300" />
+          <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground active:scale-95 transition-all duration-300">
+            {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </div>
+        <button type="submit" disabled={loading} className="w-full rounded-2xl bg-primary py-4 text-sm font-display font-bold text-primary-foreground transition-all duration-300 active:scale-[0.98] disabled:opacity-50 shadow-xl shadow-primary/25">
+          {loading ? "Entrando..." : "Entrar"}
+        </button>
+      </form>
+
+      <p className="mt-8 text-xs text-muted-foreground fade-in-up stagger-2 relative z-10">
+        Não tem conta?{" "}
+        <button onClick={() => navigate("/onboarding")} className="text-primary font-semibold">Criar conta</button>
+      </p>
+
+      <button
+        type="button"
+        onClick={() => keepAliveCheck(true)}
+        className="mt-4 flex items-center gap-2 text-[11px] text-muted-foreground/60 hover:text-muted-foreground border border-border/40 rounded-xl px-4 py-2 transition-all duration-300 active:scale-95 fade-in-up stagger-2 relative z-10"
+      >
+        <RefreshCw size={12} />
+        Acordar Banco Manualmente
+      </button>
+    </div>
+  );
+};
+
+export default Login;

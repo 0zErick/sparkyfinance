@@ -1,0 +1,85 @@
+import { describe, expect, it } from "vitest";
+import {
+  GOAL_DEPOSIT_TYPE,
+  getDailyBudget,
+  getGoalReservedTotal,
+  getNormalizedMonthlyTotals,
+  getPendingExpenseSummary,
+} from "@/lib/financialCalculations";
+import { buildBillingOverview, getSettledTransactionIds } from "@/lib/billingState";
+
+const march = "2026-03-10T12:00:00.000Z";
+const now = new Date("2026-03-20T12:00:00.000Z");
+
+describe("financialCalculations", () => {
+  it("ignora depósito em meta no saldo real e soma apenas no reservado", () => {
+    const transactions = [
+      { id: "income-1", date: march, description: "Salário", amount: 5000, type: "income", category: "Receita" },
+      { id: "expense-1", date: march, description: "Mercado", amount: 800, type: "expense", category: "Alimentação" },
+      { id: "goal-1", date: march, description: "Depósito: Reserva", amount: 500, type: GOAL_DEPOSIT_TYPE, category: "Meta" },
+    ];
+
+    const totals = getNormalizedMonthlyTotals(transactions, { now, paidBillIds: [] });
+
+    expect(totals.income).toBe(5000);
+    expect(totals.expenses).toBe(800);
+    expect(totals.balance).toBe(4200);
+    expect(getGoalReservedTotal(transactions)).toBe(500);
+  });
+
+  it("mantém contas planejadas fora do saldo real até serem pagas", () => {
+    const transactions = [
+      { id: "income-1", date: march, description: "Salário", amount: 4000, type: "income", category: "Receita" },
+      { id: "bill-1", date: march, description: "Conta de luz", amount: 300, type: "expense", category: "Conta" },
+      { id: "sub-1", date: march, description: "Assinatura: Streaming", amount: 50, type: "expense", category: "Assinatura" },
+    ];
+
+    const unpaidTotals = getNormalizedMonthlyTotals(transactions, { now, paidBillIds: [] });
+    const paidTotals = getNormalizedMonthlyTotals(transactions, { now, paidBillIds: ["bill-1", "sub-1"] });
+    const pending = getPendingExpenseSummary(transactions, { now, paidBillIds: [] });
+
+    expect(unpaidTotals.balance).toBe(4000);
+    expect(paidTotals.balance).toBe(3650);
+    expect(pending.pendingTotal).toBe(350);
+    expect(pending.pendingCount).toBe(2);
+  });
+
+  it("calcula o pode gastar hoje sem descontar metas", () => {
+    const { dailyBudget, daysLeft, reserve, baseDailyBudget, rolloverBonus } = getDailyBudget(4200, 700, 0.2, now);
+
+    expect(daysLeft).toBe(11);
+    expect(reserve).toBe(840);
+    expect(baseDailyBudget).toBeCloseTo((4200 - 700 - 840) / 11, 5);
+    expect(rolloverBonus).toBe(0);
+    expect(dailyBudget).toBe(baseDailyBudget);
+  });
+
+  it("aplica bônus de 15% do saldo não gasto de ontem", () => {
+    const yesterdayUnspent = 50;
+    const { dailyBudget, baseDailyBudget, rolloverBonus } = getDailyBudget(4200, 700, 0.2, now, yesterdayUnspent);
+
+    expect(rolloverBonus).toBeCloseTo(50 * 0.15, 5);
+    expect(dailyBudget).toBeCloseTo(baseDailyBudget + 7.5, 5);
+  });
+
+  it("trata transação de assinatura paga como liquidada no cálculo global", () => {
+    const transactions = [
+      { id: "income-1", date: march, description: "Salário", amount: 4000, type: "income", category: "Receita" },
+      { id: "sub-tx-1", date: march, description: "Assinatura: Netflix", amount: 39.9, type: "expense", category: "Assinatura" },
+    ];
+    const snapshot = {
+      paidBillIds: [],
+      subscriptions: [{ id: "sub-1", name: "Netflix", amount: 39.9, dueDay: 10, paid: true }],
+      cards: [],
+    };
+
+    const settledIds = getSettledTransactionIds(transactions, snapshot, now);
+    const totals = getNormalizedMonthlyTotals(transactions, { now, paidBillIds: settledIds });
+    const overview = buildBillingOverview(transactions, snapshot, now);
+
+    expect(settledIds).toContain("sub-tx-1");
+    expect(totals.balance).toBeCloseTo(3960.1, 5);
+    expect(overview.pendingCount).toBe(0);
+    expect(overview.allPaid).toBe(true);
+  });
+});

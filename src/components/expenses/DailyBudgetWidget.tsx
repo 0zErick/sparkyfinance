@@ -1,0 +1,149 @@
+import { useState } from "react";
+import { Wallet, Info, X, TrendingDown } from "lucide-react";
+import { useFinancialData, fmt } from "@/hooks/useFinancialData";
+import { cn } from "@/lib/utils";
+import { isDiscretionaryExpenseTransaction } from "@/lib/financialCalculations";
+
+const DailyBudgetWidget = () => {
+  const { data, dailyBudget, daysLeft, pendingTotal, baseDailyBudget, rolloverBonus } = useFinancialData();
+  const [showPopup, setShowPopup] = useState(false);
+
+  const reservePct = (() => {
+    try { return parseInt(localStorage.getItem("sparky-reserve-pct") || "20") / 100; } catch { return 0.20; }
+  })();
+
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  const todayExpenses = data.transactions
+    .filter(t => isDiscretionaryExpenseTransaction(t) && t.date.startsWith(todayStr))
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const remainingToday = Math.max(0, dailyBudget - todayExpenses);
+  const monthlyPool = dailyBudget * daysLeft;
+  const progressPct = dailyBudget > 0 ? Math.min(100, (todayExpenses / dailyBudget) * 100) : 0;
+  const isOver = todayExpenses > dailyBudget;
+
+  const reserve = Math.max(0, data.balance * reservePct);
+  const afterObligations = Math.max(0, data.balance - reserve - pendingTotal);
+
+  return (
+    <>
+      <button
+        onClick={() => setShowPopup(true)}
+        className="card-zelo fade-in-up w-full text-left active:scale-[0.98] transition-all duration-300 hover:border-primary/20 relative overflow-hidden"
+      >
+        <div className="absolute -top-6 -right-6 h-20 w-20 rounded-full bg-primary/6 blur-2xl pointer-events-none" />
+        <div className="flex items-center justify-between mb-2.5 relative z-10">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/12 border border-primary/15">
+              <Wallet size={16} className="text-primary" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold">Pode Gastar Hoje</p>
+              <p className="text-[9px] text-muted-foreground tabular-nums">{daysLeft} dias restantes no mês</p>
+            </div>
+          </div>
+          <Info size={14} className="text-muted-foreground/40" />
+        </div>
+
+        <div className="flex items-baseline gap-2 mb-2.5 relative z-10">
+          <p className={cn("text-2xl font-display font-extrabold tabular-nums", isOver ? "text-destructive" : "text-primary")}>
+            {fmt(remainingToday)}
+          </p>
+          {isOver && (
+            <span className="flex items-center gap-0.5 text-[10px] font-medium text-destructive">
+              <TrendingDown size={10} /> Acima do limite
+            </span>
+          )}
+          {!isOver && rolloverBonus > 0 && (
+            <span className="text-[10px] font-medium text-success tabular-nums">
+              +{fmt(rolloverBonus)} bônus
+            </span>
+          )}
+        </div>
+
+        <div className="space-y-1 relative z-10">
+          <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden">
+            <div
+              className={cn("h-full rounded-full transition-all duration-500", isOver ? "bg-destructive" : "bg-primary")}
+              style={{ width: `${Math.min(progressPct, 100)}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-[9px] text-muted-foreground tabular-nums">
+            <span>Gasto hoje: {fmt(todayExpenses)}</span>
+            <span>Limite: {fmt(dailyBudget)}</span>
+          </div>
+        </div>
+
+        <div className="mt-2.5 pt-2.5 border-t border-border/40 relative z-10">
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] text-muted-foreground">Saldo acumulado restante</span>
+            <span className="text-xs font-bold tabular-nums text-foreground">{fmt(monthlyPool)}</span>
+          </div>
+        </div>
+      </button>
+
+      {showPopup && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-sm card-zelo space-y-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/12 border border-primary/15">
+                  <Wallet size={16} className="text-primary" />
+                </div>
+                <h3 className="text-sm font-bold">Como funciona?</h3>
+              </div>
+              <button onClick={() => setShowPopup(false)} className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground transition-all duration-300">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="rounded-2xl bg-muted/30 border border-border/50 p-3.5">
+                <p className="text-xs font-semibold mb-1">Reserva Dinâmica ({Math.round(reservePct * 100)}%)</p>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  O sistema separa {Math.round(reservePct * 100)}% do seu saldo como reserva de segurança.
+                  O restante é dividido pelos dias faltantes do mês para gerar seu limite diário.
+                </p>
+              </div>
+              <div className="rounded-2xl bg-warning/6 border border-warning/15 p-3.5">
+                <p className="text-xs font-semibold mb-1 text-warning">Economia Progressiva (15%)</p>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  Se você gastar menos que o limite diário, apenas 15% do valor não gasto volta como bônus no dia seguinte.
+                  Os outros 85% vão automaticamente para a sua reserva de segurança.
+                </p>
+              </div>
+              <div className="rounded-2xl bg-success/6 border border-success/15 p-3.5">
+                <p className="text-xs font-semibold mb-1 text-success">Na Prática</p>
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
+                  Exemplo: se você receber R$ 3.000, tiver R$ 800 em contas pendentes e reservar 20% de segurança,
+                  o valor diário será calculado sobre o restante disponível para sobrevivência no mês.
+                </p>
+              </div>
+              <div className="rounded-2xl bg-muted/30 border border-border/50 p-3.5">
+                <p className="text-xs font-semibold mb-1">Seus Números Hoje</p>
+                <div className="space-y-1.5 mt-2">
+                  <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">Saldo Real</span><span className="font-medium tabular-nums">{fmt(data.balance)}</span></div>
+                  <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">Reserva ({Math.round(reservePct * 100)}%)</span><span className="font-medium text-warning tabular-nums">-{fmt(reserve)}</span></div>
+                  <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">Contas pendentes</span><span className="font-medium text-destructive tabular-nums">-{fmt(pendingTotal)}</span></div>
+                  <div className="flex justify-between text-[10px] pt-1 border-t border-border/40"><span className="text-muted-foreground font-semibold">Disponível para gastar</span><span className="font-bold text-primary tabular-nums">{fmt(afterObligations)}</span></div>
+                  <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">÷ {daysLeft} dias restantes</span><span className="font-bold tabular-nums">{fmt(baseDailyBudget ?? dailyBudget)}/dia</span></div>
+                  {rolloverBonus > 0 && (
+                    <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">+ Bônus (15% não gasto ontem)</span><span className="font-bold text-success tabular-nums">+{fmt(rolloverBonus)}</span></div>
+                  )}
+                  <div className="flex justify-between text-[10px] pt-1 border-t border-border/40"><span className="text-muted-foreground font-semibold">Limite final do dia</span><span className="font-bold text-primary tabular-nums">{fmt(dailyBudget)}/dia</span></div>
+                </div>
+              </div>
+            </div>
+
+            <button onClick={() => setShowPopup(false)} className="w-full rounded-2xl bg-primary py-3 text-sm font-semibold text-primary-foreground active:scale-[0.98] transition-all duration-300 shadow-lg shadow-primary/20">
+              Entendi
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default DailyBudgetWidget;
