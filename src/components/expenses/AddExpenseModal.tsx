@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useFinancialData } from "@/hooks/useFinancialData";
 import { useDockVisibility } from "@/hooks/useDockVisibility";
+import BankLogo from "@/components/BankLogo";
 
 interface AddExpenseModalProps {
   open: boolean;
@@ -32,32 +33,7 @@ const priorities = [
 
 const CARDS_KEY = "sparky-credit-cards";
 
-const BANK_COLORS: Record<string, string> = {
-  nubank: "bg-purple-600", inter: "bg-orange-500", itaú: "bg-orange-600", itau: "bg-orange-600",
-  bradesco: "bg-red-600", santander: "bg-red-700", "banco do brasil": "bg-yellow-500", bb: "bg-yellow-500",
-  caixa: "bg-blue-600", c6: "bg-gray-700", picpay: "bg-green-400", "mercado pago": "bg-blue-400",
-};
-
-const getBankColor = (name: string) => {
-  const lower = name.toLowerCase();
-  for (const [key, val] of Object.entries(BANK_COLORS)) {
-    if (lower.includes(key)) return val;
-  }
-  return "bg-primary";
-};
-
-const getBankAbbr = (name: string) => {
-  const lower = name.toLowerCase();
-  if (lower.includes("nubank")) return "NU";
-  if (lower.includes("inter")) return "IN";
-  if (lower.includes("itaú") || lower.includes("itau")) return "IT";
-  if (lower.includes("bradesco")) return "BR";
-  if (lower.includes("santander")) return "SA";
-  if (lower.includes("banco do brasil") || lower.includes("bb")) return "BB";
-  if (lower.includes("caixa")) return "CX";
-  if (lower.includes("c6")) return "C6";
-  return name.slice(0, 2).toUpperCase();
-};
+// Bank visuals (color + logo) come from the centralized <BankLogo /> component.
 
 const MONTHS = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
@@ -265,7 +241,7 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
                 className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-left flex items-center justify-between transition-all hover:border-primary/50 active:scale-[0.99]">
                 {selectedCard ? (
                   <div className="flex items-center gap-2.5">
-                    <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center text-white text-[9px] font-bold", getBankColor(selectedCard.bankName))}>{getBankAbbr(selectedCard.bankName)}</div>
+                    <BankLogo bankName={selectedCard.bankName} size={28} rounded="rounded-lg" />
                     <div><p className="text-xs font-medium">{selectedCard.cardName}</p><p className="text-[9px] text-muted-foreground">{selectedCard.bankName}</p></div>
                   </div>
                 ) : <span className="text-muted-foreground text-xs">Selecione o cartão</span>}
@@ -278,7 +254,7 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
                       <button key={c.id} onClick={() => { setSelectedCardId(c.id); setShowCardPicker(false); }}
                         className={cn("w-full flex items-center gap-3 px-3 py-3 text-left transition-all hover:bg-primary/5 active:scale-[0.99] border-b border-border/50 last:border-0",
                           selectedCardId === c.id && "bg-primary/10")}>
-                        <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center text-white text-[9px] font-bold", getBankColor(c.bankName))}>{getBankAbbr(c.bankName)}</div>
+                        <BankLogo bankName={c.bankName} size={32} rounded="rounded-lg" />
                         <div className="flex-1 min-w-0"><p className="text-xs font-medium truncate">{c.cardName}</p><p className="text-[9px] text-muted-foreground">{c.bankName} • {c.cardType || "Crédito"}</p></div>
                         <p className="text-[10px] text-muted-foreground tabular-nums">{(c.limit - (c.usedAmount || 0)).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
                       </button>

@@ -31,33 +31,8 @@ interface CreditCardData {
   futureInvoices: { month: string; amount: number }[];
 }
 
-const BANK_DATA: Record<string, { color: string; gradient: string; abbr: string }> = {
-  "nubank": { color: "bg-purple-600", gradient: "from-purple-600/20 to-purple-900/10", abbr: "NU" },
-  "inter": { color: "bg-orange-500", gradient: "from-orange-500/20 to-orange-800/10", abbr: "IN" },
-  "itaú": { color: "bg-orange-600", gradient: "from-orange-600/20 to-orange-900/10", abbr: "IT" },
-  "itau": { color: "bg-orange-600", gradient: "from-orange-600/20 to-orange-900/10", abbr: "IT" },
-  "bradesco": { color: "bg-red-600", gradient: "from-red-600/20 to-red-900/10", abbr: "BR" },
-  "santander": { color: "bg-red-700", gradient: "from-red-700/20 to-red-900/10", abbr: "SA" },
-  "banco do brasil": { color: "bg-yellow-500", gradient: "from-yellow-500/20 to-yellow-800/10", abbr: "BB" },
-  "bb": { color: "bg-yellow-500", gradient: "from-yellow-500/20 to-yellow-800/10", abbr: "BB" },
-  "caixa": { color: "bg-blue-600", gradient: "from-blue-600/20 to-blue-900/10", abbr: "CX" },
-  "c6": { color: "bg-gray-700", gradient: "from-gray-600/20 to-gray-900/10", abbr: "C6" },
-  "pan": { color: "bg-blue-500", gradient: "from-blue-500/20 to-blue-800/10", abbr: "PN" },
-  "neon": { color: "bg-cyan-500", gradient: "from-cyan-500/20 to-cyan-800/10", abbr: "NE" },
-  "next": { color: "bg-green-500", gradient: "from-green-500/20 to-green-800/10", abbr: "NX" },
-  "picpay": { color: "bg-green-400", gradient: "from-green-400/20 to-green-700/10", abbr: "PP" },
-  "mercado pago": { color: "bg-blue-400", gradient: "from-blue-400/20 to-blue-700/10", abbr: "MP" },
-  "btg": { color: "bg-blue-900", gradient: "from-blue-900/20 to-blue-950/10", abbr: "BT" },
-  "xp": { color: "bg-gray-800", gradient: "from-gray-800/20 to-gray-950/10", abbr: "XP" },
-};
-
-const getBankInfo = (name: string) => {
-  const lower = name.toLowerCase();
-  for (const [key, val] of Object.entries(BANK_DATA)) {
-    if (lower.includes(key)) return val;
-  }
-  return { color: "bg-primary", gradient: "from-primary/20 to-primary/5", abbr: name.slice(0, 2).toUpperCase() };
-};
+import BankLogo from "@/components/BankLogo";
+import { getBankBrand } from "@/lib/bankLogos";
 
 const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 
@@ -162,7 +137,7 @@ const CreditCardCarousel = () => {
 
   if (expandedCard) {
     const available = expandedCard.limit - expandedCard.usedAmount;
-    const bankInfo = getBankInfo(expandedCard.bankName);
+    // Bank brand resolved inline below via <BankLogo />.
     const usedPct = expandedCard.limit > 0 ? Math.round((expandedCard.usedAmount / expandedCard.limit) * 100) : 0;
     const now = new Date();
     const dueDate = new Date(now.getFullYear(), now.getMonth(), expandedCard.dueDay);
@@ -179,9 +154,7 @@ const CreditCardCarousel = () => {
               <ArrowLeft size={20} />
             </button>
             <div className="flex items-center gap-2.5 flex-1">
-              <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center text-white text-xs font-bold", bankInfo.color)}>
-                {bankInfo.abbr}
-              </div>
+              <BankLogo bankName={expandedCard.bankName} size={40} />
               <div>
                 <h2 className="text-base font-bold">{expandedCard.cardName}</h2>
                 <p className="text-[10px] text-muted-foreground">{expandedCard.bankName} • {expandedCard.cardType || "Crédito"}</p>
@@ -435,7 +408,7 @@ const CreditCardCarousel = () => {
       <p className="text-[10px] text-muted-foreground font-semibold tracking-wider px-0.5">CARTÕES DE CRÉDITO</p>
       <div className="space-y-2.5">
         {cards.map((card, idx) => {
-          const bankInfo = getBankInfo(card.bankName);
+          const brand = getBankBrand(card.bankName);
           const available = card.limit - card.usedAmount;
           const usedPct = card.limit > 0 ? Math.round((card.usedAmount / card.limit) * 100) : 0;
           const now = new Date();
@@ -447,25 +420,19 @@ const CreditCardCarousel = () => {
               key={card.id}
               onClick={() => setExpandedId(card.id)}
               className={cn(
-                "cursor-pointer rounded-2xl border border-border/50 p-4 relative overflow-hidden transition-all active:scale-[0.98] hover:border-primary/40",
-                `bg-gradient-to-br ${bankInfo.gradient}`,
+                "cursor-pointer rounded-2xl border border-border/50 p-4 relative overflow-hidden transition-all active:scale-[0.98] hover:border-primary/40 bg-card",
                 `fade-in-up stagger-${Math.min(idx + 1, 5)}`
               )}
             >
-              <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-white/5" />
-              
+              <div className={cn("absolute -right-6 -top-6 h-20 w-20 rounded-full opacity-20", brand.bg)} />
+
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center text-white text-[10px] font-bold shadow-sm", bankInfo.color)}>
-                    {bankInfo.abbr}
-                  </div>
+                  <BankLogo brand={brand} size={36} rounded="rounded-lg" />
                   <div className="min-w-0">
                     <p className="text-sm font-bold truncate">{card.cardName}</p>
-                    <p className="text-[9px] text-muted-foreground">{card.cardType || "Crédito"}</p>
+                    <p className="text-[9px] text-muted-foreground">{brand.name} • {card.cardType || "Crédito"}</p>
                   </div>
-                </div>
-                <div className={cn("px-2 py-0.5 rounded-md text-[9px] font-bold text-white", bankInfo.color)}>
-                  {bankInfo.abbr}
                 </div>
               </div>
 

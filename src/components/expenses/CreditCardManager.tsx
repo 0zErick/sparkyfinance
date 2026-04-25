@@ -6,42 +6,8 @@ import { cn } from "@/lib/utils";
 import { useDockVisibility } from "@/hooks/useDockVisibility";
 import { usePoints } from "@/hooks/usePoints";
 import { useFinancialData } from "@/hooks/useFinancialData";
-
-const BANK_DATA: Record<string, { color: string; abbr: string }> = {
-  "nubank": { color: "bg-purple-600", abbr: "NU" },
-  "inter": { color: "bg-orange-500", abbr: "IN" },
-  "itaú": { color: "bg-orange-600", abbr: "IT" },
-  "itau": { color: "bg-orange-600", abbr: "IT" },
-  "bradesco": { color: "bg-red-600", abbr: "BR" },
-  "santander": { color: "bg-red-700", abbr: "SA" },
-  "banco do brasil": { color: "bg-yellow-500", abbr: "BB" },
-  "bb": { color: "bg-yellow-500", abbr: "BB" },
-  "caixa": { color: "bg-blue-600", abbr: "CX" },
-  "c6": { color: "bg-gray-900", abbr: "C6" },
-  "c6 bank": { color: "bg-gray-900", abbr: "C6" },
-  "pan": { color: "bg-blue-500", abbr: "PN" },
-  "neon": { color: "bg-cyan-500", abbr: "NE" },
-  "next": { color: "bg-green-500", abbr: "NX" },
-  "picpay": { color: "bg-green-400", abbr: "PP" },
-  "mercado pago": { color: "bg-blue-400", abbr: "MP" },
-  "btg": { color: "bg-blue-900", abbr: "BT" },
-  "xp": { color: "bg-gray-800", abbr: "XP" },
-};
-
-const BANK_OPTIONS = [
-  { name: "Nubank", abbr: "NU", color: "bg-purple-600" },
-  { name: "Itaú", abbr: "IT", color: "bg-orange-600" },
-  { name: "Bradesco", abbr: "BR", color: "bg-red-600" },
-  { name: "Inter", abbr: "IN", color: "bg-orange-500" },
-  { name: "BB", abbr: "BB", color: "bg-yellow-500" },
-  { name: "Caixa", abbr: "CX", color: "bg-blue-600" },
-  { name: "Santander", abbr: "SA", color: "bg-red-700" },
-  { name: "C6 Bank", abbr: "C6", color: "bg-gray-900" },
-  { name: "BTG", abbr: "BT", color: "bg-blue-900" },
-  { name: "XP", abbr: "XP", color: "bg-gray-800" },
-  { name: "PicPay", abbr: "PP", color: "bg-green-400" },
-  { name: "Mercado Pago", abbr: "MP", color: "bg-blue-400" },
-];
+import BankLogo from "@/components/BankLogo";
+import { BANK_OPTIONS_LIST, getBankBrand } from "@/lib/bankLogos";
 
 const FLAG_OPTIONS = [
   { name: "Visa", color: "bg-blue-600" },
@@ -54,23 +20,7 @@ const FLAG_OPTIONS = [
 
 const CARD_TYPES = ["Crédito", "Débito", "Múltiplo"];
 
-const RANDOM_COLORS = [
-  "bg-emerald-600", "bg-violet-600", "bg-rose-600", "bg-amber-600",
-  "bg-cyan-600", "bg-indigo-600", "bg-teal-600", "bg-fuchsia-600",
-  "bg-lime-600", "bg-pink-600",
-];
-
-const getRandomColor = () => RANDOM_COLORS[Math.floor(Math.random() * RANDOM_COLORS.length)];
-
 const capitalize = (s: string) => s.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
-
-const getBankInfo = (name: string) => {
-  const lower = name.toLowerCase();
-  for (const [key, val] of Object.entries(BANK_DATA)) {
-    if (lower.includes(key)) return val;
-  }
-  return { color: "bg-muted-foreground", abbr: name.slice(0, 2).toUpperCase() };
-};
 
 interface CardTransaction {
   id: string; desc: string; value: number; date: string; category: string;
@@ -124,12 +74,7 @@ const CreditCardManager = ({ open, onClose }: Props) => {
     const bankName = capitalize(rawBankName);
     const limit = parseFloat(newLimit.replace(/\D/g, "")) / 100 || 0;
 
-    const isKnown = Object.keys(BANK_DATA).some(k => bankName.toLowerCase().includes(k));
-    if (!isKnown) {
-      const color = getRandomColor();
-      const abbr = bankName.slice(0, 2).toUpperCase();
-      BANK_DATA[bankName.toLowerCase()] = { color, abbr };
-    }
+    // (Bank brand info comes from the centralized helper — no need to register custom colors here.)
 
     const card: CreditCardData = {
       id: crypto.randomUUID(), bankName, cardName: capitalize(newName.trim()),
@@ -215,7 +160,7 @@ const CreditCardManager = ({ open, onClose }: Props) => {
   // Card detail view
   if (activeCard) {
     const available = activeCard.limit - activeCard.usedAmount;
-    const bankInfo = getBankInfo(activeCard.bankName);
+    // Bank brand resolved inline below via <BankLogo />.
     const usedPct = activeCard.limit > 0 ? Math.round((activeCard.usedAmount / activeCard.limit) * 100) : 0;
     const now = new Date();
     const dueDate = new Date(now.getFullYear(), now.getMonth(), activeCard.dueDay);
@@ -230,7 +175,7 @@ const CreditCardManager = ({ open, onClose }: Props) => {
           <div className="flex items-center gap-3 mb-4">
             <button onClick={() => { setSelectedCard(null); setShowPayment(false); }} className="rounded-full p-1.5 text-muted-foreground hover:text-foreground active:scale-95"><ArrowLeft size={20} /></button>
             <div className="flex items-center gap-2.5 flex-1">
-              <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center text-white text-xs font-bold", bankInfo.color)}>{bankInfo.abbr}</div>
+              <BankLogo bankName={activeCard.bankName} size={40} />
               <div>
                 <h2 className="text-base font-bold">{activeCard.cardName}</h2>
                 <p className="text-[10px] text-muted-foreground">{activeCard.bankName} • {activeCard.cardType || "Crédito"}{activeCard.cardFlag ? ` • ${activeCard.cardFlag}` : ""}</p>
@@ -349,7 +294,7 @@ const CreditCardManager = ({ open, onClose }: Props) => {
 
   // Add card form
   if (showAdd) {
-    const bankInfo = getBankInfo(newBank);
+    // Preview rendered via <BankLogo /> below.
     return (
       <div className="fixed inset-0 z-[60] flex items-end justify-center">
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAdd(false)} />
@@ -362,7 +307,7 @@ const CreditCardManager = ({ open, onClose }: Props) => {
           {/* Preview */}
           {(showCustomBank ? customBankName : newBank) && (
             <div className="flex items-center gap-3 mb-4 p-3 rounded-xl bg-muted/30 border border-border">
-              <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center text-white text-sm font-bold", getBankInfo(showCustomBank ? customBankName : newBank).color)}>{getBankInfo(showCustomBank ? customBankName : newBank).abbr}</div>
+              <BankLogo bankName={showCustomBank ? customBankName : newBank} size={48} />
               <div>
                 <p className="text-sm font-bold">{showCustomBank ? customBankName : newBank}</p>
                 <p className="text-[10px] text-muted-foreground">{newName || "Nome do cartão"} {newFlag && `• ${newFlag}`}</p>
@@ -397,11 +342,11 @@ const CreditCardManager = ({ open, onClose }: Props) => {
             <div>
               <label className="text-[10px] text-muted-foreground font-medium mb-2 block">Instituição Bancária*</label>
               <div className="grid grid-cols-4 gap-2">
-                {BANK_OPTIONS.map(bank => (
+                {BANK_OPTIONS_LIST.map(bank => (
                   <button key={bank.name} onClick={() => { setNewBank(bank.name); setShowCustomBank(false); setCustomBankName(""); }}
                     className={cn("flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 text-[10px] font-medium transition-all border",
                       newBank === bank.name && !showCustomBank ? "border-primary bg-primary/10" : "border-border bg-muted/20 hover:border-primary/40")}>
-                    <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center text-white text-[9px] font-bold", bank.color)}>{bank.abbr}</div>
+                    <BankLogo brand={bank} size={28} rounded="rounded-lg" />
                     <span className="truncate w-full text-center">{bank.name}</span>
                   </button>
                 ))}
@@ -498,7 +443,7 @@ const CreditCardManager = ({ open, onClose }: Props) => {
         ) : (
           <div className="space-y-3">
             {cards.map(card => {
-              const bankInfo = getBankInfo(card.bankName);
+              // Logo handled by <BankLogo /> below.
               const available = card.limit - card.usedAmount;
               const usedPct = card.limit > 0 ? Math.round((card.usedAmount / card.limit) * 100) : 0;
               const now = new Date();
@@ -508,7 +453,7 @@ const CreditCardManager = ({ open, onClose }: Props) => {
               return (
                 <button key={card.id} onClick={() => setSelectedCard(card.id)} className="w-full text-left card-zelo !p-4 active:scale-[0.98] transition-all">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0", bankInfo.color)}>{bankInfo.abbr}</div>
+                    <BankLogo bankName={card.bankName} size={40} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold truncate">{card.cardName}</p>
                       <p className="text-[10px] text-muted-foreground">{card.bankName} • {card.cardType || "Crédito"}</p>
