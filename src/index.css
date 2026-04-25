@@ -184,23 +184,23 @@
   }
 
   .dark .card-zelo {
-    background: hsl(224 28% 13% / 0.7);
-    border: 1px solid hsl(224 20% 20% / 0.5);
+    background: hsl(285 4% 16% / 0.75);
+    border: 1px solid hsl(285 4% 24% / 0.5);
     box-shadow:
-      0 2px 8px hsl(0 0% 0% / 0.25),
-      0 12px 40px hsl(0 0% 0% / 0.2),
-      inset 0 1px 0 hsl(215 30% 50% / 0.04);
+      0 2px 8px hsl(0 0% 0% / 0.3),
+      0 12px 40px hsl(0 0% 0% / 0.25),
+      inset 0 1px 0 hsl(0 0% 100% / 0.03);
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
   }
 
   .dark .card-zelo:hover {
-    border-color: hsl(222 60% 50% / 0.15);
+    border-color: hsl(var(--primary) / 0.25);
     box-shadow:
-      0 2px 8px hsl(0 0% 0% / 0.3),
-      0 16px 48px hsl(0 0% 0% / 0.25),
-      inset 0 1px 0 hsl(215 30% 50% / 0.06),
-      0 0 0 0.5px hsl(var(--primary) / 0.1);
+      0 2px 8px hsl(0 0% 0% / 0.35),
+      0 16px 48px hsl(0 0% 0% / 0.3),
+      inset 0 1px 0 hsl(0 0% 100% / 0.04),
+      0 0 0 0.5px hsl(var(--primary) / 0.15);
   }
 
   .text-value {
