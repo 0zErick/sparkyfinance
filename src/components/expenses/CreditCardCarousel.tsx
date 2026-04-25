@@ -31,33 +31,8 @@ interface CreditCardData {
   futureInvoices: { month: string; amount: number }[];
 }
 
-const BANK_DATA: Record<string, { color: string; gradient: string; abbr: string }> = {
-  "nubank": { color: "bg-purple-600", gradient: "from-purple-600/20 to-purple-900/10", abbr: "NU" },
-  "inter": { color: "bg-orange-500", gradient: "from-orange-500/20 to-orange-800/10", abbr: "IN" },
-  "itaú": { color: "bg-orange-600", gradient: "from-orange-600/20 to-orange-900/10", abbr: "IT" },
-  "itau": { color: "bg-orange-600", gradient: "from-orange-600/20 to-orange-900/10", abbr: "IT" },
-  "bradesco": { color: "bg-red-600", gradient: "from-red-600/20 to-red-900/10", abbr: "BR" },
-  "santander": { color: "bg-red-700", gradient: "from-red-700/20 to-red-900/10", abbr: "SA" },
-  "banco do brasil": { color: "bg-yellow-500", gradient: "from-yellow-500/20 to-yellow-800/10", abbr: "BB" },
-  "bb": { color: "bg-yellow-500", gradient: "from-yellow-500/20 to-yellow-800/10", abbr: "BB" },
-  "caixa": { color: "bg-blue-600", gradient: "from-blue-600/20 to-blue-900/10", abbr: "CX" },
-  "c6": { color: "bg-gray-700", gradient: "from-gray-600/20 to-gray-900/10", abbr: "C6" },
-  "pan": { color: "bg-blue-500", gradient: "from-blue-500/20 to-blue-800/10", abbr: "PN" },
-  "neon": { color: "bg-cyan-500", gradient: "from-cyan-500/20 to-cyan-800/10", abbr: "NE" },
-  "next": { color: "bg-green-500", gradient: "from-green-500/20 to-green-800/10", abbr: "NX" },
-  "picpay": { color: "bg-green-400", gradient: "from-green-400/20 to-green-700/10", abbr: "PP" },
-  "mercado pago": { color: "bg-blue-400", gradient: "from-blue-400/20 to-blue-700/10", abbr: "MP" },
-  "btg": { color: "bg-blue-900", gradient: "from-blue-900/20 to-blue-950/10", abbr: "BT" },
-  "xp": { color: "bg-gray-800", gradient: "from-gray-800/20 to-gray-950/10", abbr: "XP" },
-};
-
-const getBankInfo = (name: string) => {
-  const lower = name.toLowerCase();
-  for (const [key, val] of Object.entries(BANK_DATA)) {
-    if (lower.includes(key)) return val;
-  }
-  return { color: "bg-primary", gradient: "from-primary/20 to-primary/5", abbr: name.slice(0, 2).toUpperCase() };
-};
+import BankLogo from "@/components/BankLogo";
+import { getBankBrand } from "@/lib/bankLogos";
 
 const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
 
