@@ -1,8 +1,9 @@
 import { useState, memo, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { getAppBrand, getAppLogoCandidates, type AppBrand } from "@/lib/brandLogos";
+import { getAppBrand, getAppLogoUrl, type AppBrand } from "@/lib/brandLogos";
 
 interface BrandLogoProps {
+  /** Nome bruto do app/serviço (ex: "Netflix") OU brand já resolvida */
   appName?: string;
   brand?: AppBrand;
   size?: number;
@@ -11,36 +12,26 @@ interface BrandLogoProps {
 }
 
 /**
- * Logo de app/serviço com cascata: logo.dev → Simple Icons → avatar com inicial.
+ * Logo de aplicativos/serviços (assinaturas) via Simple Icons CDN.
+ * Fallback: avatar circular com inicial sobre cor sólida da marca.
  */
 const BrandLogo = memo(({ appName = "", brand, size = 44, className, rounded = "rounded-xl" }: BrandLogoProps) => {
   const resolved = brand ?? getAppBrand(appName);
-  const candidates = getAppLogoCandidates(resolved);
-  const [idx, setIdx] = useState(0);
-  const [allFailed, setAllFailed] = useState(candidates.length === 0);
+  const url = getAppLogoUrl(resolved);
+  const [errored, setErrored] = useState(false);
 
   useEffect(() => {
-    setIdx(0);
-    setAllFailed(candidates.length === 0);
-  }, [resolved.domain, resolved.slug, candidates.length]);
+    setErrored(false);
+  }, [resolved.slug, resolved.hex]);
 
-  const currentUrl = candidates[idx];
-  const showImage = !allFailed && !!currentUrl;
-
-  const handleError = () => {
-    if (idx < candidates.length - 1) {
-      setIdx(idx + 1);
-    } else {
-      setAllFailed(true);
-    }
-  };
+  const showImage = !!url && !errored;
 
   return (
     <div
       className={cn(
         "flex items-center justify-center overflow-hidden shrink-0 shadow-sm",
         rounded,
-        showImage ? "bg-white" : "",
+        showImage ? "bg-white/95" : "",
         className
       )}
       style={{
@@ -52,16 +43,15 @@ const BrandLogo = memo(({ appName = "", brand, size = 44, className, rounded = "
     >
       {showImage ? (
         <img
-          key={currentUrl}
-          src={currentUrl}
+          src={url!}
           alt={resolved.name || appName}
           width={size}
           height={size}
           loading="lazy"
           decoding="async"
           referrerPolicy="no-referrer"
-          onError={handleError}
-          className="h-full w-full p-1"
+          onError={() => setErrored(true)}
+          className="h-full w-full p-1.5"
           style={{ objectFit: "contain" }}
         />
       ) : (
