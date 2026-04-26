@@ -424,7 +424,10 @@ const CreditCardCarousel = () => {
                 `fade-in-up stagger-${Math.min(idx + 1, 5)}`
               )}
             >
-              <div className={cn("absolute -right-6 -top-6 h-20 w-20 rounded-full opacity-20", brand.bg)} />
+              <div
+                className="absolute -right-6 -top-6 h-20 w-20 rounded-full opacity-20"
+                style={{ backgroundColor: `#${brand.hex}` }}
+              />
 
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2.5">
