@@ -1,6 +1,6 @@
 import { useState, memo, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { getBankBrand, getLogoCandidates, type BankBrand } from "@/lib/bankLogos";
+import { getBankBrand, getBankLogoUrl, type BankBrand } from "@/lib/bankLogos";
 
 interface BankLogoProps {
   bankName?: string;
@@ -11,49 +11,55 @@ interface BankLogoProps {
 }
 
 /**
- * Renderiza o logotipo oficial do banco com cascata de fontes:
- *   DuckDuckGo → Google FaviconV2 → icon.horse → fallback (sigla colorida).
- * Cada fonte é tentada quando a anterior falha em carregar.
+ * Logo oficial do banco via Simple Icons CDN (SVG vetorial, fundo transparente).
+ * Se o slug não existir ou a imagem falhar, exibe um avatar circular com a inicial
+ * sobre a cor sólida da marca — sem APIs externas, 100% determinístico.
  */
 const BankLogo = memo(({ bankName = "", brand, size = 40, className, rounded = "rounded-xl" }: BankLogoProps) => {
   const resolved = brand ?? getBankBrand(bankName);
-  const candidates = getLogoCandidates(resolved.domain, size * 2);
-  const [idx, setIdx] = useState(0);
+  const url = getBankLogoUrl(resolved);
+  const [errored, setErrored] = useState(false);
 
-  // Reset quando o banco muda
   useEffect(() => {
-    setIdx(0);
-  }, [resolved.domain]);
+    setErrored(false);
+  }, [resolved.slug, resolved.hex]);
 
-  const showImage = candidates.length > 0 && idx < candidates.length;
+  const showImage = !!url && !errored;
 
   return (
     <div
       className={cn(
         "flex items-center justify-center overflow-hidden shrink-0",
         rounded,
-        resolved.bg,
+        // Sem URL OU imagem errored: fundo sólido da marca. Com imagem: fundo claro neutro p/ contraste.
+        showImage ? "bg-white/95" : "",
         className
       )}
-      style={{ width: size, height: size }}
+      style={{
+        width: size,
+        height: size,
+        backgroundColor: showImage ? undefined : `#${resolved.hex}`,
+      }}
       aria-label={resolved.name || bankName}
     >
       {showImage ? (
         <img
-          key={candidates[idx]}
-          src={candidates[idx]}
+          src={url!}
           alt={resolved.name || bankName}
           width={size}
           height={size}
           loading="lazy"
           decoding="async"
           referrerPolicy="no-referrer"
-          onError={() => setIdx((i) => i + 1)}
-          className="h-full w-full object-contain p-1"
-          style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.15))" }}
+          onError={() => setErrored(true)}
+          className="h-full w-full p-1.5"
+          style={{ objectFit: "contain" }}
         />
       ) : (
-        <span className="text-xs font-bold text-white tracking-tight">
+        <span
+          className="font-bold tracking-tight text-white"
+          style={{ fontSize: Math.max(10, size * 0.34) }}
+        >
           {resolved.abbr || bankName.slice(0, 2).toUpperCase()}
         </span>
       )}
