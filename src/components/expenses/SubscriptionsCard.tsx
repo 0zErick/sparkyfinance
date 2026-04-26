@@ -32,7 +32,7 @@ interface Subscription {
 const PRESET_SUBS = POPULAR_APPS.map((b) => ({
   name: b.name,
   logo: b.abbr,
-  color: b.bg,
+  color: `#${b.hex}`,
 }));
 
 const SubscriptionsCard = () => {
