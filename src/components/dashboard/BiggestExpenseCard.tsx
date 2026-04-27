@@ -63,6 +63,9 @@ const BiggestExpenseCard = ({ hideValues = false }: BiggestExpenseCardProps) => 
           </p>
         </div>
       </div>
+      <InfoPanel expanded={showInfo} className="relative z-10">
+        Identifica a transação de maior valor registrada no mês atual. Útil para entender qual gasto pesou mais no orçamento e planejar ajustes.
+      </InfoPanel>
     </div>
   );
 };
