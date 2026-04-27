@@ -19,6 +19,7 @@ interface BiggestExpenseCardProps {
 
 const BiggestExpenseCard = ({ hideValues = false }: BiggestExpenseCardProps) => {
   const { data } = useFinancialData();
+  const [showInfo, setShowInfo] = useState(false);
 
   const now = new Date();
   const month = now.getMonth();
@@ -45,11 +46,7 @@ const BiggestExpenseCard = ({ hideValues = false }: BiggestExpenseCardProps) => 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-0.5">
             <p className="text-label">MAIOR DESPESA</p>
-            <InfoButton
-              title="Maior Despesa do Mês"
-              description="Identifica a transação de maior valor registrada no mês atual. Útil para entender qual gasto pesou mais no orçamento e planejar ajustes."
-              align="left"
-            />
+            <InfoButton expanded={showInfo} onToggle={setShowInfo} />
           </div>
           <p className="text-sm font-display font-bold truncate mt-0.5">
             {hideValues ? "••••••" : biggest.description}
