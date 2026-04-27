@@ -1,4 +1,5 @@
 import { useFinancialData, fmt } from "@/hooks/useFinancialData";
+import InfoButton from "@/components/InfoButton";
 
 const VaultIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="shrink-0">
