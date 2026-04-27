@@ -1,92 +1,88 @@
-import { useState, useRef, useEffect } from "react";
-import { Info, X } from "lucide-react";
+import { useState } from "react";
+import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface InfoButtonProps {
-  /** Título curto exibido no popover */
-  title: string;
-  /** Texto explicativo sobre o card/seção */
-  description: string;
-  /** Tamanho do ícone (padrão 14) */
   size?: number;
   className?: string;
-  /** Posicionamento do popover relativo ao botão */
-  align?: "left" | "right" | "center";
+  /** Estado controlado (opcional). Se omitido, gerencia internamente. */
+  expanded?: boolean;
+  onToggle?: (next: boolean) => void;
 }
 
 /**
- * Botão de info universal — exibe um popover com explicação contextual
- * sobre o que o card/seção faz. Usado em todos os cards principais do app.
+ * Botão "info" universal — somente o trigger.
+ * O painel expansível com a explicação deve ser renderizado pelo pai
+ * usando <InfoPanel expanded={...}> logo abaixo do header do card.
  */
-const InfoButton = ({
-  title,
-  description,
+export const InfoButton = ({
   size = 14,
   className,
-  align = "right",
+  expanded,
+  onToggle,
 }: InfoButtonProps) => {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [internal, setInternal] = useState(false);
+  const isOpen = expanded ?? internal;
 
-  useEffect(() => {
-    if (!open) return;
-    const onClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, [open]);
-
-  const alignClass =
-    align === "left" ? "left-0" : align === "center" ? "left-1/2 -translate-x-1/2" : "right-0";
+  const handle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const next = !isOpen;
+    if (onToggle) onToggle(next);
+    else setInternal(next);
+  };
 
   return (
-    <div ref={ref} className={cn("relative inline-flex", className)}>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpen((v) => !v);
-        }}
-        aria-label={`Informação sobre ${title}`}
-        className={cn(
-          "inline-flex items-center justify-center rounded-full text-muted-foreground/80",
-          "hover:text-primary hover:bg-primary/10 active:scale-90 transition-all",
-          "p-1"
-        )}
-      >
-        <Info size={size} strokeWidth={2.2} />
-      </button>
-
-      {open && (
-        <div
-          className={cn(
-            "absolute top-full mt-2 z-50 w-64 rounded-2xl border border-border/60",
-            "bg-popover/95 backdrop-blur-xl shadow-2xl p-3.5 animate-in fade-in slide-in-from-top-1 duration-150",
-            alignClass
-          )}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-start gap-2 mb-1.5">
-            <div className="h-6 w-6 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-              <Info size={12} className="text-primary" />
-            </div>
-            <p className="text-xs font-bold text-foreground flex-1 pt-0.5">{title}</p>
-            <button
-              onClick={() => setOpen(false)}
-              className="text-muted-foreground hover:text-foreground p-0.5 -mt-0.5 -mr-0.5"
-              aria-label="Fechar"
-            >
-              <X size={12} />
-            </button>
-          </div>
-          <p className="text-[11px] leading-relaxed text-muted-foreground">{description}</p>
-        </div>
+    <button
+      type="button"
+      onClick={handle}
+      aria-label="Mostrar informações"
+      aria-expanded={isOpen}
+      className={cn(
+        "inline-flex items-center justify-center rounded-full p-1 transition-all duration-200",
+        isOpen
+          ? "text-primary bg-primary/10"
+          : "text-muted-foreground/80 hover:text-primary hover:bg-primary/10",
+        "active:scale-90",
+        className
       )}
-    </div>
+    >
+      <Info size={size} strokeWidth={2.2} />
+    </button>
   );
 };
+
+interface InfoPanelProps {
+  expanded: boolean;
+  children: React.ReactNode;
+  /** Altura máxima quando expandido (px). Default 200. */
+  maxHeight?: number;
+  className?: string;
+}
+
+/**
+ * Painel expansível que aparece sob o trigger.
+ * Usa transição CSS de max-height/opacity (mesmo padrão do card "Reserva de Contas").
+ */
+export const InfoPanel = ({
+  expanded,
+  children,
+  maxHeight = 200,
+  className,
+}: InfoPanelProps) => (
+  <div
+    className={cn("overflow-hidden transition-all duration-300 ease-in-out", className)}
+    style={{
+      maxHeight: expanded ? `${maxHeight}px` : "0px",
+      opacity: expanded ? 1 : 0,
+      marginTop: expanded ? "0.25rem" : "0",
+      marginBottom: expanded ? "0.5rem" : "0",
+    }}
+    aria-hidden={!expanded}
+  >
+    <p className="text-[11px] text-muted-foreground leading-relaxed px-0.5">
+      {children}
+    </p>
+  </div>
+);
 
 export default InfoButton;
