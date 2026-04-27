@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { useDockVisibility } from "@/hooks/useDockVisibility";
 import { useBillingSnapshot } from "@/hooks/useBillingSnapshot";
 import BrandLogo from "@/components/BrandLogo";
-import InfoButton from "@/components/InfoButton";
+import { InfoButton, InfoPanel } from "@/components/InfoButton";
 import { POPULAR_APPS, getAppBrand } from "@/lib/brandLogos";
 import {
   addPaidBillIds,
@@ -38,6 +38,7 @@ const PRESET_SUBS = POPULAR_APPS.map((b) => ({
 
 const SubscriptionsCard = () => {
   const [showAdd, setShowAdd] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [menuId, setMenuId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -211,11 +212,7 @@ const SubscriptionsCard = () => {
         <div>
           <div className="flex items-center gap-0.5">
             <p className="text-sm font-bold">Assinaturas</p>
-            <InfoButton
-              title="Assinaturas Recorrentes"
-              description="Gerencie todos os seus serviços pagos mensalmente (streaming, apps, planos). Marque como pago e gere automaticamente uma transação no extrato. +3 pts ao pagar."
-              align="left"
-            />
+            <InfoButton expanded={showInfo} onToggle={setShowInfo} />
           </div>
           <p className="text-[10px] text-muted-foreground">
             {subs.length} serviço{subs.length !== 1 ? "s" : ""} · {fmt(totalMonthly)}/mês
@@ -226,6 +223,10 @@ const SubscriptionsCard = () => {
           <Plus size={12} /> Nova
         </button>
       </div>
+
+      <InfoPanel expanded={showInfo}>
+        Gerencie todos os seus serviços pagos mensalmente (streaming, apps, planos). Marque como pago e gere automaticamente uma transação no extrato. +3 pts ao pagar.
+      </InfoPanel>
 
       {subs.length === 0 ? (
         <div className="card-zelo flex flex-col items-center py-8 gap-2">

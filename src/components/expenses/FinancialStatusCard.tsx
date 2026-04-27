@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useFinancialData } from "@/hooks/useFinancialData";
 import { ShieldCheck, AlertTriangle, ShieldAlert } from "lucide-react";
-import InfoButton from "@/components/InfoButton";
+import { InfoButton, InfoPanel } from "@/components/InfoButton";
 
 const FinancialStatusCard = () => {
   const { data, available } = useFinancialData();
