@@ -5,7 +5,7 @@ import { useFinancialData, fmt } from "@/hooks/useFinancialData";
 import PayoffGoalCard from "@/components/dashboard/PayoffGoalCard";
 import PaceBar from "@/components/expenses/PaceBar";
 import { useDockVisibility } from "@/hooks/useDockVisibility";
-import InfoButton from "@/components/InfoButton";
+import { InfoButton, InfoPanel } from "@/components/InfoButton";
 
 const CalculatorIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="shrink-0">
@@ -46,6 +46,7 @@ const SpendingOverview = ({ hideValues = false }: SpendingOverviewProps) => {
   const [simOpen, setSimOpen] = useState(false);
   const [simValue, setSimValue] = useState(0);
   const [infoPopup, setInfoPopup] = useState<string | null>(null);
+  const [showCardInfo, setShowCardInfo] = useState(false);
   const [editingPercent, setEditingPercent] = useState(false);
   const [spendPercent, setSpendPercent] = useState(() => {
     const saved = localStorage.getItem("sparky-spend-percent");
@@ -100,12 +101,12 @@ const SpendingOverview = ({ hideValues = false }: SpendingOverviewProps) => {
           </div>
           <p className="text-label">Pode Gastar Hoje</p>
         </div>
-        <InfoButton
-          title="Pode Gastar Hoje"
-          description="Calcula automaticamente quanto você pode gastar por dia até o fim do mês, reservando uma % do saldo. Ajuste a reserva no lápis e simule cortes no botão Simular."
-          align="right"
-        />
+        <InfoButton expanded={showCardInfo} onToggle={setShowCardInfo} />
       </div>
+
+      <InfoPanel expanded={showCardInfo} className="relative z-10">
+        Calcula automaticamente quanto você pode gastar por dia até o fim do mês, reservando uma % do saldo. Ajuste a reserva no lápis e simule cortes no botão Simular.
+      </InfoPanel>
 
       <div className="flex items-end gap-3 mb-1 relative z-10">
         <p className="text-4xl font-display font-extrabold tracking-tight tabular-nums text-success">

@@ -32,7 +32,7 @@ interface CreditCardData {
 }
 
 import BankLogo from "@/components/BankLogo";
-import InfoButton from "@/components/InfoButton";
+import { InfoButton, InfoPanel } from "@/components/InfoButton";
 import { getBankBrand } from "@/lib/bankLogos";
 
 const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
