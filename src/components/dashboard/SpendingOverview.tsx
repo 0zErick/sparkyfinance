@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { TrendingUp, TrendingDown, ArrowUpRight, Wallet, CreditCard, X, Info, Pencil } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowUpRight, Wallet, CreditCard, X, Pencil } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, CartesianGrid, BarChart, Bar, Tooltip } from "recharts";
 import { useFinancialData, fmt } from "@/hooks/useFinancialData";
 import PayoffGoalCard from "@/components/dashboard/PayoffGoalCard";
