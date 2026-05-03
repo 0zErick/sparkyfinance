@@ -324,7 +324,7 @@ const Onboarding = () => {
               onClick={() => { setGroupPopup({ show: false, inviteCode: "" }); navigate("/"); }}
               className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground active:scale-[0.98] transition-all"
             >
-              Começar a usar o Spark
+              Começar a usar o Sparky
             </button>
           </div>
         </div>
