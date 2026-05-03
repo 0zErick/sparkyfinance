@@ -24,28 +24,13 @@ interface SpendingOverviewProps {
   hideValues?: boolean;
 }
 
-const InfoPopup = ({ title, message, onClose }: { title: string; message: string; onClose: () => void }) => (
-  <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-    <div className="w-full max-w-sm card-zelo space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-2xl bg-primary/15">
-            <Info size={16} className="text-primary" />
-          </div>
-          <h3 className="text-sm font-bold">{title}</h3>
-        </div>
-        <button onClick={onClose} className="p-1 rounded-xl text-muted-foreground hover:text-foreground transition-all duration-300"><X size={16} /></button>
-      </div>
-      <p className="text-xs text-muted-foreground leading-relaxed">{message}</p>
-      <button onClick={onClose} className="w-full rounded-2xl bg-primary py-3 text-sm font-semibold text-primary-foreground active:scale-[0.98] transition-all duration-300 shadow-lg shadow-primary/20">Entendi</button>
-    </div>
-  </div>
-);
+// (InfoPopup removido — todos os infos agora usam InfoPanel inline)
 
 const SpendingOverview = ({ hideValues = false }: SpendingOverviewProps) => {
   const [simOpen, setSimOpen] = useState(false);
   const [simValue, setSimValue] = useState(0);
-  const [infoPopup, setInfoPopup] = useState<string | null>(null);
+  const [showIncomeInfo, setShowIncomeInfo] = useState(false);
+  const [showExpenseInfo, setShowExpenseInfo] = useState(false);
   const [showCardInfo, setShowCardInfo] = useState(false);
   const [editingPercent, setEditingPercent] = useState(false);
   const [spendPercent, setSpendPercent] = useState(() => {
