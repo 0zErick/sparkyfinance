@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { TrendingUp, TrendingDown, ArrowUpRight, Wallet, CreditCard, X, Info, Pencil } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowUpRight, Wallet, CreditCard, X, Pencil } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, CartesianGrid, BarChart, Bar, Tooltip } from "recharts";
 import { useFinancialData, fmt } from "@/hooks/useFinancialData";
 import PayoffGoalCard from "@/components/dashboard/PayoffGoalCard";
@@ -24,28 +24,13 @@ interface SpendingOverviewProps {
   hideValues?: boolean;
 }
 
-const InfoPopup = ({ title, message, onClose }: { title: string; message: string; onClose: () => void }) => (
-  <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-    <div className="w-full max-w-sm card-zelo space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-2xl bg-primary/15">
-            <Info size={16} className="text-primary" />
-          </div>
-          <h3 className="text-sm font-bold">{title}</h3>
-        </div>
-        <button onClick={onClose} className="p-1 rounded-xl text-muted-foreground hover:text-foreground transition-all duration-300"><X size={16} /></button>
-      </div>
-      <p className="text-xs text-muted-foreground leading-relaxed">{message}</p>
-      <button onClick={onClose} className="w-full rounded-2xl bg-primary py-3 text-sm font-semibold text-primary-foreground active:scale-[0.98] transition-all duration-300 shadow-lg shadow-primary/20">Entendi</button>
-    </div>
-  </div>
-);
+// (InfoPopup removido — todos os infos agora usam InfoPanel inline)
 
 const SpendingOverview = ({ hideValues = false }: SpendingOverviewProps) => {
   const [simOpen, setSimOpen] = useState(false);
   const [simValue, setSimValue] = useState(0);
-  const [infoPopup, setInfoPopup] = useState<string | null>(null);
+  const [showIncomeInfo, setShowIncomeInfo] = useState(false);
+  const [showExpenseInfo, setShowExpenseInfo] = useState(false);
   const [showCardInfo, setShowCardInfo] = useState(false);
   const [editingPercent, setEditingPercent] = useState(false);
   const [spendPercent, setSpendPercent] = useState(() => {
@@ -54,7 +39,7 @@ const SpendingOverview = ({ hideValues = false }: SpendingOverviewProps) => {
   });
   const { data, available, daysLeft } = useFinancialData();
 
-  useDockVisibility(simOpen || infoPopup !== null);
+  useDockVisibility(simOpen);
 
   useEffect(() => {
     localStorage.setItem("sparky-spend-percent", String(spendPercent));
@@ -221,43 +206,35 @@ const SpendingOverview = ({ hideValues = false }: SpendingOverviewProps) => {
       <div className="grid grid-cols-2 gap-2">
         <div className="card-zelo fade-in-up stagger-1 relative overflow-hidden">
           <div className="absolute -top-4 -left-4 h-12 w-12 rounded-full bg-success/8 blur-xl pointer-events-none" />
-          <button onClick={() => setInfoPopup("receita")} className="absolute top-3 right-3 p-0.5 rounded-lg text-muted-foreground/40 hover:text-muted-foreground active:scale-90 transition-all duration-300">
-            <Info size={11} />
-          </button>
+          <div className="absolute top-2 right-2 z-20">
+            <InfoButton expanded={showIncomeInfo} onToggle={setShowIncomeInfo} size={12} />
+          </div>
           <div className="flex items-center gap-2 mb-2 relative z-10">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-success/12 border border-success/15"><Wallet size={14} className="text-success" /></div>
             <span className="text-[10px] text-muted-foreground font-medium">Receita Mensal</span>
           </div>
           <p className="text-lg font-bold tabular-nums relative z-10">{hideValues ? masked : fmt(data.income)}</p>
           {hasData && !hideValues && (<span className="text-[10px] text-success font-medium flex items-center gap-0.5 relative z-10"><ArrowUpRight size={10} /> Receita registrada</span>)}
+          <InfoPanel expanded={showIncomeInfo} className="relative z-10">
+            Total de entradas no mês: salários, freelances e rendimentos.
+          </InfoPanel>
         </div>
         <div className="card-zelo fade-in-up stagger-2 relative overflow-hidden">
           <div className="absolute -top-4 -right-4 h-12 w-12 rounded-full bg-destructive/8 blur-xl pointer-events-none" />
-          <button onClick={() => setInfoPopup("gasto")} className="absolute top-3 right-3 p-0.5 rounded-lg text-muted-foreground/40 hover:text-muted-foreground active:scale-90 transition-all duration-300">
-            <Info size={11} />
-          </button>
+          <div className="absolute top-2 right-2 z-20">
+            <InfoButton expanded={showExpenseInfo} onToggle={setShowExpenseInfo} size={12} />
+          </div>
           <div className="flex items-center gap-2 mb-2 relative z-10">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-destructive/12 border border-destructive/15"><CreditCard size={14} className="text-destructive" /></div>
             <span className="text-[10px] text-muted-foreground font-medium">Gasto Mensal</span>
           </div>
           <p className="text-lg font-bold tabular-nums relative z-10">{hideValues ? masked : fmt(data.expenses)}</p>
           {hasData && !hideValues && (<span className="text-[10px] text-destructive font-medium flex items-center gap-0.5 relative z-10"><ArrowUpRight size={10} className="rotate-90" /> Despesas registradas</span>)}
+          <InfoPanel expanded={showExpenseInfo} className="relative z-10">
+            Total de despesas no mês: contas, compras e assinaturas.
+          </InfoPanel>
         </div>
       </div>
-
-      {infoPopup && (
-        <InfoPopup
-          title={infoPopup === "receita" ? "Receita Mensal" : infoPopup === "gasto" ? "Gasto Mensal" : "Pode Gastar Hoje"}
-          message={
-            infoPopup === "receita"
-              ? "Total de entradas no mês: salários, freelances e rendimentos."
-              : infoPopup === "gasto"
-              ? "Total de despesas no mês: contas, compras e assinaturas."
-              : `${spendPercent}% do saldo dividido pelos dias restantes do mês.`
-          }
-          onClose={() => setInfoPopup(null)}
-        />
-      )}
 
       {hasData && balanceHistory.length > 1 && (
         <div className="card-zelo fade-in-up stagger-3">

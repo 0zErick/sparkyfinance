@@ -44,10 +44,38 @@ const ImportModal = ({ open, onClose }: ImportModalProps) => {
         body: { text: text.trim() },
       });
       if (error) throw error;
-      const parsed = (resData?.transactions || []).map((t: any) => ({
+      // Filter out irrelevant items: caixinhas, reservas, transferências entre contas próprias,
+      // aplicações/resgates de poupança/CDB, etc. — não devem entrar no extrato do app.
+      const IRRELEVANT_PATTERNS = [
+        /caixinh/i,
+        /reserv/i,
+        /poupan[cç]a/i,
+        /aplica[cç][aã]o/i,
+        /resgate/i,
+        /cdb/i,
+        /rendimento autom/i,
+        /transfer[eê]ncia entre contas/i,
+        /transf\.? entre contas/i,
+        /entre contas pr[oó]prias/i,
+        /investiment/i,
+        /meta:/i,
+        /objetivo:/i,
+      ];
+      const isIrrelevant = (desc: string) => IRRELEVANT_PATTERNS.some(rx => rx.test(desc || ""));
+      const raw = resData?.transactions || [];
+      const filtered = raw.filter((t: any) => !isIrrelevant(t.description));
+      const skipped = raw.length - filtered.length;
+      const parsed = filtered.map((t: any) => ({
         ...t, id: crypto.randomUUID(), selected: true,
       }));
-      if (parsed.length === 0) { toast.error("Nenhuma transação encontrada no texto"); setLoading(false); return; }
+      if (parsed.length === 0) {
+        toast.error(skipped > 0 ? "Apenas movimentações irrelevantes (caixinhas/reservas) foram detectadas." : "Nenhuma transação encontrada no texto");
+        setLoading(false);
+        return;
+      }
+      if (skipped > 0) {
+        toast.success(`${skipped} movimentação(ões) irrelevante(s) (caixinhas/reservas) foram ignoradas.`);
+      }
       setTransactions(parsed);
       setStep("review");
     } catch (e: any) {
@@ -98,7 +126,7 @@ const ImportModal = ({ open, onClose }: ImportModalProps) => {
       transactions: [...newTxs, ...data.transactions],
     });
 
-    toast.success(`Sucesso! ${selected.length} transações foram integradas ao seu Spark e o saldo foi atualizado.`);
+    toast.success(`Sucesso! ${selected.length} transações foram integradas ao seu Sparky e o saldo foi atualizado.`);
     handleClose();
   };
 

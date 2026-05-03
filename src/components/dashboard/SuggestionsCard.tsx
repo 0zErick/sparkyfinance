@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { Landmark, MessageCircle, ArrowLeft, Lightbulb, TrendingDown, PiggyBank, Target, Sparkles, Zap, BookOpen, Shield, Heart } from "lucide-react";
+import { Landmark, MessageCircle, ArrowLeft, Lightbulb, TrendingDown, PiggyBank, Target, Sparkles, Zap, BookOpen, Shield, Heart, X } from "lucide-react";
 import { useFinancialData, fmt } from "@/hooks/useFinancialData";
 
 const ALL_TIPS = [
@@ -19,6 +19,11 @@ const SuggestionsCard = () => {
   const [syncPopup, setSyncPopup] = useState(false);
   const [whatsappPopup, setWhatsappPopup] = useState(false);
   const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * ALL_TIPS.length));
+  const [dismissed, setDismissed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const until = Number(localStorage.getItem("sparky-tips-dismissed-until") || 0);
+    return until > Date.now();
+  });
   const { data, available, dailyBudget, daysLeft } = useFinancialData();
 
   const hasFinancialData = data.balance > 0 || data.income > 0 || data.expenses > 0;
@@ -45,9 +50,26 @@ const SuggestionsCard = () => {
     return tips.slice(0, 2);
   }, [hasFinancialData, data, available, dailyBudget, daysLeft, tipIndex]);
 
+  const handleDismiss = () => {
+    // Hide for 24h
+    localStorage.setItem("sparky-tips-dismissed-until", String(Date.now() + 24 * 60 * 60 * 1000));
+    setDismissed(true);
+  };
+
+  if (dismissed) return null;
+
   return (
-    <div className="space-y-2">
-      <p className="text-label px-1">DICAS INTELIGENTES</p>
+    <div className="space-y-2 relative">
+      <div className="flex items-center justify-between px-1">
+        <p className="text-label">DICAS INTELIGENTES</p>
+        <button
+          onClick={handleDismiss}
+          aria-label="Ocultar dicas"
+          className="rounded-full p-1 text-muted-foreground/70 hover:text-foreground hover:bg-muted/40 active:scale-90 transition-all duration-200"
+        >
+          <X size={13} />
+        </button>
+      </div>
 
       {dynamicTips.map((tip, i) => {
         const Icon = tip.icon;
@@ -117,7 +139,7 @@ const SuggestionsCard = () => {
                 <MessageCircle size={28} className="text-muted-foreground" />
               </div>
               <h3 className="text-base font-bold">Em desenvolvimento</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">O assistente no WhatsApp ainda não está disponível. Em breve teremos novidades! Por enquanto, use o Spark IA dentro do app.</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">O assistente no WhatsApp ainda não está disponível. Em breve teremos novidades! Por enquanto, use o Sparky IA dentro do app.</p>
               <button onClick={() => setWhatsappPopup(false)} className="w-full rounded-2xl border border-border py-3 text-xs font-medium text-muted-foreground active:scale-[0.98] transition-all duration-300 mt-1">
                 <ArrowLeft size={12} className="inline mr-1" /> Voltar
               </button>

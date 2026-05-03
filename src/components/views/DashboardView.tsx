@@ -76,10 +76,10 @@ const DashboardView = () => {
         <h1 className="text-xl sm:text-2xl font-display font-bold">Resumo De Hoje</h1>
         <p className="text-xs sm:text-sm text-muted-foreground">{dateStr}</p>
       </div>
+      <SuggestionsCard />
       <BalanceCard onVisibilityChange={handleVisibilityChange} />
       <SpendingOverview hideValues={hideValues} />
       <BiggestExpenseCard hideValues={hideValues} />
-      <SuggestionsCard />
     </div>
   );
 };

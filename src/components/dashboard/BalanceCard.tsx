@@ -55,17 +55,15 @@ const BalanceCard = ({ onVisibilityChange }: BalanceCardProps) => {
       <div className="absolute -bottom-10 -left-10 h-24 w-24 rounded-full bg-primary/8 blur-2xl pointer-events-none" />
 
       <div className="flex items-center justify-between mb-1 relative z-10">
+        <span className="text-label">Saldo Total</span>
         <div className="flex items-center gap-1">
-          <span className="text-label">Saldo Total</span>
-          <InfoButton expanded={showInfo} onToggle={setShowInfo} />
-        </div>
-        <div className="flex items-center gap-1.5">
           <button onClick={() => setEditing(!editing)} className="rounded-xl p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 active:scale-95 transition-all duration-300" title="Ajustar saldo">
             <Pencil size={13} />
           </button>
           <button onClick={() => setVisible(!visible)} className="rounded-xl p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 active:scale-95 transition-all duration-300">
             {visible ? <Eye size={15} /> : <EyeOff size={15} />}
           </button>
+          <InfoButton expanded={showInfo} onToggle={setShowInfo} />
         </div>
       </div>
 

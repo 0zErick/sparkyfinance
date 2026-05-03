@@ -85,7 +85,7 @@ const Header = ({ hidden = false }: HeaderProps) => {
         <button
           onClick={handleCatClick}
           className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 glow-ring active:scale-90 transition-all duration-300"
-          aria-label="Spark"
+          aria-label="Sparky"
         >
           <SparkBadge />
         </button>

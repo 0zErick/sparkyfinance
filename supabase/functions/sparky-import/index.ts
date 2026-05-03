@@ -35,6 +35,12 @@ REGRAS RIGOROSAS:
 - type: "in" para crédito/receita/PIX recebido/depósito, "out" para débito/despesa/pagamento/saque
 - Se houver ambiguidade no tipo (crédito vs débito), analise o contexto: "recebido", "depósito", "salário" = "in"; "pagamento", "compra", "débito" = "out"
 - Ignore linhas de saldo, cabeçalhos, rodapés e informações não-transacionais
+- IGNORE COMPLETAMENTE movimentações internas que não afetam o patrimônio real do usuário, como:
+  • Depósitos/retiradas em "caixinhas", "reservas", "objetivos" ou "metas" (ex: "Erick colocou R$ 60 na caixinha Emergência" / "Erick tirou R$ 60 da caixinha Emergência")
+  • Transferências entre contas próprias do mesmo usuário
+  • Aplicações ou resgates de poupança / CDB / investimentos
+  • Rendimentos automáticos de poupança/caixinha
+  Essas movimentações NÃO devem aparecer no extrato.
 - Cada transação DEVE ter todos os campos preenchidos
 - confidence: número de 0 a 1 indicando confiança na extração geral`
 
