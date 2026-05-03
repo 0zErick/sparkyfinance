@@ -26,16 +26,16 @@ const RankingCard = () => {
             <Crown size={18} className="text-warning" />
           </div>
           <div>
-            <div className="flex items-center gap-0.5">
-              <p className="text-sm font-semibold">Ranking</p>
-              <InfoButton expanded={showInfo} onToggle={setShowInfo} />
-            </div>
+            <p className="text-sm font-semibold">Ranking</p>
             <p className="text-xs text-muted-foreground">{profile.name} • {roleLabel}</p>
           </div>
         </div>
-        <div className="flex items-center gap-1.5 rounded-full bg-warning/15 px-2.5 py-1">
-          <TrendingUp size={12} className="text-warning" />
-          <span className="text-xs font-bold text-warning tabular-nums">{currentPoints} pts</span>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 rounded-full bg-warning/15 px-2.5 py-1">
+            <TrendingUp size={12} className="text-warning" />
+            <span className="text-xs font-bold text-warning tabular-nums">{currentPoints} pts</span>
+          </div>
+          <InfoButton expanded={showInfo} onToggle={setShowInfo} />
         </div>
       </div>
 
