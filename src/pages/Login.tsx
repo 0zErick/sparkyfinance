@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { syncLocalDataOwner } from "@/lib/userLocalData";
+import { isSessionRemembered, isSessionExpired, markSessionRemembered, clearRememberedSession } from "@/lib/sessionTimer";
 
 const keepAliveCheck = async (manual = false) => {
   try {
@@ -16,16 +17,8 @@ const keepAliveCheck = async (manual = false) => {
   }
 };
 
-const CatLogo = () => (
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 6l2 6" />
-    <path d="M20 6l-2 6" />
-    <circle cx="12" cy="14" r="7" />
-    <circle cx="9.5" cy="13" r="0.8" fill="hsl(var(--primary))" />
-    <circle cx="14.5" cy="13" r="0.8" fill="hsl(var(--primary))" />
-    <path d="M12 15.5l-0.8 0.5h1.6L12 15.5z" fill="hsl(var(--primary))" />
-    <path d="M6 14h2.5M15.5 14H18M6 16h2.5M15.5 16H18" strokeWidth="1" />
-  </svg>
+const SparkBadge = () => (
+  <span className="font-display font-extrabold text-4xl text-primary leading-none select-none">S</span>
 );
 
 const Login = () => {
@@ -39,13 +32,27 @@ const Login = () => {
 
   useEffect(() => {
     if (localStorage.getItem("sparky-demo-mode") === "true") return;
+
+    // Se sessão lembrada expirou (>24h), força signOut e exige novo login
+    if (isSessionExpired()) {
+      clearRememberedSession();
+      supabase.auth.signOut().catch(() => {});
+      return;
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (localStorage.getItem("sparky-demo-mode") === "true") return;
-      if (session?.user) { syncLocalDataOwner(session.user.id); navigate("/"); }
+      if (session?.user && isSessionRemembered()) {
+        syncLocalDataOwner(session.user.id);
+        navigate("/");
+      }
     });
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (localStorage.getItem("sparky-demo-mode") === "true") return;
-      if (session?.user) { syncLocalDataOwner(session.user.id); navigate("/"); }
+      if (session?.user && isSessionRemembered()) {
+        syncLocalDataOwner(session.user.id);
+        navigate("/");
+      }
     });
     return () => subscription.unsubscribe();
   }, [navigate]);
@@ -87,6 +94,7 @@ const Login = () => {
       } else if (data.user) {
         localStorage.removeItem("sparky-demo-mode");
         syncLocalDataOwner(data.user.id);
+        markSessionRemembered();
         navigate("/");
       }
     } catch (err: any) {
@@ -113,7 +121,7 @@ const Login = () => {
           onClick={handleLogoTap}
           className="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 border border-primary/20 glow-ring active:scale-95 transition-all duration-300 select-none"
         >
-          <CatLogo />
+          <SparkBadge />
         </button>
         <span className="text-3xl font-display font-extrabold tracking-tight">SPARKY</span>
         <p className="text-sm text-muted-foreground">Seu controle financeiro inteligente</p>

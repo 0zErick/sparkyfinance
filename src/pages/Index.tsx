@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import TabBar from "@/components/layout/TabBar";
 import { syncLocalDataOwner } from "@/lib/userLocalData";
+import { isSessionExpired, clearRememberedSession } from "@/lib/sessionTimer";
 import GlobalNotificationPopup from "@/components/layout/GlobalNotificationPopup";
 import { Settings, Timer, Eye, X } from "lucide-react";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
@@ -96,6 +97,14 @@ const Index = () => {
     const isDemo = localStorage.getItem("sparky-demo-mode") === "true";
     if (isDemo) {
       markReady();
+      return;
+    }
+
+    // Sessão lembrada expirou (>24h sem novo login) → força logout e volta para /login
+    if (isSessionExpired()) {
+      clearRememberedSession();
+      supabase.auth.signOut().catch(() => {});
+      navigate("/login");
       return;
     }
 
