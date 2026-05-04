@@ -17,16 +17,8 @@ const keepAliveCheck = async (manual = false) => {
   }
 };
 
-const CatLogo = () => (
-  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="hsl(var(--primary))" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 6l2 6" />
-    <path d="M20 6l-2 6" />
-    <circle cx="12" cy="14" r="7" />
-    <circle cx="9.5" cy="13" r="0.8" fill="hsl(var(--primary))" />
-    <circle cx="14.5" cy="13" r="0.8" fill="hsl(var(--primary))" />
-    <path d="M12 15.5l-0.8 0.5h1.6L12 15.5z" fill="hsl(var(--primary))" />
-    <path d="M6 14h2.5M15.5 14H18M6 16h2.5M15.5 16H18" strokeWidth="1" />
-  </svg>
+const SparkBadge = () => (
+  <span className="font-display font-extrabold text-4xl text-primary leading-none select-none">S</span>
 );
 
 const Login = () => {
