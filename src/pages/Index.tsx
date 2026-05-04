@@ -100,6 +100,14 @@ const Index = () => {
       return;
     }
 
+    // Sessão lembrada expirou (>24h sem novo login) → força logout e volta para /login
+    if (isSessionExpired()) {
+      clearRememberedSession();
+      supabase.auth.signOut().catch(() => {});
+      navigate("/login");
+      return;
+    }
+
     const checkBanStatus = async (session: any) => {
       if (!session?.user) return false;
       try {
