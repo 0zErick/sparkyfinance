@@ -40,13 +40,27 @@ const Login = () => {
 
   useEffect(() => {
     if (localStorage.getItem("sparky-demo-mode") === "true") return;
+
+    // Se sessão lembrada expirou (>24h), força signOut e exige novo login
+    if (isSessionExpired()) {
+      clearRememberedSession();
+      supabase.auth.signOut().catch(() => {});
+      return;
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (localStorage.getItem("sparky-demo-mode") === "true") return;
-      if (session?.user) { syncLocalDataOwner(session.user.id); navigate("/"); }
+      if (session?.user && isSessionRemembered()) {
+        syncLocalDataOwner(session.user.id);
+        navigate("/");
+      }
     });
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (localStorage.getItem("sparky-demo-mode") === "true") return;
-      if (session?.user) { syncLocalDataOwner(session.user.id); navigate("/"); }
+      if (session?.user && isSessionRemembered()) {
+        syncLocalDataOwner(session.user.id);
+        navigate("/");
+      }
     });
     return () => subscription.unsubscribe();
   }, [navigate]);
