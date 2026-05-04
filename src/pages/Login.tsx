@@ -121,7 +121,7 @@ const Login = () => {
           onClick={handleLogoTap}
           className="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 border border-primary/20 glow-ring active:scale-95 transition-all duration-300 select-none"
         >
-          <CatLogo />
+          <SparkBadge />
         </button>
         <span className="text-3xl font-display font-extrabold tracking-tight">SPARKY</span>
         <p className="text-sm text-muted-foreground">Seu controle financeiro inteligente</p>
