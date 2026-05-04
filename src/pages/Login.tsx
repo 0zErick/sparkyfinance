@@ -102,6 +102,7 @@ const Login = () => {
       } else if (data.user) {
         localStorage.removeItem("sparky-demo-mode");
         syncLocalDataOwner(data.user.id);
+        markSessionRemembered();
         navigate("/");
       }
     } catch (err: any) {
