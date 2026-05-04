@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { syncLocalDataOwner } from "@/lib/userLocalData";
+import { isSessionRemembered, isSessionExpired, markSessionRemembered, clearRememberedSession } from "@/lib/sessionTimer";
 
 const keepAliveCheck = async (manual = false) => {
   try {
