@@ -21,16 +21,6 @@ const BalanceHero = ({ onVisibilityChange }: BalanceHeroProps) => {
   const [adjustDesc, setAdjustDesc] = useState("");
 
   const { available, data, addTransaction } = useFinancialData();
-  const { profile } = useProfile();
-
-  useEffect(() => {
-    onVisibilityChange?.(visible);
-  }, [visible, onVisibilityChange]);
-
-  const hour = new Date().getHours();
-  const greeting =
-    hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
-  const firstName = (profile?.name || "Usuário").split(" ")[0];
 
   const pctChange = data.income > 0 ? ((data.income - data.expenses) / data.income) * 100 : 0;
   const isPositive = pctChange >= 0;
