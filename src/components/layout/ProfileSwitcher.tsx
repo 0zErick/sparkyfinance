@@ -5,8 +5,12 @@ import "react-image-crop/dist/ReactCrop.css";
 import {
   ChevronDown, Check, UserPlus, User, Trophy, Crown, Star,
   Settings, Users, LogOut, Gift, Camera, Mail, Calendar, X,
-  Image, Sparkles, Clock, Trash2, Shield, MessageSquare, Send
+  Image, Sparkles, Clock, Trash2, Shield, MessageSquare, Send, Menu
 } from "lucide-react";
+
+interface ProfileSwitcherProps {
+  trigger?: "avatar" | "hamburger";
+}
 import AdminPanel from "@/components/admin/AdminPanel";
 import { useDockVisibility } from "@/hooks/useDockVisibility";
 import { cn } from "@/lib/utils";
