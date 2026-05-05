@@ -1,17 +1,7 @@
 import { useState } from "react";
 import { useFinancialData, fmt } from "@/hooks/useFinancialData";
 import { InfoButton, InfoPanel } from "@/components/InfoButton";
-
-const VaultIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="shrink-0">
-    <rect x="2" y="4" width="20" height="16" rx="3" stroke="hsl(var(--primary))" strokeWidth="1.8" />
-    <rect x="2" y="4" width="20" height="16" rx="3" fill="hsl(var(--primary))" opacity="0.08" />
-    <circle cx="12" cy="12" r="4" stroke="hsl(var(--primary))" strokeWidth="1.5" />
-    <circle cx="12" cy="12" r="1.5" fill="hsl(var(--primary))" opacity="0.5" />
-    <line x1="16" y1="12" x2="18" y2="12" stroke="hsl(var(--primary))" strokeWidth="1.5" strokeLinecap="round" />
-    <rect x="20" y="9" width="2" height="6" rx="1" fill="hsl(var(--primary))" opacity="0.3" />
-  </svg>
-);
+import MerchantLogo from "@/components/MerchantLogo";
 
 interface BiggestExpenseCardProps {
   hideValues?: boolean;
@@ -43,9 +33,7 @@ const BiggestExpenseCard = ({ hideValues = false }: BiggestExpenseCardProps) => 
         <InfoButton expanded={showInfo} onToggle={setShowInfo} />
       </div>
       <div className="flex items-center gap-3 relative z-10 pr-7">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/8 border border-primary/12">
-          <VaultIcon />
-        </div>
+        <MerchantLogo name={`${biggest.description} ${biggest.category ?? ""}`} size={44} rounded="rounded-2xl" />
         <div className="flex-1 min-w-0">
           <p className="text-label">MAIOR DESPESA</p>
           <p className="text-sm font-display font-bold truncate mt-0.5">
