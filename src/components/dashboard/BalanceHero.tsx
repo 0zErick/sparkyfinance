@@ -90,10 +90,6 @@ const BalanceHero = ({ onVisibilityChange }: BalanceHeroProps) => {
         </div>
       </div>
 
-      {/* Balance label */}
-      <p className="relative z-10 text-[11px] text-muted-foreground tracking-wide mb-1">
-        Seu Saldo
-      </p>
 
       {/* Hero amount — enorme, estilo referência */}
       <div className="relative z-10 flex items-end gap-2">
