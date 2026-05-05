@@ -1050,7 +1050,7 @@ const ProfileSwitcher = ({ trigger = "avatar" }: ProfileSwitcherProps = {}) => {
       {open && !isLoading && (
         <>
           <div className="fixed inset-0 z-40" onClick={closeAll} />
-          <div className="absolute right-0 top-11 z-50 w-72 rounded-2xl border border-border bg-card p-3 shadow-xl shadow-black/30 fade-in-up" onClick={(event) => event.stopPropagation()}>
+          <div className={cn("absolute top-12 z-50 w-72 rounded-2xl border border-border bg-card p-3 shadow-xl shadow-black/30 fade-in-up", trigger === "hamburger" ? "left-0" : "right-0")} onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center gap-3 mb-3">
               {renderAvatar(current, "h-11 w-11", "text-sm")}
               <div className="flex-1 min-w-0">
