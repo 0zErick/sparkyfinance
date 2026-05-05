@@ -1032,13 +1032,19 @@ const ProfileSwitcher = ({ trigger = "avatar" }: ProfileSwitcherProps = {}) => {
 
   return (
     <div className="relative">
-      <button onClick={() => setOpen(!open)} className="flex items-center gap-1.5 active:scale-95 transition-transform">
-        {isLoading ? (
+      <button onClick={() => setOpen(!open)} className="flex items-center gap-1.5 active:scale-95 transition-transform" aria-label={trigger === "hamburger" ? "Abrir menu" : "Abrir perfil"}>
+        {trigger === "hamburger" ? (
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted/50 border border-border/60 hover:bg-muted/80 transition-colors">
+            <Menu size={18} className="text-foreground" />
+          </div>
+        ) : isLoading ? (
           <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
         ) : (
-          renderAvatar(current!, "h-8 w-8", "text-xs")
+          <>
+            {renderAvatar(current!, "h-8 w-8", "text-xs")}
+            <ChevronDown size={14} className={cn("text-muted-foreground transition-transform", open && "rotate-180")} />
+          </>
         )}
-        <ChevronDown size={14} className={cn("text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
 
       {open && !isLoading && (
