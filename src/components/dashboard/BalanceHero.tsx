@@ -2,7 +2,6 @@ import { Eye, EyeOff, Pencil, Plus, Minus, TrendingUp, TrendingDown } from "luci
 import { useState, useEffect } from "react";
 import { InfoButton, InfoPanel } from "@/components/InfoButton";
 import { useFinancialData, fmt } from "@/hooks/useFinancialData";
-import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 
 interface BalanceHeroProps {
