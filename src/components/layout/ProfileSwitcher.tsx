@@ -49,7 +49,7 @@ const inspirationalQuotes = [
 
 type SubView = null | "profile" | "prizes" | "members" | "ranking" | "admin" | "support";
 
-const ProfileSwitcher = () => {
+const ProfileSwitcher = ({ trigger = "avatar" }: ProfileSwitcherProps = {}) => {
   const navigate = useNavigate();
   const { profile: dbProfile, isDemo } = useProfile();
   const { members: groupMembers, isLeader: isGroupLeader } = useGroupMembers();
