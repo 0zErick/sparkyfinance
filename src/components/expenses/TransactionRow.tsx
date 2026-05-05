@@ -1,10 +1,11 @@
 import { memo, useState, useCallback } from "react";
-import { ArrowDownLeft, ArrowUpRight, PiggyBank, Pencil, Trash2, Check, X } from "lucide-react";
+import { ArrowUpRight, PiggyBank, Pencil, Trash2, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmt } from "@/hooks/useFinancialData";
 import { isGoalDepositTransaction } from "@/lib/financialCalculations";
 import type { Transaction } from "@/hooks/useFinancialQuery";
 import { toast } from "sonner";
+import MerchantLogo from "@/components/MerchantLogo";
 
 const parseBRL = (str: string): number => {
   const clean = str.replace(/[^\d.,]/g, "");
@@ -95,13 +96,17 @@ const TransactionRow = memo(({ transaction: t, onDelete, onUpdate }: Transaction
 
   return (
     <div className="flex items-center gap-3 px-4 py-3">
-      <div className={cn("flex h-8 w-8 items-center justify-center rounded-xl",
-        isIncomeTx ? "bg-success/15" : isGoalTx ? "bg-primary/15" : "bg-destructive/15"
-      )}>
-        {isIncomeTx ? <ArrowUpRight size={14} className="text-success" />
-          : isGoalTx ? <PiggyBank size={14} className="text-primary" />
-          : <ArrowDownLeft size={14} className="text-destructive" />}
-      </div>
+      {isIncomeTx ? (
+        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-success/15">
+          <ArrowUpRight size={14} className="text-success" />
+        </div>
+      ) : isGoalTx ? (
+        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/15">
+          <PiggyBank size={14} className="text-primary" />
+        </div>
+      ) : (
+        <MerchantLogo name={`${t.description} ${t.category ?? ""}`} size={32} rounded="rounded-xl" />
+      )}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{t.description}</p>
         <p className="text-[10px] text-muted-foreground">{t.category}</p>
