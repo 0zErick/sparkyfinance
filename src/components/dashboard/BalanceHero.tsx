@@ -66,11 +66,10 @@ const BalanceHero = ({ onVisibilityChange }: BalanceHeroProps) => {
       <div className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-primary/8 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-20 -left-12 h-40 w-40 rounded-full bg-primary/4 blur-3xl" />
 
-      {/* Top row: greeting + actions */}
+      {/* Top row: label + actions */}
       <div className="relative z-10 flex items-start justify-between mb-3">
         <div className="min-w-0">
-          <p className="text-[11px] text-muted-foreground">{greeting},</p>
-          <p className="text-base font-display font-bold truncate">{firstName}</p>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">Seu Saldo</p>
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <button
