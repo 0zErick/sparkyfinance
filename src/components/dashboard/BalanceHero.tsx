@@ -2,7 +2,6 @@ import { Eye, EyeOff, Pencil, Plus, Minus, TrendingUp, TrendingDown } from "luci
 import { useState, useEffect } from "react";
 import { InfoButton, InfoPanel } from "@/components/InfoButton";
 import { useFinancialData, fmt } from "@/hooks/useFinancialData";
-import { useProfile } from "@/hooks/useProfile";
 import { toast } from "sonner";
 
 interface BalanceHeroProps {
@@ -22,16 +21,10 @@ const BalanceHero = ({ onVisibilityChange }: BalanceHeroProps) => {
   const [adjustDesc, setAdjustDesc] = useState("");
 
   const { available, data, addTransaction } = useFinancialData();
-  const { profile } = useProfile();
 
   useEffect(() => {
     onVisibilityChange?.(visible);
   }, [visible, onVisibilityChange]);
-
-  const hour = new Date().getHours();
-  const greeting =
-    hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
-  const firstName = (profile?.name || "Usuário").split(" ")[0];
 
   const pctChange = data.income > 0 ? ((data.income - data.expenses) / data.income) * 100 : 0;
   const isPositive = pctChange >= 0;
@@ -66,11 +59,10 @@ const BalanceHero = ({ onVisibilityChange }: BalanceHeroProps) => {
       <div className="pointer-events-none absolute -top-16 -right-16 h-44 w-44 rounded-full bg-primary/8 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-20 -left-12 h-40 w-40 rounded-full bg-primary/4 blur-3xl" />
 
-      {/* Top row: greeting + actions */}
+      {/* Top row: label + actions */}
       <div className="relative z-10 flex items-start justify-between mb-3">
         <div className="min-w-0">
-          <p className="text-[11px] text-muted-foreground">{greeting},</p>
-          <p className="text-base font-display font-bold truncate">{firstName}</p>
+          <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">Seu Saldo</p>
         </div>
         <div className="flex items-center gap-1 shrink-0">
           <button
@@ -91,10 +83,6 @@ const BalanceHero = ({ onVisibilityChange }: BalanceHeroProps) => {
         </div>
       </div>
 
-      {/* Balance label */}
-      <p className="relative z-10 text-[11px] text-muted-foreground tracking-wide mb-1">
-        Seu Saldo
-      </p>
 
       {/* Hero amount — enorme, estilo referência */}
       <div className="relative z-10 flex items-end gap-2">

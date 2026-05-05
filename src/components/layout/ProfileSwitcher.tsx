@@ -5,8 +5,12 @@ import "react-image-crop/dist/ReactCrop.css";
 import {
   ChevronDown, Check, UserPlus, User, Trophy, Crown, Star,
   Settings, Users, LogOut, Gift, Camera, Mail, Calendar, X,
-  Image, Sparkles, Clock, Trash2, Shield, MessageSquare, Send
+  Image, Sparkles, Clock, Trash2, Shield, MessageSquare, Send, Menu
 } from "lucide-react";
+
+interface ProfileSwitcherProps {
+  trigger?: "avatar" | "hamburger";
+}
 import AdminPanel from "@/components/admin/AdminPanel";
 import { useDockVisibility } from "@/hooks/useDockVisibility";
 import { cn } from "@/lib/utils";
@@ -45,7 +49,7 @@ const inspirationalQuotes = [
 
 type SubView = null | "profile" | "prizes" | "members" | "ranking" | "admin" | "support";
 
-const ProfileSwitcher = () => {
+const ProfileSwitcher = ({ trigger = "avatar" }: ProfileSwitcherProps = {}) => {
   const navigate = useNavigate();
   const { profile: dbProfile, isDemo } = useProfile();
   const { members: groupMembers, isLeader: isGroupLeader } = useGroupMembers();
@@ -1028,19 +1032,25 @@ const ProfileSwitcher = () => {
 
   return (
     <div className="relative">
-      <button onClick={() => setOpen(!open)} className="flex items-center gap-1.5 active:scale-95 transition-transform">
-        {isLoading ? (
+      <button onClick={() => setOpen(!open)} className="flex items-center gap-1.5 active:scale-95 transition-transform" aria-label={trigger === "hamburger" ? "Abrir menu" : "Abrir perfil"}>
+        {trigger === "hamburger" ? (
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted/50 border border-border/60 hover:bg-muted/80 transition-colors">
+            <Menu size={18} className="text-foreground" />
+          </div>
+        ) : isLoading ? (
           <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
         ) : (
-          renderAvatar(current!, "h-8 w-8", "text-xs")
+          <>
+            {renderAvatar(current!, "h-8 w-8", "text-xs")}
+            <ChevronDown size={14} className={cn("text-muted-foreground transition-transform", open && "rotate-180")} />
+          </>
         )}
-        <ChevronDown size={14} className={cn("text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
 
       {open && !isLoading && (
         <>
           <div className="fixed inset-0 z-40" onClick={closeAll} />
-          <div className="absolute right-0 top-11 z-50 w-72 rounded-2xl border border-border bg-card p-3 shadow-xl shadow-black/30 fade-in-up" onClick={(event) => event.stopPropagation()}>
+          <div className={cn("absolute top-12 z-50 w-72 rounded-2xl border border-border bg-card p-3 shadow-xl shadow-black/30 fade-in-up", trigger === "hamburger" ? "left-0" : "right-0")} onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center gap-3 mb-3">
               {renderAvatar(current, "h-11 w-11", "text-sm")}
               <div className="flex-1 min-w-0">
