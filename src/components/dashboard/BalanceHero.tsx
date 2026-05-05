@@ -22,6 +22,10 @@ const BalanceHero = ({ onVisibilityChange }: BalanceHeroProps) => {
 
   const { available, data, addTransaction } = useFinancialData();
 
+  useEffect(() => {
+    onVisibilityChange?.(visible);
+  }, [visible, onVisibilityChange]);
+
   const pctChange = data.income > 0 ? ((data.income - data.expenses) / data.income) * 100 : 0;
   const isPositive = pctChange >= 0;
 
