@@ -44,14 +44,14 @@ const Login = () => {
       if (localStorage.getItem("sparky-demo-mode") === "true") return;
       if (session?.user && isSessionRemembered()) {
         syncLocalDataOwner(session.user.id);
-        navigate("/");
+        navigate("/", { replace: true });
       }
     });
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (localStorage.getItem("sparky-demo-mode") === "true") return;
       if (session?.user && isSessionRemembered()) {
         syncLocalDataOwner(session.user.id);
-        navigate("/");
+        navigate("/", { replace: true });
       }
     });
     return () => subscription.unsubscribe();
@@ -95,7 +95,7 @@ const Login = () => {
         localStorage.removeItem("sparky-demo-mode");
         syncLocalDataOwner(data.user.id);
         markSessionRemembered();
-        navigate("/");
+        navigate("/", { replace: true });
       }
     } catch (err: any) {
       const msg = err?.message || "";
