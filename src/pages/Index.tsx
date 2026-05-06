@@ -132,10 +132,10 @@ const Index = () => {
         navigate("/login", { replace: true });
       } else if (session?.user) {
         if (!hasRememberedSessionMarker()) markSessionRemembered();
-        checkBanStatus(session).then(async (blocked) => {
-        if (blocked) return;
         syncLocalDataOwner(session.user.id);
         markReady();
+        checkBanStatus(session).then(async (blocked) => {
+        if (blocked) return;
         // Check admin role from profiles table
         const { data: profile } = await supabase.from("profiles").select("role").eq("user_id", session.user.id).single();
         setIsAdmin(profile?.role === "admin");
