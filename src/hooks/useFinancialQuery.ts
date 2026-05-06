@@ -230,7 +230,7 @@ export const useFinancialQuery = () => {
   const addMutation = useMutation({
     mutationFn: async (tx: Omit<Transaction, "id">) => {
       const cached = queryClient.getQueryData<FinancialData>(queryKey)?.transactions ?? [];
-      if (cached.some((transaction) => isSameTransaction(tx, transaction))) {
+      if (cached.some((transaction) => !transaction.id.startsWith("optimistic-") && isSameTransaction(tx, transaction))) {
         throw new Error("duplicate-transaction");
       }
 
@@ -265,10 +265,10 @@ export const useFinancialQuery = () => {
         .eq("amount", tx.amount)
         .eq("type", tx.type)
         .eq("category", tx.category)
-        .maybeSingle();
+        .limit(1);
 
       if (lookupError) throw lookupError;
-      if (existing?.id) throw new Error("duplicate-transaction");
+      if (existing?.[0]?.id) throw new Error("duplicate-transaction");
 
       const { data: inserted, error } = await supabase
         .from("transactions")
