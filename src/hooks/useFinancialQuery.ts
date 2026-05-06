@@ -147,7 +147,7 @@ export const useFinancialQuery = () => {
     const channel = supabase
       .channel("transactions-realtime-query")
       .on("postgres_changes", { event: "*", schema: "public", table: "transactions" }, () => {
-        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+        queryClient.invalidateQueries({ queryKey });
       })
       .subscribe();
 
@@ -165,7 +165,7 @@ export const useFinancialQuery = () => {
   useEffect(() => {
     if (!isDemo()) return;
 
-    const handler = () => queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    const handler = () => queryClient.invalidateQueries({ queryKey });
     window.addEventListener("storage", handler);
     window.addEventListener("sparky-data-cleared", handler);
 
@@ -231,7 +231,7 @@ export const useFinancialQuery = () => {
     mutationFn: async (tx: Omit<Transaction, "id">) => {
       if (isDemo()) {
         const newTx = { ...tx, id: crypto.randomUUID() };
-        queryClient.setQueryData<FinancialData>(QUERY_KEY, (old) => {
+        queryClient.setQueryData<FinancialData>(queryKey, (old) => {
           if (!old) return { ...defaultData, transactions: [newTx] };
           const newIncome = tx.type === "income" ? old.income + tx.amount : old.income;
           const newExpenses = tx.type === "expense" ? old.expenses + tx.amount : old.expenses;
@@ -270,10 +270,10 @@ export const useFinancialQuery = () => {
     },
     onMutate: async (tx) => {
       if (isDemo()) return;
-      await queryClient.cancelQueries({ queryKey: QUERY_KEY });
-      const previous = queryClient.getQueryData<FinancialData>(QUERY_KEY);
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData<FinancialData>(queryKey);
       const optimisticTx = { ...tx, id: `optimistic-${Date.now()}` };
-      queryClient.setQueryData<FinancialData>(QUERY_KEY, (old) => {
+      queryClient.setQueryData<FinancialData>(queryKey, (old) => {
         if (!old) return { ...defaultData, transactions: [optimisticTx] };
         const newIncome = tx.type === "income" ? old.income + tx.amount : old.income;
         const newExpenses = tx.type === "expense" ? old.expenses + tx.amount : old.expenses;
@@ -289,12 +289,12 @@ export const useFinancialQuery = () => {
     },
     onError: (_err, _tx, context) => {
       if (!isDemo() && context?.previous) {
-        queryClient.setQueryData(QUERY_KEY, context.previous);
+        queryClient.setQueryData(queryKey, context.previous);
       }
     },
     onSettled: () => {
       if (!isDemo()) {
-        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+        queryClient.invalidateQueries({ queryKey });
       }
     },
   });
@@ -302,7 +302,7 @@ export const useFinancialQuery = () => {
   const updateMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Transaction> }) => {
       if (isDemo()) {
-        queryClient.setQueryData<FinancialData>(QUERY_KEY, (old) => {
+        queryClient.setQueryData<FinancialData>(queryKey, (old) => {
           if (!old) return old!;
           const oldTx = old.transactions.find((transaction) => transaction.id === id);
           if (!oldTx) return old;
@@ -340,9 +340,9 @@ export const useFinancialQuery = () => {
     },
     onMutate: async ({ id, updates }) => {
       if (isDemo()) return;
-      await queryClient.cancelQueries({ queryKey: QUERY_KEY });
-      const previous = queryClient.getQueryData<FinancialData>(QUERY_KEY);
-      queryClient.setQueryData<FinancialData>(QUERY_KEY, (old) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData<FinancialData>(queryKey);
+      queryClient.setQueryData<FinancialData>(queryKey, (old) => {
         if (!old) return old!;
         const oldTx = old.transactions.find((t) => t.id === id);
         if (!oldTx) return old;
@@ -361,12 +361,12 @@ export const useFinancialQuery = () => {
     },
     onError: (_err, _vars, context) => {
       if (!isDemo() && context?.previous) {
-        queryClient.setQueryData(QUERY_KEY, context.previous);
+        queryClient.setQueryData(queryKey, context.previous);
       }
     },
     onSettled: () => {
       if (!isDemo()) {
-        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+        queryClient.invalidateQueries({ queryKey });
       }
     },
   });
@@ -374,7 +374,7 @@ export const useFinancialQuery = () => {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       if (isDemo()) {
-        queryClient.setQueryData<FinancialData>(QUERY_KEY, (old) => {
+        queryClient.setQueryData<FinancialData>(queryKey, (old) => {
           if (!old) return old!;
           const tx = old.transactions.find((transaction) => transaction.id === id);
           if (!tx) return old;
@@ -397,9 +397,9 @@ export const useFinancialQuery = () => {
     },
     onMutate: async (id) => {
       if (isDemo()) return;
-      await queryClient.cancelQueries({ queryKey: QUERY_KEY });
-      const previous = queryClient.getQueryData<FinancialData>(QUERY_KEY);
-      queryClient.setQueryData<FinancialData>(QUERY_KEY, (old) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData<FinancialData>(queryKey);
+      queryClient.setQueryData<FinancialData>(queryKey, (old) => {
         if (!old) return old!;
         const tx = old.transactions.find((t) => t.id === id);
         if (!tx) return old;
@@ -412,12 +412,12 @@ export const useFinancialQuery = () => {
     },
     onError: (_err, _id, context) => {
       if (!isDemo() && context?.previous) {
-        queryClient.setQueryData(QUERY_KEY, context.previous);
+        queryClient.setQueryData(queryKey, context.previous);
       }
     },
     onSettled: () => {
       if (!isDemo()) {
-        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+        queryClient.invalidateQueries({ queryKey });
       }
     },
   });
@@ -441,7 +441,7 @@ export const useFinancialQuery = () => {
   const updateData = useCallback(
     async (partial: Partial<FinancialData>) => {
       if (isDemo()) {
-        queryClient.setQueryData<FinancialData>(QUERY_KEY, (old) => ({
+        queryClient.setQueryData<FinancialData>(queryKey, (old) => ({
           ...(old ?? defaultData),
           ...partial,
         }));
@@ -476,14 +476,14 @@ export const useFinancialQuery = () => {
         await supabase.from("transactions").delete().eq("id", transaction.id);
       }
 
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey });
     },
     [data.transactions, queryClient],
   );
 
   const clearAll = useCallback(async () => {
     if (isDemo()) {
-      queryClient.setQueryData<FinancialData>(QUERY_KEY, { ...defaultData });
+      queryClient.setQueryData<FinancialData>(queryKey, { ...defaultData });
       const keys = [
         "sparky-balance",
         "sparky-transactions",
@@ -516,11 +516,11 @@ export const useFinancialQuery = () => {
     if (!session?.user) return;
 
     await supabase.from("transactions").delete().eq("user_id", session.user.id);
-    queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    queryClient.invalidateQueries({ queryKey });
   }, [queryClient]);
 
   const refetch = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    queryClient.invalidateQueries({ queryKey });
   }, [queryClient]);
 
   return {
