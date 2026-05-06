@@ -31,6 +31,14 @@ export interface FinancialData {
 const QUERY_KEY = ["financial-data"];
 const STORAGE_KEY = "sparky-financial-data";
 const isDemo = () => localStorage.getItem("sparky-demo-mode") === "true";
+const getActiveDataOwner = () => isDemo() ? "demo" : localStorage.getItem("sparky-data-owner") || "auth";
+const isSameTransaction = (a: Omit<Transaction, "id">, b: Transaction) =>
+  a.date === b.date &&
+  a.description.trim().toLowerCase() === b.description.trim().toLowerCase() &&
+  a.type === b.type &&
+  a.category === b.category &&
+  Math.abs(a.amount - b.amount) < 0.01 &&
+  (a.cardId || "") === (b.cardId || "");
 
 const defaultData: FinancialData = {
   balance: 0,
@@ -97,9 +105,10 @@ export const useFinancialQuery = () => {
   const queryClient = useQueryClient();
   const billingSnapshot = useBillingSnapshot();
   const todayKey = new Date().toISOString().slice(0, 10);
+  const queryKey = useMemo(() => [...QUERY_KEY, getActiveDataOwner()], []);
 
   const queryResult = useQuery({
-    queryKey: QUERY_KEY,
+    queryKey,
     queryFn: fetchFinancialData,
     placeholderData: defaultData,
   });
