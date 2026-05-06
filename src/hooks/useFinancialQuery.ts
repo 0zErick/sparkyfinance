@@ -229,6 +229,11 @@ export const useFinancialQuery = () => {
 
   const addMutation = useMutation({
     mutationFn: async (tx: Omit<Transaction, "id">) => {
+      const cached = queryClient.getQueryData<FinancialData>(queryKey)?.transactions ?? [];
+      if (cached.some((transaction) => isSameTransaction(tx, transaction))) {
+        throw new Error("duplicate-transaction");
+      }
+
       if (isDemo()) {
         const newTx = { ...tx, id: crypto.randomUUID() };
         queryClient.setQueryData<FinancialData>(queryKey, (old) => {
@@ -251,6 +256,20 @@ export const useFinancialQuery = () => {
       } = await supabase.auth.getSession();
       if (!session?.user) throw new Error("Not authenticated");
 
+      const { data: existing, error: lookupError } = await supabase
+        .from("transactions")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .eq("date", tx.date)
+        .eq("description", tx.description)
+        .eq("amount", tx.amount)
+        .eq("type", tx.type)
+        .eq("category", tx.category)
+        .maybeSingle();
+
+      if (lookupError) throw lookupError;
+      if (existing?.id) throw new Error("duplicate-transaction");
+
       const { data: inserted, error } = await supabase
         .from("transactions")
         .insert({
@@ -272,6 +291,9 @@ export const useFinancialQuery = () => {
       if (isDemo()) return;
       await queryClient.cancelQueries({ queryKey });
       const previous = queryClient.getQueryData<FinancialData>(queryKey);
+      if (previous?.transactions.some((transaction) => isSameTransaction(tx, transaction))) {
+        throw new Error("duplicate-transaction");
+      }
       const optimisticTx = { ...tx, id: `optimistic-${Date.now()}` };
       queryClient.setQueryData<FinancialData>(queryKey, (old) => {
         if (!old) return { ...defaultData, transactions: [optimisticTx] };
