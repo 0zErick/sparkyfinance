@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import TabBar from "@/components/layout/TabBar";
 import { syncLocalDataOwner } from "@/lib/userLocalData";
-import { isSessionExpired, clearRememberedSession } from "@/lib/sessionTimer";
+import { isSessionExpired, clearRememberedSession, markSessionRemembered, hasRememberedSessionMarker } from "@/lib/sessionTimer";
 import GlobalNotificationPopup from "@/components/layout/GlobalNotificationPopup";
 import { Settings, Timer, Eye, X } from "lucide-react";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
@@ -104,7 +104,7 @@ const Index = () => {
     if (isSessionExpired()) {
       clearRememberedSession();
       supabase.auth.signOut().catch(() => {});
-      navigate("/login");
+      navigate("/login", { replace: true });
       return;
     }
 
@@ -117,7 +117,7 @@ const Index = () => {
         const isSuspended = user.user_metadata?.suspended === true;
         if (isBanned || isSuspended) {
           await supabase.auth.signOut();
-          navigate("/login");
+          navigate("/login", { replace: true });
           return true;
         }
       } catch {
@@ -126,28 +126,35 @@ const Index = () => {
       return false;
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const hydrateSession = (session: any) => {
       if (!session && !localStorage.getItem("sparky-demo-mode")) {
         setAuthChecked(true);
-        navigate("/login");
+        navigate("/login", { replace: true });
       } else if (session?.user) {
-        const blocked = await checkBanStatus(session);
+        if (!hasRememberedSessionMarker()) markSessionRemembered();
+        checkBanStatus(session).then(async (blocked) => {
         if (blocked) return;
         syncLocalDataOwner(session.user.id);
         markReady();
         // Check admin role from profiles table
         const { data: profile } = await supabase.from("profiles").select("role").eq("user_id", session.user.id).single();
         setIsAdmin(profile?.role === "admin");
+        });
       }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      hydrateSession(session);
     });
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session && !localStorage.getItem("sparky-demo-mode")) {
         setAuthChecked(true);
-        navigate("/login");
+        navigate("/login", { replace: true });
       } else if (session?.user) {
         const blocked = await checkBanStatus(session);
         if (blocked) return;
+        if (!hasRememberedSessionMarker()) markSessionRemembered();
         syncLocalDataOwner(session.user.id);
         markReady();
         const { data: profile } = await supabase.from("profiles").select("role").eq("user_id", session.user.id).single();
@@ -161,7 +168,7 @@ const Index = () => {
     const safetyTimer = setTimeout(() => {
       if (!readyRef.current) {
         setAuthChecked(true);
-        navigate("/login");
+        navigate("/login", { replace: true });
       }
     }, 5000);
 
