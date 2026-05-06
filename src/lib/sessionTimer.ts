@@ -6,7 +6,10 @@ const KEY = "sparky-session-expires-at";
 const LAST_LOGIN_DAY_KEY = "sparky-last-login-day";
 const TWENTY_FOUR_H = 24 * 60 * 60 * 1000;
 
-const todayKey = () => new Date().toISOString().slice(0, 10);
+const todayKey = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+};
 
 export const markSessionRemembered = () => {
   try {
