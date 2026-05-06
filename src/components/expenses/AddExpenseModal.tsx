@@ -56,6 +56,7 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
   const [expMonth, setExpMonth] = useState(String(now.getMonth()));
   const [expYear, setExpYear] = useState(String(now.getFullYear()));
   const [scheduled, setScheduled] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const { data, addTransaction } = useFinancialData();
 
@@ -76,9 +77,11 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
   const finalCategory = isOthers && customCategory.trim() ? customCategory.trim() : selectedCategory || "Outros";
 
   const handleSave = async () => {
+    if (saving) return;
     if (!name.trim()) { toast.error("Preencha o nome"); return; }
     const numValue = parseBRLInput(value);
     if (numValue <= 0) { toast.error("Informe um valor válido"); return; }
+    setSaving(true);
 
     // If split, divide by number of people
     const finalValue = split ? numValue / splitPeople : numValue;
@@ -139,8 +142,10 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
     setName(""); setValue("R$ 0,00"); setSelectedCategory(null); setCustomCategory(""); setInstallments(1); setSelectedCardId(""); setRecurring(false); setSplit(false); setSplitPeople(2); setScheduled(false);
     setExpDay(String(now.getDate())); setExpMonth(String(now.getMonth())); setExpYear(String(now.getFullYear()));
     onClose();
-    } catch {
-      toast.error("Erro ao salvar. Tente novamente.");
+    } catch (error: any) {
+      toast.error(error?.message === "duplicate-transaction" ? "Este lançamento já foi registrado." : "Erro ao salvar. Tente novamente.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -407,10 +412,11 @@ const AddExpenseModal = ({ open, onClose, type = "expense" }: AddExpenseModalPro
           </div>
         )}
 
-        <button onClick={handleSave}
+        <button onClick={handleSave} disabled={saving}
           className={cn("w-full rounded-xl py-3.5 text-sm font-bold text-primary-foreground transition-all active:scale-[0.98] pulse-glow",
-            scheduled ? "bg-warning" : isIncome ? "bg-success" : isCardCategory ? "bg-purple-600" : "bg-primary")}>
-          {saveLabel}
+            scheduled ? "bg-warning" : isIncome ? "bg-success" : isCardCategory ? "bg-purple-600" : "bg-primary",
+            saving && "opacity-60 pointer-events-none")}>
+          {saving ? "Salvando..." : saveLabel}
         </button>
       </div>
     </div>
