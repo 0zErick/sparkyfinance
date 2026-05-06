@@ -154,7 +154,7 @@ export const useFinancialQuery = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [queryClient, queryKey]);
 
   useEffect(() => {
     if (isDemo() && queryResult.data) {
@@ -173,7 +173,7 @@ export const useFinancialQuery = () => {
       window.removeEventListener("storage", handler);
       window.removeEventListener("sparky-data-cleared", handler);
     };
-  }, [queryClient]);
+  }, [queryClient, queryKey]);
 
   const computed = useMemo(() => {
     const billingOverview = buildBillingOverview(data.transactions, billingSnapshot, stableNow);
@@ -500,7 +500,7 @@ export const useFinancialQuery = () => {
 
       queryClient.invalidateQueries({ queryKey });
     },
-    [data.transactions, queryClient],
+    [data.transactions, queryClient, queryKey],
   );
 
   const clearAll = useCallback(async () => {
@@ -539,11 +539,11 @@ export const useFinancialQuery = () => {
 
     await supabase.from("transactions").delete().eq("user_id", session.user.id);
     queryClient.invalidateQueries({ queryKey });
-  }, [queryClient]);
+  }, [queryClient, queryKey]);
 
   const refetch = useCallback(() => {
     queryClient.invalidateQueries({ queryKey });
-  }, [queryClient]);
+  }, [queryClient, queryKey]);
 
   return {
     data,
