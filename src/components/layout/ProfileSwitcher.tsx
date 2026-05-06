@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
 import { useGroupMembers } from "@/hooks/useGroupMembers";
+import { clearRememberedSession } from "@/lib/sessionTimer";
 import { toast } from "sonner";
 
 interface Prize {
@@ -278,6 +279,7 @@ const ProfileSwitcher = ({ trigger = "avatar" }: ProfileSwitcherProps = {}) => {
     setShowLogoutConfirm(false);
     closeAll();
     localStorage.removeItem("sparky-demo-mode");
+    clearRememberedSession();
     await supabase.auth.signOut();
     navigate("/login");
   };
