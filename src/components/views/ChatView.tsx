@@ -108,19 +108,30 @@ const SUGGESTION_CHIPS = [
   "Análise de categorias",
 ];
 
-const STATUS_PHRASES = [
-  "Analisando seus dados...",
-  "Consultando orçamentos...",
-  "Formulando resposta...",
-  "Processando informações...",
-  "Verificando transações...",
+const COT_STEPS = [
+  { key: "Identificação", label: "Identificando variáveis" },
+  { key: "Análise de Padrões", label: "Cruzando padrões" },
+  { key: "Projeção", label: "Projetando 30/60/90 dias" },
+  { key: "Otimização", label: "Otimizando ações" },
 ];
 
+// Preserve markdown; only strip HTML tags and disallowed dashes
 const sanitizeAssistantText = (text: string) => text
   .replace(/<[^>\n]*(>|$)/g, "")
-  .replace(/\*\*/g, "")
-  .replace(/\*/g, "")
+  .replace(/[—–]/g, ",")
   .replace(/&nbsp;/g, " ");
+
+const detectCompletedSteps = (text: string): number => {
+  // A step is "completed" once the NEXT heading (or end markers) appears
+  const order = ["## Identificação", "## Análise de Padrões", "## Projeção", "## Otimização", "## Conclusão"];
+  let completed = 0;
+  for (let i = 0; i < order.length - 1; i++) {
+    if (text.includes(order[i + 1])) completed = i + 1;
+  }
+  if (text.includes("## Conclusão")) completed = 4;
+  return completed;
+};
+
 
 const ChatView = () => {
   const { data: financialData, available, daysLeft, dailyBudget } = useFinancialQuery();
