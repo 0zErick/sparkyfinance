@@ -16,8 +16,8 @@ const tabs = [
 
 const TopTabs = memo(({ activeTab, onTabChange }: TopTabsProps) => {
   return (
-    <nav className="shrink-0 px-4 pt-3 pb-2">
-      <div className="liquid-dock mx-auto flex w-full max-w-md items-center justify-between gap-1 rounded-2xl p-1.5">
+    <nav className="shrink-0 flex justify-center px-4 pt-2 pb-2">
+      <div className="liquid-dock flex w-full max-w-md items-center justify-center gap-1 rounded-2xl p-1.5">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
