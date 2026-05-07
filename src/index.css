@@ -318,7 +318,7 @@
 }
 
 @keyframes sparky-rgb-fallback {
-  to { background-position: 300% 0; }
+  to { background-position: 400% 0; }
 }
 
 /* Custom scrollbar */
