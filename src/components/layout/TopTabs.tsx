@@ -28,7 +28,7 @@ const TopTabs = memo(({ activeTab, onTabChange }: TopTabsProps) => {
               onClick={() => onTabChange(tab.id)}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 font-display text-sm font-semibold transition-all duration-300 active:scale-95",
+                "flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2.5 font-display text-sm font-semibold transition-all duration-300 active:scale-95",
                 isActive
                   ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
                   : "text-muted-foreground hover:text-foreground"
