@@ -293,7 +293,11 @@ const Index = () => {
         </div>
       )}
 
-      <div data-main-scroll className={`relative flex-1 min-h-0 overflow-x-hidden ${activeTab === 'chat' ? 'overflow-hidden' : 'overflow-y-auto'}`} style={{ overscrollBehavior: 'none', paddingBottom: activeTab === 'chat' ? '0' : 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
+      {activeTab !== 'chat' && (
+        <TopTabs activeTab={activeTab} onTabChange={handleTabChange} />
+      )}
+
+      <div data-main-scroll className={`relative flex-1 min-h-0 overflow-x-hidden ${activeTab === 'chat' ? 'overflow-hidden' : 'overflow-y-auto'}`} style={{ overscrollBehavior: 'none', paddingBottom: activeTab === 'chat' ? '0' : 'calc(96px + env(safe-area-inset-bottom, 0px))' }}>
         <Suspense fallback={
           <div className="space-y-3 px-4 pt-4">
             <div className="h-10 w-40 bg-muted rounded-xl animate-pulse" />
@@ -307,7 +311,9 @@ const Index = () => {
           </div>
         </Suspense>
       </div>
-      {activeTab !== 'chat' && <TabBar activeTab={activeTab} onTabChange={handleTabChange} />}
+      {activeTab !== 'chat' && (
+        <SparkyFAB onClick={() => handleTabChange('chat')} />
+      )}
     </div>
   );
 };
