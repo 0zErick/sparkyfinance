@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import TopTabs from "@/components/layout/TopTabs";
 import SparkyFAB from "@/components/layout/SparkyFAB";
+import Header from "@/components/layout/Header";
 import { syncLocalDataOwner } from "@/lib/userLocalData";
 import { isSessionExpired, clearRememberedSession, markSessionRemembered, hasRememberedSessionMarker } from "@/lib/sessionTimer";
 import GlobalNotificationPopup from "@/components/layout/GlobalNotificationPopup";
