@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Home, Wallet, FileText, ChevronRight } from "lucide-react";
+import { Home, Wallet, Users, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TopTabsProps {
@@ -8,37 +8,39 @@ interface TopTabsProps {
 }
 
 const tabs = [
-  { id: "home", label: "Hoje", icon: Home },
+  { id: "home", label: "Início", icon: Home },
   { id: "expenses", label: "Despesas", icon: Wallet },
+  { id: "members", label: "Membros", icon: Users },
   { id: "docs", label: "Docs", icon: FileText },
 ];
 
 const TopTabs = memo(({ activeTab, onTabChange }: TopTabsProps) => {
   return (
-    <div className="shrink-0 px-4 pt-2 pb-1">
-      <div className="no-scrollbar flex gap-2 overflow-x-auto">
+    <nav className="shrink-0 px-4 pt-3 pb-2">
+      <div className="liquid-dock mx-auto flex w-full max-w-md items-center justify-between gap-1 rounded-2xl p-1.5">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
+              type="button"
               onClick={() => onTabChange(tab.id)}
+              aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-xs font-display font-semibold transition-all duration-300 active:scale-95",
+                "flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 font-display text-sm font-semibold transition-all duration-300 active:scale-95",
                 isActive
-                  ? "border-success/40 bg-success/10 text-success shadow-sm shadow-success/10"
-                  : "border-border/40 bg-card/40 text-muted-foreground hover:text-foreground"
+                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon size={14} strokeWidth={isActive ? 2.4 : 1.8} />
+              <Icon size={16} strokeWidth={isActive ? 2.4 : 2} />
               <span className="tracking-tight">{tab.label}</span>
-              {isActive && <ChevronRight size={12} className="opacity-60" />}
             </button>
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 });
 
