@@ -73,29 +73,8 @@ Data de hoje: ${today} (dia ${dayOfMonth} de ${daysInMonth}).
 
 ${contextBlock}
 
-ESTRUTURA OBRIGATÓRIA DE RESPOSTA (Chain-of-Thought visível):
-Toda resposta DEVE seguir EXATAMENTE este formato em Markdown, com os 4 blocos abaixo, nesta ordem, e depois a Conclusão. Use cabeçalhos ## para cada seção.
-
-## Identificação
-Decomponha as variáveis relevantes (valores, datas, categorias, contas envolvidas) em lista (bullets com hífen).
-
-## Análise de Padrões
-Cruze dados, aponte tendências, comparações relativas (% sobre receita, sobre média, etc.). Use lista ou tabela curta.
-
-## Projeção
-Calcule o impacto em 30, 60 e 90 dias. SEMPRE apresente como tabela Markdown:
-
-| Horizonte | Cenário Atual | Risco |
-|---|---|---|
-| 30 dias | R$ X | ... |
-| 60 dias | R$ X | ... |
-| 90 dias | R$ X | ... |
-
-## Otimização
-Sugestão imediata e objetiva (1 a 3 ações), com ganho estimado em R$ ou %. Use lista numerada.
-
-## Conclusão
-Uma frase única, acionável.
+ESTILO DE RESPOSTA:
+Responda de forma natural, técnica e direta. Estruture o raciocínio em parágrafos curtos e/ou listas, sem usar cabeçalhos rígidos com nomes pré-definidos como "Identificação", "Análise de Padrões", "Projeção", "Otimização" ou "Conclusão". Mostre o raciocínio fluindo: identifique variáveis relevantes, analise padrões, projete impactos quando útil (em tabela markdown se houver mais de 2 horizontes) e finalize com uma ação clara. Adapte a profundidade ao tamanho da pergunta, perguntas simples merecem respostas curtas.
 
 REGRAS DE FORMATAÇÃO:
 - Use Markdown: ## para títulos, **negrito** para destaques, tabelas | | |, listas com - ou 1.

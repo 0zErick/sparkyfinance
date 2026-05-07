@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import StatusCards from "@/components/expenses/StatusCards";
 import CreditCardCarousel from "@/components/expenses/CreditCardCarousel";
 import TrendChart from "@/components/expenses/TrendChart";
@@ -11,38 +12,37 @@ import SubscriptionsCard from "@/components/expenses/SubscriptionsCard";
 import DailyBudgetWidget from "@/components/expenses/DailyBudgetWidget";
 
 import { useFinancialData } from "@/hooks/useFinancialData";
+import { isGoalDepositTransaction } from "@/lib/financialCalculations";
 
 interface VisaoGeralTabProps {
   onNavigateToMetas?: () => void;
 }
 
+const MONTH_LABELS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
 const VisaoGeralTab = ({ onNavigateToMetas }: VisaoGeralTabProps) => {
-  const { data, available, dailyBudget } = useFinancialData();
-  const hasData = data.balance > 0 || data.income > 0 || data.expenses > 0;
+  const { data } = useFinancialData();
 
-  const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"];
-  const balanceHistory = months.map(name => ({
-    name,
-    value: hasData ? Math.round(data.balance * (0.6 + Math.random() * 0.5)) : 0,
-  }));
-  if (hasData) balanceHistory[balanceHistory.length - 1].value = Math.round(data.balance);
-
-  const projectionData = [
-    { name: "Sem 1", value: hasData ? Math.round(available * 1.2) : 0 },
-    { name: "Sem 2", value: hasData ? Math.round(available * 1.05) : 0 },
-    { name: "Sem 3", value: hasData ? Math.round(available * 0.9) : 0 },
-    { name: "Sem 4", value: hasData ? Math.round(available) : 0 },
-  ];
-
-  const dailyPower = [
-    { name: "Seg", value: hasData ? Math.round(dailyBudget * 1.3) : 0 },
-    { name: "Ter", value: hasData ? Math.round(dailyBudget * 1.1) : 0 },
-    { name: "Qua", value: hasData ? Math.round(dailyBudget * 0.85) : 0 },
-    { name: "Qui", value: hasData ? Math.round(dailyBudget) : 0 },
-    { name: "Sex", value: hasData ? Math.round(dailyBudget * 1.2) : 0 },
-    { name: "Sáb", value: hasData ? Math.round(dailyBudget * 0.75) : 0 },
-    { name: "Dom", value: hasData ? Math.round(dailyBudget) : 0 },
-  ];
+  // Real balance history: net (income - expenses) per month for the last 6 months
+  const balanceHistory = useMemo(() => {
+    const now = new Date();
+    const months: { name: string; value: number }[] = [];
+    let running = 0;
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthIdx = d.getMonth();
+      const yearIdx = d.getFullYear();
+      const net = data.transactions.reduce((sum, t) => {
+        const td = new Date(t.date);
+        if (td.getMonth() !== monthIdx || td.getFullYear() !== yearIdx) return sum;
+        if (isGoalDepositTransaction(t)) return sum;
+        return sum + (t.type === "income" ? t.amount : -t.amount);
+      }, 0);
+      running += net;
+      months.push({ name: MONTH_LABELS[monthIdx], value: Math.round(running) });
+    }
+    return months;
+  }, [data.transactions]);
 
   return (
     <div className="space-y-3">
@@ -54,9 +54,9 @@ const VisaoGeralTab = ({ onNavigateToMetas }: VisaoGeralTabProps) => {
       <DailyBudgetWidget />
       <CreditCardCarousel />
       <SubscriptionsCard />
-      <TrendChart title="Histórico de Saldo" data={balanceHistory} color="hsl(var(--primary))" gradientId="balGrad" />
-      <TrendChart title="Projeção de Saldo" data={projectionData} color="hsl(var(--success))" gradientId="projGrad" legend="Estimativa do saldo nas próximas semanas com base nos seus gastos e receitas recorrentes." />
-      <TrendChart title="Poder de Compra Diário" data={dailyPower} color="hsl(var(--warning))" gradientId="dailyGrad" legend="Quanto você pode gastar por dia sem comprometer o orçamento do mês." />
+      {balanceHistory.some(m => m.value !== 0) && (
+        <TrendChart title="Histórico de Saldo" data={balanceHistory} color="hsl(var(--primary))" gradientId="balGrad" />
+      )}
       <DonutChart />
       <PaceBar />
     </div>
