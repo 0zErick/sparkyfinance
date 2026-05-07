@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import TopTabs from "@/components/layout/TopTabs";
 import SparkyFAB from "@/components/layout/SparkyFAB";
+import Header from "@/components/layout/Header";
 import { syncLocalDataOwner } from "@/lib/userLocalData";
 import { isSessionExpired, clearRememberedSession, markSessionRemembered, hasRememberedSessionMarker } from "@/lib/sessionTimer";
 import GlobalNotificationPopup from "@/components/layout/GlobalNotificationPopup";
@@ -294,7 +295,10 @@ const Index = () => {
       )}
 
       {activeTab !== 'chat' && (
-        <TopTabs activeTab={activeTab} onTabChange={handleTabChange} />
+        <>
+          <Header />
+          <TopTabs activeTab={activeTab} onTabChange={handleTabChange} />
+        </>
       )}
 
       <div data-main-scroll className={`relative flex-1 min-h-0 overflow-x-hidden ${activeTab === 'chat' ? 'overflow-hidden' : 'overflow-y-auto'}`} style={{ overscrollBehavior: 'none', paddingBottom: activeTab === 'chat' ? '0' : 'calc(96px + env(safe-area-inset-bottom, 0px))' }}>
