@@ -284,6 +284,43 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* ── RGB animated border for Sparky FAB ── */
+@property --sparky-rgb-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes sparky-rgb-spin {
+  to { --sparky-rgb-angle: 360deg; }
+}
+
+.sparky-rgb-fab {
+  --sparky-rgb-angle: 0deg;
+  background: conic-gradient(
+    from var(--sparky-rgb-angle),
+    #ff3b6b, #ffb13b, #ffd93b, #3bff8a, #3bd4ff, #6b3bff, #ff3bd4, #ff3b6b
+  );
+  padding: 1.5px;
+  animation: sparky-rgb-spin 4s linear infinite;
+  box-shadow:
+    0 8px 24px -8px rgba(255, 59, 107, 0.35),
+    0 8px 24px -8px rgba(59, 212, 255, 0.25),
+    0 0 0 0.5px rgba(255, 255, 255, 0.06);
+}
+
+@supports not (background: conic-gradient(from 0deg, red, blue)) {
+  .sparky-rgb-fab {
+    background: linear-gradient(90deg, #ff3b6b, #3bd4ff, #6b3bff, #ff3b6b);
+    background-size: 300% 100%;
+    animation: sparky-rgb-fallback 4s linear infinite;
+  }
+}
+
+@keyframes sparky-rgb-fallback {
+  to { background-position: 300% 0; }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 3px;

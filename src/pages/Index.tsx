@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import TabBar from "@/components/layout/TabBar";
+import TopTabs from "@/components/layout/TopTabs";
+import SparkyFAB from "@/components/layout/SparkyFAB";
 import { syncLocalDataOwner } from "@/lib/userLocalData";
 import { isSessionExpired, clearRememberedSession, markSessionRemembered, hasRememberedSessionMarker } from "@/lib/sessionTimer";
 import GlobalNotificationPopup from "@/components/layout/GlobalNotificationPopup";
@@ -9,7 +10,6 @@ import { Settings, Timer, Eye, X } from "lucide-react";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 
 const DashboardView = lazyWithRetry(() => import("@/components/views/DashboardView"));
-const TasksView = lazyWithRetry(() => import("@/components/views/TasksView"));
 const ExpensesView = lazyWithRetry(() => import("@/components/views/ExpensesView"));
 const DocsView = lazyWithRetry(() => import("@/components/views/DocsView"));
 const MembersView = lazyWithRetry(() => import("@/components/views/MembersView"));
@@ -241,7 +241,6 @@ const Index = () => {
   const renderView = () => {
     switch (activeTab) {
       case "home": return <DashboardView />;
-      case "tasks": return <TasksView />;
       case "chat": return <ChatView />;
       case "expenses": return <ExpensesView />;
       case "docs": return <DocsView />;
@@ -294,7 +293,11 @@ const Index = () => {
         </div>
       )}
 
-      <div data-main-scroll className={`relative flex-1 min-h-0 overflow-x-hidden ${activeTab === 'chat' ? 'overflow-hidden' : 'overflow-y-auto'}`} style={{ overscrollBehavior: 'none', paddingBottom: activeTab === 'chat' ? '0' : 'calc(100px + env(safe-area-inset-bottom, 0px))' }}>
+      {activeTab !== 'chat' && (
+        <TopTabs activeTab={activeTab} onTabChange={handleTabChange} />
+      )}
+
+      <div data-main-scroll className={`relative flex-1 min-h-0 overflow-x-hidden ${activeTab === 'chat' ? 'overflow-hidden' : 'overflow-y-auto'}`} style={{ overscrollBehavior: 'none', paddingBottom: activeTab === 'chat' ? '0' : 'calc(96px + env(safe-area-inset-bottom, 0px))' }}>
         <Suspense fallback={
           <div className="space-y-3 px-4 pt-4">
             <div className="h-10 w-40 bg-muted rounded-xl animate-pulse" />
@@ -308,7 +311,9 @@ const Index = () => {
           </div>
         </Suspense>
       </div>
-      {activeTab !== 'chat' && <TabBar activeTab={activeTab} onTabChange={handleTabChange} />}
+      {activeTab !== 'chat' && (
+        <SparkyFAB onClick={() => handleTabChange('chat')} />
+      )}
     </div>
   );
 };
