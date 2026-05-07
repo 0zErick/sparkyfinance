@@ -156,16 +156,14 @@ const ChatView = () => {
     return shuffled.slice(0, 4);
   }, [activeId]);
 
-  // Set current user ID for scoped chat storage
-  // Rotate status phrases while loading
-  useEffect(() => {
-    if (!isLoading) return;
-    setStatusIndex(0);
-    const interval = setInterval(() => {
-      setStatusIndex(prev => (prev + 1) % STATUS_PHRASES.length);
-    }, 2500);
-    return () => clearInterval(interval);
-  }, [isLoading]);
+  // Track Chain-of-Thought completion based on streamed assistant text
+  const lastAssistant = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "assistant") return messages[i].content;
+    }
+    return "";
+  }, [messages]);
+  const completedSteps = useMemo(() => detectCompletedSteps(lastAssistant), [lastAssistant]);
 
   useEffect(() => {
     const isDemo = localStorage.getItem("sparky-demo-mode") === "true";
