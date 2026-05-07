@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { handleBRLChange, parseBRLInput } from "@/lib/brlInput";
-import { Target, PiggyBank, TrendingUp, Calendar, Lightbulb, Plus, X, Wallet, Shield, Sparkles, DollarSign } from "lucide-react";
+import { Target, PiggyBank, TrendingUp, Calendar, Plus, X, Wallet, Shield, Sparkles, DollarSign } from "lucide-react";
 import { BarChart, Bar, XAxis, ResponsiveContainer, RadialBarChart, RadialBar } from "recharts";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -34,17 +34,6 @@ const parseBRL = (str: string): number => {
   }
   return parseFloat(clean) || 0;
 };
-
-const tips = [
-  { title: "Reduza delivery", desc: "Cozinhar mais vezes por semana pode economizar bastante no final do mês.", icon: "🍳" },
-  { title: "Revise assinaturas", desc: "Cancele serviços que não usa para economizar mensalmente.", icon: "📺" },
-  { title: "Energia em horário reduzido", desc: "Use eletrodomésticos após 22h para reduzir a conta de luz em até 15%.", icon: "⚡" },
-  { title: "Compras no atacado", desc: "Itens de uso frequente saem mais baratos em atacarejos.", icon: "🛒" },
-  { title: "Metas semanais", desc: "Dividir o orçamento em semanas facilita o controle dos gastos.", icon: "📅" },
-  { title: "Cashback e cupons", desc: "Use apps de cashback e cupons para economizar nas compras do dia a dia.", icon: "💰" },
-  { title: "Transporte alternativo", desc: "Considere caronas, bicicleta ou transporte público para economizar.", icon: "🚲" },
-  { title: "Lista de compras", desc: "Ir ao mercado com lista reduz compras por impulso em até 40%.", icon: "📝" },
-];
 
 const goalTypes = [
   { id: "emergency", label: "Reserva de Emergência", icon: Shield, color: "text-destructive", bg: "bg-destructive/15" },
@@ -82,15 +71,6 @@ const PlanejamentoTab = () => {
   }, []);
   const totalBudget = budgetCategories.reduce((s: number, c: any) => s + c.budget, 0);
   const totalSpent = budgetCategories.reduce((s: number, c: any) => s + c.spent, 0);
-  const [activeTip, setActiveTip] = useState(0);
-
-  // Auto-rotate tips every 8 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveTip(prev => (prev + 1) % tips.length);
-    }, 8000);
-    return () => clearInterval(interval);
-  }, []);
   const [goalModalOpen, setGoalModalOpen] = useState(false);
   const [editBudgetOpen, setEditBudgetOpen] = useState(false);
   const [newGoalOpen, setNewGoalOpen] = useState(false);
@@ -221,30 +201,6 @@ const PlanejamentoTab = () => {
               </span>
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Smart Tips */}
-      <div className="card-zelo fade-in-up stagger-1">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-warning/15">
-            <Lightbulb size={14} className="text-warning" />
-          </div>
-          <p className="text-xs font-semibold">Dicas Inteligentes</p>
-        </div>
-        <div className="rounded-xl bg-muted/30 border border-border p-3">
-          <div className="flex items-start gap-3">
-            <span className="text-xl">{tips[activeTip].icon}</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold mb-0.5">{tips[activeTip].title}</p>
-              <p className="text-[10px] text-muted-foreground leading-relaxed">{tips[activeTip].desc}</p>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center justify-center gap-1.5 mt-3">
-          {tips.map((_, i) => (
-            <button key={i} onClick={() => setActiveTip(i)} className={cn("h-1.5 rounded-full transition-all", activeTip === i ? "w-4 bg-primary" : "w-1.5 bg-muted-foreground/30")} />
-          ))}
         </div>
       </div>
 
