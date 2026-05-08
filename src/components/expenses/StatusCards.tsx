@@ -65,7 +65,7 @@ const StatusCards = () => {
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-2" style={{ alignItems: "start" }}>
+      <div className="grid grid-cols-3 gap-2 items-stretch">
         {statuses.map((s, i) => {
           const Icon = s.icon;
           const isExpanded = expandedInfo === s.infoKey;
