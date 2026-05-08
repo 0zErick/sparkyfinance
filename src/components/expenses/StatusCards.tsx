@@ -24,7 +24,7 @@ const StatusCards = () => {
       infoKey: "saldo",
     },
     {
-      label: "A Pagar",
+      label: "Pendentes",
       value: allPaid ? "" : fmt(pendingTotal),
       color: "text-warning",
       sub: allPaid ? "Contas todas pagas" : `${pendingCount} pendente(s)`,
