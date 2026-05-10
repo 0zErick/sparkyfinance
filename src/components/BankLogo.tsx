@@ -1,6 +1,7 @@
 import { useState, memo, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { getBankBrand, type BankBrand } from "@/lib/bankLogos";
+import { getBrandIcon } from "@/lib/brandIcons";
 
 interface BankLogoProps {
   bankName?: string;
@@ -56,14 +57,20 @@ const BankLogo = memo(({ bankName = "", brand, size = 40, className, rounded = "
             display: "block",
           }}
         />
-      ) : (
-        <span
-          className="font-bold tracking-tight text-white"
-          style={{ fontSize: Math.max(11, size * 0.4), lineHeight: 1 }}
-        >
-          {resolved.abbr || bankName.slice(0, 2).toUpperCase()}
-        </span>
-      )}
+      ) : (() => {
+        const Icon = getBrandIcon(resolved.iconName);
+        if (Icon) {
+          return <Icon size={Math.max(14, Math.round(size * 0.55))} className="text-white" strokeWidth={2.25} />;
+        }
+        return (
+          <span
+            className="font-bold tracking-tight text-white"
+            style={{ fontSize: Math.max(11, size * 0.4), lineHeight: 1 }}
+          >
+            {resolved.abbr || bankName.slice(0, 2).toUpperCase()}
+          </span>
+        );
+      })()}
     </div>
   );
 });
