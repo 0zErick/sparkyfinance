@@ -1,6 +1,7 @@
 import { useState, memo, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { getBankBrand, type BankBrand } from "@/lib/bankLogos";
+import { getBrandIcon } from "@/lib/brandIcons";
 
 interface BankLogoProps {
   bankName?: string;

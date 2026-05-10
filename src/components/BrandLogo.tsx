@@ -1,6 +1,7 @@
 import { useState, memo, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { getAppBrand, type AppBrand } from "@/lib/brandLogos";
+import { getBrandIcon } from "@/lib/brandIcons";
 
 interface BrandLogoProps {
   appName?: string;

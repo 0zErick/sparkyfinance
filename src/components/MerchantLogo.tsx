@@ -1,6 +1,7 @@
 import { useState, memo, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { getMerchantBrand, type MerchantBrand } from "@/lib/merchantLogos";
+import { getBrandIcon } from "@/lib/brandIcons";
 
 interface MerchantLogoProps {
   /** Nome livre (descrição da transação, categoria, etc) */
