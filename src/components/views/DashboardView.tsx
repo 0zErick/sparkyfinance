@@ -53,11 +53,17 @@ const DashboardView = () => {
       {/* Insights priority */}
       <SuggestionsCard />
 
+      {/* AI proactive insights */}
+      <AIInsightsCard />
+
       {/* Hero balance — referência IMG_2590 */}
       <BalanceHero onVisibilityChange={handleVisibilityChange} />
 
       {/* Apple-watch style mini-widgets — referência IMG_2589 */}
       <WidgetGrid hideValues={hideValues} />
+
+      {/* Cofrinhos / Savings jars */}
+      <CofrinhosCard />
 
       {/* Existing rich detail blocks */}
       <SpendingOverview hideValues={hideValues} />
