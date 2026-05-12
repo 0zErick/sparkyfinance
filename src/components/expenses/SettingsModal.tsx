@@ -5,7 +5,7 @@ import {
   ArrowLeft, Pencil, Star, ChevronRight, User, SlidersHorizontal,
   CreditCard, KeyRound, Lock, Fingerprint, LogOut, Trash2,
   AlertTriangle, RotateCcw, MessageCircle, LayoutGrid, Volume2,
-  Vibrate, Sun, Moon, Info, PiggyBank, Users, Rocket, Link2,
+  Vibrate, Sun, Moon, Rocket, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { handleBRLChange } from "@/lib/brlInput";
