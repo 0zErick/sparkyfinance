@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import {
   ArrowLeft, Pencil, Star, ChevronRight, User, SlidersHorizontal,
   CreditCard, KeyRound, Lock, Fingerprint, LogOut, Trash2,
   AlertTriangle, RotateCcw, MessageCircle, LayoutGrid, Volume2,
-  Vibrate, Sun, Moon, Rocket, Users,
+  Vibrate, Sun, Moon, Rocket, Users, Copy, Share2, Camera,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { handleBRLChange } from "@/lib/brlInput";
@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface Props { open: boolean; onClose: () => void; }
 
-type Screen = "root" | "profile" | "preferences" | "subscription" | "security";
+type Screen = "root" | "profile" | "preferences" | "subscription" | "security" | "invite";
 
 const SETTINGS_KEY = "sparky-financial-settings";
 const PREFS_KEY = "sparky-prefs";
