@@ -1,10 +1,9 @@
 import { useState, useCallback, Suspense } from "react";
-import { Plus, Settings, CreditCard } from "lucide-react";
+import { Plus, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
 
 const AddExpenseModal = lazyWithRetry(() => import("@/components/expenses/AddExpenseModal"));
-const SettingsModal = lazyWithRetry(() => import("@/components/expenses/SettingsModal"));
 const CreditCardManager = lazyWithRetry(() => import("@/components/expenses/CreditCardManager"));
 const VisaoGeralTab = lazyWithRetry(() => import("@/components/expenses/VisaoGeralTab"));
 const ExtratoTab = lazyWithRetry(() => import("@/components/expenses/ExtratoTab"));
