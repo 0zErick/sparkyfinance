@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import {
   ArrowLeft, Pencil, Star, ChevronRight, User, SlidersHorizontal,
   CreditCard, KeyRound, Lock, Fingerprint, LogOut, Trash2,
   AlertTriangle, RotateCcw, MessageCircle, LayoutGrid, Volume2,
-  Vibrate, Sun, Moon, Rocket, Users,
+  Vibrate, Sun, Moon, Rocket, Users, Copy, Share2, Camera,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { handleBRLChange } from "@/lib/brlInput";
@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface Props { open: boolean; onClose: () => void; }
 
-type Screen = "root" | "profile" | "preferences" | "subscription" | "security";
+type Screen = "root" | "profile" | "preferences" | "subscription" | "security" | "invite";
 
 const SETTINGS_KEY = "sparky-financial-settings";
 const PREFS_KEY = "sparky-prefs";
@@ -358,13 +358,80 @@ const ToggleInline = ({ label, value, onChange }: any) => (
   </div>
 );
 
+/* ────────── Invite & group screen ────────── */
+const InviteScreen = ({ onBack }: { onBack: () => void }) => {
+  const { profile } = useProfile();
+  const { members, leader, isLeader } = useGroupMembers();
+  const code = profile?.invite_code || "—";
+  const inviteUrl = `${window.location.origin}/onboarding?code=${code}`;
+
+  const copyCode = () => {
+    navigator.clipboard.writeText(code);
+    toast.success("Código copiado");
+  };
+  const shareInvite = async () => {
+    const text = `Entre no meu grupo no Sparky com o código ${code}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: "Convite Sparky", text, url: inviteUrl }); } catch {}
+    } else {
+      navigator.clipboard.writeText(`${text}\n${inviteUrl}`);
+      toast.success("Convite copiado");
+    }
+  };
+
+  return (
+    <ScreenShell title="Convite e grupo" onBack={onBack} subtitle="Compartilhe seu código e veja quem está no grupo">
+      <SectionLabel>Seu código</SectionLabel>
+      <Card>
+        <p className="text-[11px] text-muted-foreground mb-2">Use este código para convidar pessoas para o seu grupo financeiro.</p>
+        <div className="flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3 mb-3">
+          <span className="font-mono text-lg font-bold tracking-widest">{code}</span>
+          <button onClick={copyCode} className="rounded-lg p-2 hover:bg-muted active:scale-95 transition-transform">
+            <Copy size={16} />
+          </button>
+        </div>
+        <button onClick={shareInvite}
+          className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground active:scale-[0.98] transition-transform">
+          <Share2 size={15} /> Compartilhar convite
+        </button>
+      </Card>
+
+      <SectionLabel>Membros ({members.length})</SectionLabel>
+      <div className="space-y-2">
+        {members.map((m) => {
+          const lead = isLeader(m);
+          const ini = (m.name || "?").split(" ").slice(0, 2).map(p => p[0]).join("").toUpperCase();
+          return (
+            <div key={m.id} className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/60 px-4 py-3">
+              {m.avatar_url ? (
+                <img src={m.avatar_url} alt={m.name} className="h-10 w-10 rounded-full object-cover" />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-xs font-bold text-primary-foreground">{ini}</div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold truncate">{m.name}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{m.email || "—"}</p>
+              </div>
+              <span className={cn("text-[10px] font-semibold rounded-full px-2 py-0.5",
+                lead ? "bg-warning/15 text-warning" : "bg-muted text-muted-foreground")}>
+                {lead ? "Líder" : "Membro"}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </ScreenShell>
+  );
+};
 /* ────────── Root settings screen ────────── */
 const RootScreen = ({ onClose, navigate }: { onClose: () => void; navigate: (s: Screen) => void }) => {
-  const { profile, isDemo } = useProfile();
+  const { profile, updateProfile, isDemo } = useProfile();
   const { members } = useGroupMembers();
   const { clearAll } = useFinancialData();
   const [confirmClear, setConfirmClear] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const memberCount = useMemo(() => members?.length ?? 1, [members]);
 
@@ -382,6 +449,41 @@ const RootScreen = ({ onClose, navigate }: { onClose: () => void; navigate: (s: 
     if (isDemo) localStorage.removeItem("sparky-demo-mode");
     else await supabase.auth.signOut();
     window.location.href = "/login";
+  };
+
+  const handleAvatarPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    try {
+      // Resize + compress to <=400x400 jpeg base64
+      const dataUrl: string = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("read"));
+        reader.readAsDataURL(file);
+      });
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise(r => { img.onload = r; });
+      const max = 400;
+      const size = Math.min(img.width, img.height);
+      const sx = (img.width - size) / 2;
+      const sy = (img.height - size) / 2;
+      const canvas = document.createElement("canvas");
+      canvas.width = max; canvas.height = max;
+      const ctx = canvas.getContext("2d")!;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, max, max);
+      const out = canvas.toDataURL("image/jpeg", 0.82);
+      await updateProfile({ avatar_url: out });
+      toast.success("Foto atualizada");
+    } catch {
+      toast.error("Erro ao atualizar foto");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -404,12 +506,14 @@ const RootScreen = ({ onClose, navigate }: { onClose: () => void; navigate: (s: 
               {initials}
             </div>
           )}
-          <button onClick={() => navigate("profile")}
-            className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-card border border-border flex items-center justify-center active:scale-90 transition-transform">
-            <Pencil size={13} />
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarPick} />
+          <button onClick={() => fileRef.current?.click()} disabled={uploading}
+            className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-accent text-accent-foreground border border-border flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50">
+            <Camera size={13} />
           </button>
         </div>
         <h2 className="mt-3 text-xl font-display font-bold tracking-tight">{profile?.name || "Usuário"}</h2>
+        {uploading && <p className="text-[11px] text-muted-foreground mt-1">Enviando…</p>}
       </div>
 
       {/* Stat cards */}
@@ -445,12 +549,7 @@ const RootScreen = ({ onClose, navigate }: { onClose: () => void; navigate: (s: 
         <Row icon={User} label="Perfil" onClick={() => navigate("profile")} />
         <Row icon={SlidersHorizontal} label="Preferências" onClick={() => navigate("preferences")} />
         <Row icon={CreditCard} label="Assinatura" onClick={() => navigate("subscription")} />
-        <Row icon={KeyRound} label="Convite e grupo" onClick={() => {
-          if (profile?.invite_code) {
-            navigator.clipboard.writeText(profile.invite_code);
-            toast.success(`Código ${profile.invite_code} copiado`);
-          }
-        }} />
+        <Row icon={KeyRound} label="Convite e grupo" onClick={() => navigate("invite")} />
       </div>
 
       {/* Segurança */}
@@ -530,7 +629,8 @@ const SettingsModal = ({ open, onClose }: Props) => {
         {screen === "profile" && <ProfileScreen onBack={() => setScreen("root")} />}
         {screen === "preferences" && <PreferencesScreen onBack={() => setScreen("root")} />}
         {screen === "subscription" && <SubscriptionScreen onBack={() => setScreen("root")} />}
-        {screen === "security" && <SecurityScreen onBack={() => setScreen("root")} />}
+       {screen === "security" && <SecurityScreen onBack={() => setScreen("root")} />}
+        {screen === "invite" && <InviteScreen onBack={() => setScreen("root")} />}
       </div>
     </div>
   );
