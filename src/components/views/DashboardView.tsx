@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import BalanceHero from "@/components/dashboard/BalanceHero";
 import WidgetGrid from "@/components/dashboard/WidgetGrid";
 import SpendingOverview from "@/components/dashboard/SpendingOverview";
-import SuggestionsCard from "@/components/dashboard/SuggestionsCard";
+
 import BiggestExpenseCard from "@/components/dashboard/BiggestExpenseCard";
 import AIInsightsCard from "@/components/dashboard/AIInsightsCard";
 import CofrinhosCard from "@/components/dashboard/CofrinhosCard";
