@@ -284,25 +284,101 @@ const SubscriptionScreen = ({ onBack }: { onBack: () => void }) => (
 
 const SecurityScreen = ({ onBack }: { onBack: () => void }) => {
   const [bio, setBio] = useState(() => localStorage.getItem("sparky-biometric") === "true");
+  const [busy, setBusy] = useState(false);
+
   const handlePass = async () => {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user?.email) { toast.error("Sem e-mail vinculado"); return; }
-    const { error } = await supabase.auth.resetPasswordForEmail(data.user.email);
-    if (error) toast.error("Erro ao enviar e-mail");
-    else toast.success("Link de redefinição enviado para seu e-mail");
+    if (busy) return;
+    setBusy(true);
+    try {
+      const { data } = await supabase.auth.getUser();
+      const email = data.user?.email;
+      if (!email) {
+        toast.error("Sua conta não tem e-mail vinculado");
+        return;
+      }
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/login`,
+      });
+      if (error) toast.error("Não foi possível enviar o e-mail");
+      else toast.success(`Link enviado para ${email}`);
+    } catch {
+      toast.error("Erro inesperado");
+    } finally {
+      setBusy(false);
+    }
   };
-  const toggleBio = (v: boolean) => {
-    setBio(v); localStorage.setItem("sparky-biometric", String(v));
-    toast.success(v ? "Biometria ativada" : "Biometria desativada");
+
+  const toggleBio = async (v: boolean) => {
+    if (!v) {
+      setBio(false);
+      localStorage.removeItem("sparky-biometric");
+      localStorage.removeItem("sparky-biometric-cred");
+      toast.success("Biometria desativada");
+      return;
+    }
+    try {
+      if (typeof window === "undefined" || !window.PublicKeyCredential) {
+        toast.error("Biometria não suportada neste dispositivo");
+        return;
+      }
+      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      if (!available) {
+        toast.error("Nenhum sensor biométrico disponível");
+        return;
+      }
+      const { data } = await supabase.auth.getUser();
+      const userId = data.user?.id || "demo-user";
+      const userName = data.user?.email || "Sparky";
+      const challenge = crypto.getRandomValues(new Uint8Array(32));
+      const userIdBytes = new TextEncoder().encode(userId);
+      const cred = await navigator.credentials.create({
+        publicKey: {
+          challenge,
+          rp: { name: "Sparky Finance" },
+          user: { id: userIdBytes, name: userName, displayName: userName },
+          pubKeyCredParams: [
+            { type: "public-key", alg: -7 },
+            { type: "public-key", alg: -257 },
+          ],
+          authenticatorSelection: {
+            authenticatorAttachment: "platform",
+            userVerification: "required",
+            residentKey: "preferred",
+          },
+          timeout: 60000,
+          attestation: "none",
+        },
+      }) as PublicKeyCredential | null;
+      if (!cred) throw new Error("cancel");
+      localStorage.setItem("sparky-biometric", "true");
+      localStorage.setItem("sparky-biometric-cred", cred.id);
+      setBio(true);
+      toast.success("Biometria ativada");
+    } catch (err: any) {
+      const msg = err?.name === "NotAllowedError" ? "Autenticação cancelada" : "Falha ao ativar biometria";
+      toast.error(msg);
+    }
   };
+
   return (
     <ScreenShell title="Segurança" onBack={onBack}>
-      <Row icon={Lock} label="Alterar senha" onClick={handlePass} />
+      <button onClick={handlePass} disabled={busy}
+        className={cn(
+          "w-full flex items-center gap-3 rounded-2xl border border-border/60 bg-card/60 px-4 py-3.5 text-left",
+          "active:scale-[0.985] transition-transform disabled:opacity-60"
+        )}>
+        <Lock size={18} className="opacity-80" />
+        <span className="flex-1 text-sm font-medium">{busy ? "Enviando…" : "Alterar senha"}</span>
+        <ChevronRight size={16} className="opacity-50" />
+      </button>
       <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/60 px-4 py-3.5">
         <Fingerprint size={18} className="opacity-80" />
         <span className="flex-1 text-sm font-medium">Biometria</span>
         <Toggle value={bio} onChange={toggleBio} />
       </div>
+      <p className="px-1 pt-1 text-[11px] text-muted-foreground leading-relaxed">
+        A biometria usa o sensor do seu dispositivo (Face ID, Touch ID ou impressão digital) para acelerar o login.
+      </p>
     </ScreenShell>
   );
 };
