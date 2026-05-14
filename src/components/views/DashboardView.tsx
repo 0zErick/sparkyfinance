@@ -50,8 +50,6 @@ const DashboardView = () => {
         {dateStr}
       </p>
 
-      {/* Insights priority */}
-      <SuggestionsCard />
 
       {/* AI proactive insights */}
       <AIInsightsCard />
