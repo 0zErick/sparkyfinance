@@ -19,6 +19,7 @@ const ChatView = lazyWithRetry(() => import("@/components/views/ChatView"));
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("home");
+  const [scanOpen, setScanOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const readyRef = useRef(false);
   const [authChecked, setAuthChecked] = useState(false);
