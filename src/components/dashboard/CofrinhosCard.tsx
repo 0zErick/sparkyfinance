@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, ChevronRight } from "lucide-react";
+import { Plus, ChevronRight, PiggyBank, Lightbulb } from "lucide-react";
 import { Cofrinho, loadCofrinhos, monthlyContribution } from "@/lib/cofrinhos";
 import { fmt } from "@/hooks/useFinancialData";
 import CofrinhosManager from "@/components/expenses/CofrinhosManager";
