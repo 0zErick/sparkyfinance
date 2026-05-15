@@ -26,8 +26,8 @@ const CofrinhosCard = () => {
           onClick={() => setOpen(true)}
           className="card-zelo fade-in-up w-full text-left flex items-center gap-3 active:scale-[0.99] transition-transform"
         >
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/12 border border-primary/10 text-xl">
-            🐷
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/12 border border-primary/10">
+            <PiggyBank size={20} className="text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold">Crie seu primeiro Cofrinho</p>
