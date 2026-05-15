@@ -78,7 +78,12 @@ const CofrinhosCard = () => {
                   className="w-full text-left active:scale-[0.99] transition-transform"
                 >
                   <div className="flex items-center gap-2.5 mb-1">
-                    <span className="text-base leading-none">{c.emoji}</span>
+                    <span
+                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md"
+                      style={{ background: `${c.color}1f`, color: c.color }}
+                    >
+                      <PiggyBank size={12} strokeWidth={2.4} />
+                    </span>
                     <p className="flex-1 text-xs font-semibold truncate">{c.name}</p>
                     <p className="text-[10px] text-muted-foreground tabular-nums shrink-0">
                       {fmt(c.saved)} <span className="opacity-50">/ {fmt(c.target)}</span>
@@ -91,8 +96,9 @@ const CofrinhosCard = () => {
                     />
                   </div>
                   {monthly !== null && pct < 100 && (
-                    <p className="mt-1 text-[10px] text-muted-foreground">
-                      💡 Guarde {fmt(monthly)}/mês para atingir no prazo
+                    <p className="mt-1 text-[10px] text-muted-foreground flex items-center gap-1">
+                      <Lightbulb size={10} className="text-primary" />
+                      Guarde {fmt(monthly)}/mês para atingir no prazo
                     </p>
                   )}
                 </button>
